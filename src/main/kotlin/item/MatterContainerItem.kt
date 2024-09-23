@@ -7,10 +7,10 @@ import net.minestom.server.instance.Instance
 import net.minestom.server.item.ItemStack
 import java.util.*
 
-object TrainingCampItem : Actionable {
+object MatterContainerItem : Actionable {
     override fun getItem(uuid: UUID): ItemStack {
         val data = players[uuid.toString()]!!
-        return data.trainingCamps.item(data.trainingCampCost)
+        return data.matterContainers.item(data.containerCost)
     }
 
     override fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean {
@@ -21,15 +21,15 @@ object TrainingCampItem : Actionable {
         val target = event.player.getTargetBlockPosition(20) ?: return true
         val playerData = players[event.player.uuid.toString()]!!
         if (instance.getBlock(target) != playerData.block) return true
-        if (playerData.organicMatter - playerData.trainingCampCost < 0) return true
-        playerData.organicMatter -= playerData.trainingCampCost
-        playerData.trainingCamps.place(target, instance)
-        playerData.trainingCamps.setBuildingItem(event.player.inventory, playerData.trainingCampCost)
+        if (playerData.organicMatter - playerData.containerCost < 0) return true
+        playerData.organicMatter -= playerData.containerCost
+        playerData.matterContainers.place(target, instance)
+        playerData.matterContainers.setBuildingItem(event.player.inventory, playerData.containerCost)
         return true
     }
 
     override fun setItemSlot(player: Player) {
         val data = players[player.uuid.toString()]!!
-        data.trainingCamps.setBuildingItem(player.inventory, data.trainingCampCost)
+        data.matterContainers.setBuildingItem(player.inventory, data.containerCost)
     }
 }

@@ -12,7 +12,7 @@ import java.util.*
 object OwnedBlockItem : Actionable {
     override fun getItem(uuid: UUID): ItemStack {
         return item(Material.LIME_DYE) {
-            itemName = "<green>Your Land".asMini()
+            itemName = "<green><bold>Your Land".asMini()
         }
     }
 

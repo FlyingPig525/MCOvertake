@@ -18,22 +18,21 @@ import java.util.UUID
 
 object ColonyItem : Actionable {
     override fun getItem(uuid: UUID): ItemStack {
-        val playerData = players[uuid]
+        val playerData = players[uuid.toString()]!!
         return item(Material.CHEST) {
-            itemName = "<green>$COLONY_SYMBOL Instantiate Colony <dark_gray>-<red> $POWER_SYMBOL ${playerData?.colonyCost}".asMini()
+            itemName = "<green>$COLONY_SYMBOL<bold> Instantiate Colony</bold> <dark_gray>-<red> $POWER_SYMBOL ${playerData.colonyCost}".asMini()
         }
     }
 
     override fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean {
         if (event.itemUseTime > 0) return true
         val target = event.player.getTargetBlockPosition(20) ?: return true
-        val data = players[event.player.uuid]!!
+        val data = players[event.player.uuid.toString()]!!
         if (instance.getBlock(target) == Block.GRASS_BLOCK && data.power - data.colonyCost >= 0) {
             instance.setBlock(target, data.block)
             data.blocks++
             data.power -= data.colonyCost
             event.itemUseTime = 300
-            data.updateBossBars(event.player)
         } else throw IllegalStateException("Colony target is not grass!!!!!!! wtf is going on!!!! AAAAAAAAAAAAAAAAAAAAAA")
         return true
     }

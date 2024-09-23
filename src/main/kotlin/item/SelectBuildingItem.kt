@@ -1,5 +1,6 @@
 package io.github.flyingpig525.item
 
+import io.github.flyingpig525.BUILDING_SYMBOL
 import io.github.flyingpig525.data.Building
 import io.github.flyingpig525.data.PlayerData
 import io.github.flyingpig525.players
@@ -24,37 +25,37 @@ import java.util.*
 object SelectBuildingItem : Actionable {
     override fun getItem(uuid: UUID): ItemStack {
         return item(Material.BRICK) {
-            itemName = "<gray>Blueprint Constructor".asMini()
+            itemName = "<gold>$BUILDING_SYMBOL <bold>Blueprint Constructor</bold> $BUILDING_SYMBOL".asMini()
         }
     }
 
     override fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean {
-        val inventory = Inventory(InventoryType.CHEST_3_ROW, "Select Blueprint")
-        val playerData = players[event.player.uuid]!!
+        val inventory = Inventory(InventoryType.CHEST_4_ROW, "Select Blueprint")
+        val playerData = players[event.player.uuid.toString()]!!
 
 
-        inventory[2, 1] = Building.TrainingCamp.item(playerData.trainingCampCost)
-        inventory[3, 1] = Building.Barrack.item(playerData.barracksCost)
-        inventory[5, 1] = Building.MatterExtractor.item(playerData.extractorCost)
-        inventory[6, 1] = Building.MatterContainer.item(playerData.containerCost)
+        inventory[2, 1] = playerData.trainingCamps.item(playerData.trainingCampCost)
+        inventory[3, 1] = playerData.barracks.item(playerData.barracksCost)
+        inventory[5, 1] = playerData.matterExtractors.item(playerData.extractorCost)
+        inventory[6, 1] = playerData.matterContainers.item(playerData.containerCost)
         event.player.openInventory(inventory)
 
-        val inventoryEventNode = EventNode.type("click", EventFilter.INVENTORY) { _, inv -> inventory == inv }
+        val inventoryEventNode = EventNode.type("select-building-inv", EventFilter.INVENTORY) { _, inv -> inventory == inv }
             .listen<InventoryClickEvent> { e ->
-                val data = players[e.player.uuid]!!
+                val data = players[e.player.uuid.toString()]!!
                 var close = true
                 when(e.clickedItem) {
                     Building.TrainingCamp.item(playerData.trainingCampCost) -> {
-                        data.trainingCamps.setBuildingItem(e.player.inventory, data.trainingCampCost)
+                        data.trainingCamps.setBuildingItem(e.player.inventory, playerData.trainingCampCost)
                     }
                     Building.MatterExtractor.item(playerData.extractorCost) -> {
-                        data.matterExtractors.setBuildingItem(e.player.inventory, data.extractorCost)
+                        data.matterExtractors.setBuildingItem(e.player.inventory, playerData.extractorCost)
                     }
                     Building.MatterContainer.item(playerData.containerCost) -> {
-                        data.matterExtractors.setBuildingItem(e.player.inventory, data.containerCost)
+                        data.matterContainers.setBuildingItem(e.player.inventory, playerData.containerCost)
                     }
                     Building.Barrack.item(playerData.barracksCost) -> {
-                        data.barracks.setBuildingItem(e.player.inventory, data.barracksCost)
+                        data.barracks.setBuildingItem(e.player.inventory, playerData.barracksCost)
                     }
                     else -> { close = false }
                 }

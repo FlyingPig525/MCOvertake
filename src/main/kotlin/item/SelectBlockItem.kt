@@ -41,13 +41,13 @@ object SelectBlockItem : Actionable {
         }
         event.player.openInventory(inventory)
 
-        val inventoryEventNode = EventNode.type("select-block-inv", EventFilter.INVENTORY, {event, inv -> inventory == inv}).listen<InventoryClickEvent> { e ->
-            players[e.player.uuid] = PlayerData(e.player.uuid, e.clickedItem.material().block()!!)
+        val inventoryEventNode = EventNode.type("select-block-inv", EventFilter.INVENTORY, {_, inv -> inventory == inv}).listen<InventoryClickEvent> { e ->
+            players[e.player.uuid.toString()] = PlayerData(e.player.uuid.toString(), e.clickedItem.material().block()!!)
             e.player.closeInventory()
             for (i in 0..8) {
                 e.player.inventory[i] = ItemStack.AIR
             }
-            players[e.player.uuid]!!.updateBossBars(e.player)
+            players[e.player.uuid.toString()]!!.updateBossBars()
             SelectBuildingItem.setItemSlot(e.player)
         }
 
