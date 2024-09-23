@@ -1,5 +1,6 @@
 package io.github.flyingpig525.item
 
+import io.github.flyingpig525.building.TrainingCamp
 import io.github.flyingpig525.players
 import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerUseItemEvent
@@ -10,7 +11,7 @@ import java.util.*
 object TrainingCampItem : Actionable {
     override fun getItem(uuid: UUID): ItemStack {
         val data = players[uuid.toString()]!!
-        return data.trainingCamps.item(data.trainingCampCost)
+        return TrainingCamp.getItem(data.trainingCampCost)
     }
 
     override fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean {
@@ -24,12 +25,12 @@ object TrainingCampItem : Actionable {
         if (playerData.organicMatter - playerData.trainingCampCost < 0) return true
         playerData.organicMatter -= playerData.trainingCampCost
         playerData.trainingCamps.place(target, instance)
-        playerData.trainingCamps.setBuildingItem(event.player.inventory, playerData.trainingCampCost)
+        playerData.trainingCamps.select(event.player, playerData.trainingCampCost)
         return true
     }
 
     override fun setItemSlot(player: Player) {
         val data = players[player.uuid.toString()]!!
-        data.trainingCamps.setBuildingItem(player.inventory, data.trainingCampCost)
+        data.trainingCamps.select(player, data.trainingCampCost)
     }
 }

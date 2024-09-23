@@ -12,8 +12,14 @@ import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerUseItemEvent
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
+import net.minestom.server.instance.block.BlockFace
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
+import net.minestom.server.network.packet.server.play.SetCooldownPacket
+import net.minestom.server.utils.PacketUtils
+import net.minestom.server.utils.time.Cooldown
+import java.time.Duration
+import java.time.Instant
 import java.util.*
 
 object ClaimItem : Actionable {
@@ -27,14 +33,21 @@ object ClaimItem : Actionable {
     }
 
     override fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean {
-        if (event.itemUseTime > 0) return true
-        val target = event.player.getTargetBlockPosition(20) ?: return true
         val data = players[event.player.uuid.toString()]!!
-        if (instance.getBlock(target) == Block.GRASS_BLOCK && data.power - data.claimCost >= 0) {
+        if (data.power - data.claimCost < 0) return true
+        if (!data.claimCooldown.isReady(Instant.now().toEpochMilli())) return true
+        val target = event.player.getTargetBlockPosition(20) ?: return true
+        if (instance.getBlock(target) == Block.GRASS_BLOCK) {
+            instance.breakBlock(event.player, target, BlockFace.TOP, false)
             instance.setBlock(target, data.block)
             data.blocks++
             data.power -= data.claimCost
-            event.itemUseTime = 15
+            data.claimCooldown = Cooldown(Duration.ofMillis(data.maxClaimCooldown))
+            event.player.sendPacket(
+                SetCooldownPacket(
+                    getItem(event.player.uuid).material().id(),
+                    (data.claimCooldown.duration.toMillis() / 50).toInt()
+                ))
         } else throw IllegalStateException("Claim target is not grass!!!!!!! wtf is going on!!!! AAAAAAAAAAAAAAAAAAAAAA")
         return true
     }

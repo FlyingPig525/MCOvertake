@@ -1,8 +1,7 @@
 package io.github.flyingpig525.item
 
 import io.github.flyingpig525.BUILDING_SYMBOL
-import io.github.flyingpig525.data.Building
-import io.github.flyingpig525.data.PlayerData
+import io.github.flyingpig525.building.*
 import io.github.flyingpig525.players
 import net.bladehunt.kotstom.GlobalEventHandler
 import net.bladehunt.kotstom.dsl.item.item
@@ -34,10 +33,10 @@ object SelectBuildingItem : Actionable {
         val playerData = players[event.player.uuid.toString()]!!
 
 
-        inventory[2, 1] = playerData.trainingCamps.item(playerData.trainingCampCost)
-        inventory[3, 1] = playerData.barracks.item(playerData.barracksCost)
-        inventory[5, 1] = playerData.matterExtractors.item(playerData.extractorCost)
-        inventory[6, 1] = playerData.matterContainers.item(playerData.containerCost)
+        inventory[2, 1] = TrainingCamp.getItem(playerData.trainingCampCost)
+        inventory[3, 1] = Barrack.getItem(playerData.barracksCost)
+        inventory[5, 1] = MatterExtractor.getItem(playerData.extractorCost)
+        inventory[6, 1] = MatterContainer.getItem(playerData.containerCost)
         event.player.openInventory(inventory)
 
         val inventoryEventNode = EventNode.type("select-building-inv", EventFilter.INVENTORY) { _, inv -> inventory == inv }
@@ -45,17 +44,17 @@ object SelectBuildingItem : Actionable {
                 val data = players[e.player.uuid.toString()]!!
                 var close = true
                 when(e.clickedItem) {
-                    Building.TrainingCamp.item(playerData.trainingCampCost) -> {
-                        data.trainingCamps.setBuildingItem(e.player.inventory, playerData.trainingCampCost)
+                    TrainingCamp.getItem(playerData.trainingCampCost) -> {
+                        data.trainingCamps.select(e.player, playerData.trainingCampCost)
                     }
-                    Building.MatterExtractor.item(playerData.extractorCost) -> {
-                        data.matterExtractors.setBuildingItem(e.player.inventory, playerData.extractorCost)
+                    MatterExtractor.getItem(playerData.extractorCost) -> {
+                        data.matterExtractors.select(e.player, playerData.extractorCost)
                     }
-                    Building.MatterContainer.item(playerData.containerCost) -> {
-                        data.matterContainers.setBuildingItem(e.player.inventory, playerData.containerCost)
+                    MatterContainer.getItem(playerData.containerCost) -> {
+                        data.matterContainers.select(e.player, playerData.containerCost)
                     }
-                    Building.Barrack.item(playerData.barracksCost) -> {
-                        data.barracks.setBuildingItem(e.player.inventory, playerData.barracksCost)
+                    Barrack.getItem(playerData.barracksCost) -> {
+                        data.barracks.select(e.player, playerData.barracksCost)
                     }
                     else -> { close = false }
                 }

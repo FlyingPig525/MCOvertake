@@ -1,5 +1,6 @@
 package io.github.flyingpig525.item
 
+import io.github.flyingpig525.building.Barrack
 import io.github.flyingpig525.players
 import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerUseItemEvent
@@ -10,7 +11,7 @@ import java.util.*
 object BarracksItem : Actionable {
     override fun getItem(uuid: UUID): ItemStack {
         val data = players[uuid.toString()]!!
-        return data.barracks.item(data.barracksCost)
+        return Barrack.getItem(data.barracksCost)
     }
 
     override fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean {
@@ -24,12 +25,12 @@ object BarracksItem : Actionable {
         if (playerData.organicMatter - playerData.barracksCost < 0) return true
         playerData.organicMatter -= playerData.barracksCost
         playerData.barracks.place(target, instance)
-        playerData.barracks.setBuildingItem(event.player.inventory, playerData.barracksCost)
+        playerData.barracks.select(event.player, playerData.barracksCost)
         return true
     }
 
     override fun setItemSlot(player: Player) {
         val data = players[player.uuid.toString()]!!
-        data.barracks.setBuildingItem(player.inventory, data.barracksCost)
+        data.barracks.select(player, data.barracksCost)
     }
 }

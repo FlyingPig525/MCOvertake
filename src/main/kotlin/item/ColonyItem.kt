@@ -14,6 +14,10 @@ import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
+import net.minestom.server.network.packet.server.play.SetCooldownPacket
+import net.minestom.server.utils.time.Cooldown
+import java.time.Duration
+import java.time.Instant
 import java.util.UUID
 
 object ColonyItem : Actionable {
@@ -25,14 +29,21 @@ object ColonyItem : Actionable {
     }
 
     override fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean {
-        if (event.itemUseTime > 0) return true
-        val target = event.player.getTargetBlockPosition(20) ?: return true
         val data = players[event.player.uuid.toString()]!!
-        if (instance.getBlock(target) == Block.GRASS_BLOCK && data.power - data.colonyCost >= 0) {
+        if (data.power - data.colonyCost < 0) return true
+        if (!data.colonyCooldown.isReady(Instant.now().toEpochMilli())) return true
+        val target = event.player.getTargetBlockPosition(20) ?: return true
+        if (instance.getBlock(target) == Block.GRASS_BLOCK) {
             instance.setBlock(target, data.block)
             data.blocks++
             data.power -= data.colonyCost
-            event.itemUseTime = 300
+            data.colonyCooldown = Cooldown(Duration.ofSeconds(15))
+            event.player.sendPacket(
+                SetCooldownPacket(
+                    getItem(event.player.uuid).material().id(),
+                    (data.colonyCooldown.duration.toMillis() / 50).toInt()
+                )
+            )
         } else throw IllegalStateException("Colony target is not grass!!!!!!! wtf is going on!!!! AAAAAAAAAAAAAAAAAAAAAA")
         return true
     }
