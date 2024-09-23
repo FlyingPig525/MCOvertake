@@ -31,12 +31,14 @@ object SelectBuildingItem : Actionable {
     override fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean {
         val inventory = Inventory(InventoryType.CHEST_4_ROW, "Select Blueprint")
         val playerData = players[event.player.uuid.toString()]!!
+        val clearItem = item(Material.BARRIER) { itemName = "<red><bold>Clear Selected Item".asMini() }
 
 
         inventory[2, 1] = TrainingCamp.getItem(playerData.trainingCampCost)
         inventory[3, 1] = Barrack.getItem(playerData.barracksCost)
         inventory[5, 1] = MatterExtractor.getItem(playerData.extractorCost)
         inventory[6, 1] = MatterContainer.getItem(playerData.containerCost)
+        inventory[4, 3] = clearItem
         event.player.openInventory(inventory)
 
         val inventoryEventNode = EventNode.type("select-building-inv", EventFilter.INVENTORY) { _, inv -> inventory == inv }
@@ -55,6 +57,9 @@ object SelectBuildingItem : Actionable {
                     }
                     Barrack.getItem(playerData.barracksCost) -> {
                         data.barracks.select(e.player, playerData.barracksCost)
+                    }
+                    clearItem -> {
+                        setItemSlot(e.player)
                     }
                     else -> { close = false }
                 }

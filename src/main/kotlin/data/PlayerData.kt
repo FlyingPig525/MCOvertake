@@ -14,6 +14,7 @@ import net.minestom.server.instance.block.Block
 import net.minestom.server.utils.time.Cooldown
 import java.time.Duration
 import java.util.*
+import kotlin.collections.Map
 
 @Serializable
 class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val block: Block) {
@@ -83,5 +84,11 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
         matterBossBar.progress((organicMatter / maxMatter).toFloat().coerceIn(0.0f..1.0f))
         player.showBossBar(matterBossBar)
 
+    }
+
+    companion object {
+        fun Map<String, PlayerData>.getDataByBlock(block: Block): PlayerData? {
+            return values.find { it.block == block }
+        }
     }
 }

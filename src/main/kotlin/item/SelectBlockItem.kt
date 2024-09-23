@@ -1,7 +1,10 @@
 package io.github.flyingpig525.item
 
+import com.sun.jdi.InvalidTypeException
 import io.github.flyingpig525.COLONY_SYMBOL
+import io.github.flyingpig525.clearBlock
 import io.github.flyingpig525.data.PlayerData
+import io.github.flyingpig525.data.block.*
 import io.github.flyingpig525.players
 import net.bladehunt.kotstom.GlobalEventHandler
 import net.bladehunt.kotstom.dsl.item.item
@@ -21,27 +24,73 @@ import net.minestom.server.inventory.InventoryType
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import java.util.*
+import kotlin.enums.EnumEntries
 
 
 object SelectBlockItem : Actionable {
     override fun getItem(uuid: UUID): ItemStack {
         return item(Material.STRUCTURE_VOID) {
-            itemName = "<green><bold>$COLONY_SYMBOL Select Block $COLONY_SYMBOL".asMini()
+            itemName = "<green>$COLONY_SYMBOL <bold>Select Block</bold> $COLONY_SYMBOL".asMini()
         }
     }
 
     override fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean {
         val inventory = Inventory(InventoryType.CHEST_5_ROW, "Select Block")
 
-        inventory[4, 2] = item(Material.WARPED_HYPHAE) {
-            itemName = "<gray>- <reset>Warped Hyphae <gray>-".asMini()
-            lore {
-                +"<gray>-| <green>Click to Select"
-            }
-        }
+        inventory[3, 1] = NATURAL_CATEGORY
+        inventory[5, 1] = UNDERGROUND_CATEGORY
+        inventory[4, 3] = NETHER_CATEGORY
+
         event.player.openInventory(inventory)
 
+        val inventoryEventNode = EventNode.type("select-category-inv", EventFilter.INVENTORY, {_, inv -> inventory == inv}).listen<InventoryClickEvent> { e ->
+            if (e.clickedItem.material() == Material.AIR) return@listen
+            when(e.clickedItem) {
+                NATURAL_CATEGORY -> openCategory(NaturalCategory.entries, e)
+                UNDERGROUND_CATEGORY -> openCategory(UndergroundCategory.entries, e)
+                NETHER_CATEGORY -> openCategory(NetherCategory.entries, e)
+                else -> {}
+            }
+//            players[e.player.uuid.toString()] = PlayerData(e.player.uuid.toString(), e.clickedItem.material().block()!!)
+//            e.player.closeInventory()
+//            for (i in 0..8) {
+//                e.player.inventory[i] = ItemStack.AIR
+//            }
+//            players[e.player.uuid.toString()]!!.updateBossBars()
+//            SelectBuildingItem.setItemSlot(e.player)
+//            setItemSlot(e.player)
+        }
+
+        GlobalEventHandler.addChild(inventoryEventNode)
+
+        return true
+    }
+
+    private fun openCategory(entries: EnumEntries<*>, e: InventoryClickEvent) {
+        val inventory = Inventory(InventoryType.CHEST_6_ROW, "Select Block")
+
+        for ((i, block) in entries.withIndex()) {
+            if (block is CategoryBlock) {
+                val item = item(block.material) {
+                    itemName = "<gray>- <gold><bold>${block.name} <reset><gray>-".asMini()
+                    lore {
+                        +"<gray>-| <green><bold>Click to Select".asMini()
+                    }
+                }
+                inventory[i % 9, i / 9] = item
+            } else throw InvalidTypeException("block is not type CategoryBlock")
+        }
+
+        e.player.openInventory(inventory)
+
         val inventoryEventNode = EventNode.type("select-block-inv", EventFilter.INVENTORY, {_, inv -> inventory == inv}).listen<InventoryClickEvent> { e ->
+            if (e.clickedItem.material() == Material.AIR) return@listen
+            if (players[e.player.uuid.toString()] != null) {
+                val data = players[e.player.uuid.toString()]!!
+                clearBlock(data.block)
+                e.player.hideBossBar(data.matterBossBar)
+                e.player.hideBossBar(data.powerBossBar)
+            }
             players[e.player.uuid.toString()] = PlayerData(e.player.uuid.toString(), e.clickedItem.material().block()!!)
             e.player.closeInventory()
             for (i in 0..8) {
@@ -49,11 +98,10 @@ object SelectBlockItem : Actionable {
             }
             players[e.player.uuid.toString()]!!.updateBossBars()
             SelectBuildingItem.setItemSlot(e.player)
+            setItemSlot(e.player)
         }
 
         GlobalEventHandler.addChild(inventoryEventNode)
-
-        return true
     }
 
     override fun setItemSlot(player: Player) {

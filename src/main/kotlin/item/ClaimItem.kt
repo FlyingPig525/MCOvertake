@@ -3,19 +3,27 @@ package io.github.flyingpig525.item
 import io.github.flyingpig525.CLAIM_SYMBOL
 import io.github.flyingpig525.POWER_SYMBOL
 import io.github.flyingpig525.players
+import net.bladehunt.kotstom.SchedulerManager
+import net.bladehunt.kotstom.dsl.ParticleBuilder
 import net.bladehunt.kotstom.dsl.item.amount
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
+import net.bladehunt.kotstom.dsl.particle
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.bladehunt.kotstom.extension.set
+import net.minestom.server.coordinate.Point
+import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerUseItemEvent
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.instance.block.BlockFace
+import net.minestom.server.instance.block.BlockHandler.Destroy
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import net.minestom.server.network.packet.server.play.SetCooldownPacket
+import net.minestom.server.particle.Particle
+import net.minestom.server.utils.NamespaceID
 import net.minestom.server.utils.PacketUtils
 import net.minestom.server.utils.time.Cooldown
 import java.time.Duration
@@ -38,8 +46,7 @@ object ClaimItem : Actionable {
         if (!data.claimCooldown.isReady(Instant.now().toEpochMilli())) return true
         val target = event.player.getTargetBlockPosition(20) ?: return true
         if (instance.getBlock(target) == Block.GRASS_BLOCK) {
-            instance.breakBlock(event.player, target, BlockFace.TOP, false)
-            instance.setBlock(target, data.block)
+            claimWithParticle(event.player, target, Block.GRASS_BLOCK, data.block)
             data.blocks++
             data.power -= data.claimCost
             data.claimCooldown = Cooldown(Duration.ofMillis(data.maxClaimCooldown))

@@ -10,6 +10,7 @@ import net.bladehunt.kotstom.SchedulerManager
 import net.bladehunt.kotstom.dsl.item.amount
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
+import net.bladehunt.kotstom.dsl.kbar
 import net.bladehunt.kotstom.dsl.listen
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.bladehunt.kotstom.extension.set
@@ -22,11 +23,15 @@ import net.minestom.server.extras.MojangAuth
 import net.minestom.server.instance.InstanceContainer
 import net.minestom.server.instance.LightingChunk
 import net.minestom.server.instance.anvil.AnvilLoader
+import net.minestom.server.instance.batch.AbsoluteBlockBatch
+import net.minestom.server.instance.batch.Batch
 import net.minestom.server.instance.block.Block
 import net.minestom.server.inventory.PlayerInventory
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import net.minestom.server.network.packet.server.play.SetCooldownPacket
+import net.minestom.server.potion.Potion
+import net.minestom.server.potion.PotionEffect
 import net.minestom.server.timer.TaskSchedule
 import java.io.File
 
@@ -79,22 +84,26 @@ fun main() {
         e.player.gameMode = GameMode.ADVENTURE
         e.player.flyingSpeed = 0.5f
         e.player.isAllowFlying = true
+        e.player.addEffect(Potion(PotionEffect.NIGHT_VISION, 1, -1))
         val data = players[e.player.uuid.toString()]
         if (data == null) {
             SelectBlockItem.setAllSlots(e.player)
         } else {
             data.updateBossBars()
             SelectBuildingItem.setItemSlot(e.player)
-            e.player.sendPackets(
-                SetCooldownPacket(
-                    ClaimItem.getItem(e.player.uuid).material().id(),
-                    (data.claimCooldown.duration.toMillis() / 50).toInt()
-                ),
-                SetCooldownPacket(
-                    ColonyItem.getItem(e.player.uuid).material().id(),
-                    (data.colonyCooldown.duration.toMillis() / 50).toInt()
+            SelectBlockItem.setItemSlot(e.player)
+            if (e.isFirstSpawn) {
+                e.player.sendPackets(
+                    SetCooldownPacket(
+                        ClaimItem.getItem(e.player.uuid).material().id(),
+                        (data.claimCooldown.duration.toMillis() / 50).toInt()
+                    ),
+                    SetCooldownPacket(
+                        ColonyItem.getItem(e.player.uuid).material().id(),
+                        (data.colonyCooldown.duration.toMillis() / 50).toInt()
+                    )
                 )
-            )
+            }
         }
     }
 
@@ -166,7 +175,7 @@ fun main() {
                         if (canAccess) break
                     }
                     if (canAccess) {
-                        e.player.inventory.claim(playerData.claimLevel, playerData.claimCost)
+                        ClaimItem.setItemSlot(e.player)
                     } else {
                         ColonyItem.setItemSlot(e.player)
                     }
@@ -197,27 +206,24 @@ fun main() {
     minecraftServer.start("0.0.0.0", 25565)
 }
 
-fun PlayerInventory.attack() {
-    set(0, attackItem("", 10))
-}
-
-fun PlayerInventory.claim(claimLevel: Int, powerCost: Int) {
-    set(0, claimItem(claimLevel, powerCost))
-}
-
-fun PlayerInventory.colony(powerCost: Int) {
-    set(0, colonyItem(powerCost))
+fun clearBlock(block: Block) {
+    SchedulerManager.scheduleTask({
+        println("clear block")
+        for (x in 0..300) {
+            for (z in 0..300) {
+                instance.loadChunk(Vec(x.toDouble(), z.toDouble())).thenRun {
+                    if (instance.getBlock(x, 39, z) == block) {
+                        instance.setBlock(x, 39, z, Block.GRASS_BLOCK)
+                        instance.setBlock(x, 40, z, Block.AIR)
+                    }
+                }
+            }
+        }
+    }, TaskSchedule.immediate(), TaskSchedule.stop())
 }
 
 fun PlayerInventory.idle() {
     set(0, idleItem())
-}
-
-fun PlayerInventory.selectBlock() {
-    for (i in 1..9)
-        set(i, item(Material.STRUCTURE_VOID) {
-            itemName = "<green><bold>$COLONY_SYMBOL Select Block $COLONY_SYMBOL".asMini()
-        })
 }
 
 fun attackItem(target: String, powerCost: Int): ItemStack = item(Material.IRON_SWORD) {
@@ -226,19 +232,7 @@ fun attackItem(target: String, powerCost: Int): ItemStack = item(Material.IRON_S
     amount = 1
 }
 
-fun claimItem(claimLevel: Int, powerCost: Int): ItemStack {
-    val item = listOf(Material.WOODEN_HOE, Material.IRON_HOE, Material.DIAMOND_HOE)[claimLevel]
-    return item(item) {
-        itemName = "<gold>$CLAIM_SYMBOL <bold>Expand</bold> <dark_gray>-<red> $POWER_SYMBOL $powerCost".asMini()
-        amount = 1
-    }
-}
-
 fun idleItem(): ItemStack = item(Material.GRAY_DYE) {
     itemName = "".asMini()
     amount = 1
-}
-
-fun colonyItem(powerCost: Int): ItemStack = item(Material.CHEST) {
-    itemName = "<green>$COLONY_SYMBOL Instantiate Colony <dark_gray>-<red> $POWER_SYMBOL $powerCost".asMini()
 }

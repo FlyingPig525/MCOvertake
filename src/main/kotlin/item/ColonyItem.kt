@@ -34,7 +34,7 @@ object ColonyItem : Actionable {
         if (!data.colonyCooldown.isReady(Instant.now().toEpochMilli())) return true
         val target = event.player.getTargetBlockPosition(20) ?: return true
         if (instance.getBlock(target) == Block.GRASS_BLOCK) {
-            instance.setBlock(target, data.block)
+            claimWithParticle(event.player, target, Block.GRASS_BLOCK, data.block)
             data.blocks++
             data.power -= data.colonyCost
             data.colonyCooldown = Cooldown(Duration.ofSeconds(15))
