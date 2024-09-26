@@ -28,6 +28,11 @@ import kotlin.enums.EnumEntries
 
 
 object SelectBlockItem : Actionable {
+
+    init {
+        Actionable.registry += this
+    }
+
     override fun getItem(uuid: UUID): ItemStack {
         return item(Material.STRUCTURE_VOID) {
             itemName = "<green>$COLONY_SYMBOL <bold>Select Block</bold> $COLONY_SYMBOL".asMini()

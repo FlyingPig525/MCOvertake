@@ -9,9 +9,14 @@ import net.minestom.server.item.ItemStack
 import java.util.*
 
 object MatterContainerItem : Actionable {
+
+    init {
+        Actionable.registry += this
+    }
+
     override fun getItem(uuid: UUID): ItemStack {
         val data = players[uuid.toString()]!!
-        return MatterContainer.getItem(data.containerCost)
+        return MatterContainer.getItem(data)
     }
 
     override fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean {
@@ -21,11 +26,13 @@ object MatterContainerItem : Actionable {
         }
         val target = event.player.getTargetBlockPosition(20) ?: return true
         val playerData = players[event.player.uuid.toString()]!!
+        if (MatterContainer.getResourceUse(playerData.matterContainers.count + 1) > playerData.maxDisposableResources * 1.5) return true
         if (instance.getBlock(target) != playerData.block) return true
         if (playerData.organicMatter - playerData.containerCost < 0) return true
         playerData.organicMatter -= playerData.containerCost
         playerData.matterContainers.place(target, instance)
         playerData.matterContainers.select(event.player, playerData.containerCost)
+        playerData.updateBossBars()
         return true
     }
 

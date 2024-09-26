@@ -2,13 +2,14 @@ package io.github.flyingpig525.data
 
 import io.github.flyingpig525.MATTER_SYMBOL
 import io.github.flyingpig525.POWER_SYMBOL
+import io.github.flyingpig525.RESOURCE_SYMBOL
 import io.github.flyingpig525.building.*
-import io.github.flyingpig525.instance
 import io.github.flyingpig525.serializers.BlockSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.kyori.adventure.bossbar.BossBar
+import net.minestom.server.entity.Player
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.utils.time.Cooldown
@@ -23,7 +24,7 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
     val trainingCampCost: Int get() = (trainingCamps.count * 25) + 25
     val barracks = Barrack()
     val maxPower: Int get() = 100 + barracks.count * 25
-    val barracksCost: Int get() = (barracks.count * 10) + 20
+    val barracksCost: Int get() = (barracks.count * 20) + 20
     val matterExtractors = MatterExtractor()
     val extractorCost: Int get() = (matterExtractors.count * 25) + 25
     val matterContainers = MatterContainer()
@@ -32,29 +33,29 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
     var claimLevel: Int = 0
     val claimCost: Int get() = blocks.floorDiv(500) + 5
     @Transient var claimCooldown = Cooldown(Duration.ofMillis(maxClaimCooldown))
-    val maxClaimCooldown get() = (((blocks / 1000) * 50) + 500).toLong()
+    val maxClaimCooldown get() = (((blocks.toLong() / 1000.0) * 50.0) + 1000.0).toLong()
     val colonyCost: Int get() = claimCost * 10
     @Transient var colonyCooldown = Cooldown(Duration.ofSeconds(if (blocks > 0) 15 else 0))
     @Transient var attackCooldown = Cooldown(Duration.ofSeconds(1))
     var power: Double = 100.0
         set(value) {
-            field = value
+            field = value.coerceIn(0.0..maxPower.toDouble())
             updateBossBars()
         }
     @Transient val powerBossBar: BossBar = BossBar.bossBar(
                 "<red>$POWER_SYMBOL Power <gray>-<red> $power/$maxPower".asMini(),
-                (power / maxPower).toFloat().coerceIn(0.0f..1.0f),
+                (power / maxPower).toFloat(),
                 BossBar.Color.RED,
                 BossBar.Overlay.PROGRESS
             )
     var organicMatter: Double = 100.0
         set(value) {
-            field = value
+            field = value.coerceIn(0.0..maxMatter.toDouble())
             updateBossBars()
         }
     @Transient val matterBossBar: BossBar = BossBar.bossBar(
-                "<green>$MATTER_SYMBOL Organic Matter <gray>-<green> $organicMatter/$maxMatter".asMini(),
-                (organicMatter / maxMatter).toFloat().coerceIn(0.0f..1.0f),
+                "<green>$MATTER_SYMBOL Organic Matter <gray>- <green>$organicMatter/$maxMatter".asMini(),
+                (organicMatter / maxMatter).toFloat(),
                 BossBar.Color.GREEN,
                 BossBar.Overlay.PROGRESS
             )
@@ -63,12 +64,32 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
             field = value
             updateBossBars()
         }
+    val disposableResourcesUsed: Int get() {
+        val barrack = barracks.resourceUse
+        val matterContainer = matterContainers.resourceUse
+        val matterExtractor = matterExtractors.resourceUse
+        val trainingCamp = trainingCamps.resourceUse
+        return barrack + matterExtractor + matterContainer + trainingCamp
+    }
+    val maxDisposableResources: Int get() = (blocks / 5) + 30
+    @Transient val resourcesBossBar: BossBar = BossBar.bossBar(
+        "<${
+            if (disposableResourcesUsed > maxDisposableResources)
+                "light_purple"
+            else "white"
+        }>$RESOURCE_SYMBOL Disposable Resources <gray>- <${
+            if (disposableResourcesUsed > maxDisposableResources)
+                "light_purple"
+            else "white"
+        }>$disposableResourcesUsed/$maxDisposableResources".asMini(),
+        (disposableResourcesUsed.toFloat() / maxDisposableResources.toFloat()).coerceIn((0f..1f)),
+        BossBar.Color.WHITE,
+        BossBar.Overlay.PROGRESS
+    )
 
     fun tick(instance: Instance) {
-        power =
-            ((trainingCamps.count * 0.5 + 0.5) + power).coerceIn(0.0..(maxPower).toDouble())
         organicMatter =
-            ((matterExtractors.count * 0.5 + 0.5) + organicMatter).coerceIn(0.0..(maxMatter).toDouble())
+            ((matterExtractors.count * 0.5 + 0.5) + organicMatter)
         val player = instance.getPlayerByUuid(UUID.fromString(uuid))
         if (player != null) {
             updateBossBars()
@@ -76,14 +97,24 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
     }
 
     fun updateBossBars() {
-        val player = instance.getPlayerByUuid(UUID.fromString(uuid)) ?: return
         powerBossBar.name("<red>$POWER_SYMBOL Power <gray>-<red> $power/$maxPower".asMini())
-        powerBossBar.progress((power / maxPower).toFloat().coerceIn(0.0f..1.0f))
-        player.showBossBar(powerBossBar)
+        powerBossBar.progress((power / maxPower).toFloat())
         matterBossBar.name("<green>$MATTER_SYMBOL Organic Matter <gray>-<green> $organicMatter/$maxMatter".asMini())
-        matterBossBar.progress((organicMatter / maxMatter).toFloat().coerceIn(0.0f..1.0f))
-        player.showBossBar(matterBossBar)
+        matterBossBar.progress((organicMatter / maxMatter).toFloat())
+        if (disposableResourcesUsed > 30) {
+            val overflow = disposableResourcesUsed > maxDisposableResources
+            resourcesBossBar.name("<${if (overflow) "light_purple" else "white"}>$RESOURCE_SYMBOL Disposable Resources <gray>- <${if (overflow) "light_purple" else "white"}>$disposableResourcesUsed/$maxDisposableResources".asMini())
+            resourcesBossBar.progress((disposableResourcesUsed.toFloat() / maxDisposableResources.toFloat()).coerceIn(0f..1f))
+            resourcesBossBar.color(if (disposableResourcesUsed > maxDisposableResources) BossBar.Color.PURPLE else BossBar.Color.WHITE)
+        }
+    }
 
+    fun showBossBars(player: Player) {
+        player.apply {
+            showBossBar(powerBossBar)
+            showBossBar(matterBossBar)
+            showBossBar(resourcesBossBar)
+        }
     }
 
     companion object {

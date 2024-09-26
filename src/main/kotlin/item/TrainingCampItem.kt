@@ -1,5 +1,6 @@
 package io.github.flyingpig525.item
 
+import io.github.flyingpig525.building.MatterContainer
 import io.github.flyingpig525.building.TrainingCamp
 import io.github.flyingpig525.players
 import net.minestom.server.entity.Player
@@ -9,9 +10,14 @@ import net.minestom.server.item.ItemStack
 import java.util.*
 
 object TrainingCampItem : Actionable {
+
+    init {
+        Actionable.registry += this
+    }
+
     override fun getItem(uuid: UUID): ItemStack {
         val data = players[uuid.toString()]!!
-        return TrainingCamp.getItem(data.trainingCampCost)
+        return TrainingCamp.getItem(data)
     }
 
     override fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean {
@@ -21,11 +27,13 @@ object TrainingCampItem : Actionable {
         }
         val target = event.player.getTargetBlockPosition(20) ?: return true
         val playerData = players[event.player.uuid.toString()]!!
+        if (TrainingCamp.getResourceUse(playerData.trainingCamps.count + 1) > playerData.maxDisposableResources * 1.5) return true
         if (instance.getBlock(target) != playerData.block) return true
         if (playerData.organicMatter - playerData.trainingCampCost < 0) return true
         playerData.organicMatter -= playerData.trainingCampCost
         playerData.trainingCamps.place(target, instance)
         playerData.trainingCamps.select(event.player, playerData.trainingCampCost)
+        playerData.updateBossBars()
         return true
     }
 

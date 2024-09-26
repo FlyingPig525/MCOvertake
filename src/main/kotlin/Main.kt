@@ -10,7 +10,6 @@ import net.bladehunt.kotstom.SchedulerManager
 import net.bladehunt.kotstom.dsl.item.amount
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
-import net.bladehunt.kotstom.dsl.kbar
 import net.bladehunt.kotstom.dsl.listen
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.bladehunt.kotstom.extension.set
@@ -23,8 +22,6 @@ import net.minestom.server.extras.MojangAuth
 import net.minestom.server.instance.InstanceContainer
 import net.minestom.server.instance.LightingChunk
 import net.minestom.server.instance.anvil.AnvilLoader
-import net.minestom.server.instance.batch.AbsoluteBlockBatch
-import net.minestom.server.instance.batch.Batch
 import net.minestom.server.instance.block.Block
 import net.minestom.server.inventory.PlayerInventory
 import net.minestom.server.item.ItemStack
@@ -42,6 +39,7 @@ const val MECHANICAL_PART_SYMBOL = "\uD83E\uDE93"
 const val CLAIM_SYMBOL = "◎"
 const val COLONY_SYMBOL = "⚐"
 const val BUILDING_SYMBOL = "⧈"
+const val RESOURCE_SYMBOL = "⌘"
 
 val players = Json.decodeFromString<MutableMap<String, PlayerData>>(
     if (File("./player-data.json").exists())
@@ -54,8 +52,9 @@ fun main() {
     // Initialize the server
     val minecraftServer = MinecraftServer.init()
     MojangAuth.init()
+    MinecraftServer.getBrandName()
 
-
+    initItems()
 
     instance = InstanceManager.createInstanceContainer().apply {
         chunkLoader = AnvilLoader("world/world")
@@ -89,7 +88,7 @@ fun main() {
         if (data == null) {
             SelectBlockItem.setAllSlots(e.player)
         } else {
-            data.updateBossBars()
+            data.showBossBars(e.player)
             SelectBuildingItem.setItemSlot(e.player)
             SelectBlockItem.setItemSlot(e.player)
             if (e.isFirstSpawn) {
@@ -107,11 +106,21 @@ fun main() {
         }
     }
 
+    // General player tick/extractor tick
     SchedulerManager.scheduleTask({
         for (uuid in players.keys) {
             players[uuid]!!.tick(instance)
         }
     }, TaskSchedule.tick(30), TaskSchedule.tick(30))
+
+    // Camp tick
+    SchedulerManager.scheduleTask({
+        for (uuid in players.keys) {
+            val data = players[uuid]!!
+            data.power += data.trainingCamps.count * 0.5 + 0.5
+            data.updateBossBars()
+        }
+    }, TaskSchedule.tick(70), TaskSchedule.tick(70))
 
     GlobalEventHandler.listen<PlayerMoveEvent> { e ->
         with(e) {
@@ -130,17 +139,12 @@ fun main() {
     GlobalEventHandler.listen<PlayerUseItemEvent> { e ->
         val item = e.player.getItemInHand(e.hand)
         val uuid = e.player.uuid
-        e.isCancelled = when (item) {
-            SelectBlockItem.getItem(uuid) -> SelectBlockItem.onInteract(e, instance)
-            ColonyItem.getItem(uuid) -> ColonyItem.onInteract(e, instance)
-            ClaimItem.getItem(uuid) -> ClaimItem.onInteract(e, instance)
-            SelectBuildingItem.getItem(uuid) -> SelectBuildingItem.onInteract(e, instance)
-            TrainingCampItem.getItem(uuid) -> TrainingCampItem.onInteract(e, instance)
-            MatterExtractorItem.getItem(uuid) -> MatterExtractorItem.onInteract(e, instance)
-            MatterContainerItem.getItem(uuid) -> MatterContainerItem.onInteract(e, instance)
-            BarracksItem.getItem(uuid) -> BarracksItem.onInteract(e, instance)
-
-            else -> true
+        e.isCancelled = true
+        for (actionable in Actionable.registry) {
+            if (item == actionable.getItem(uuid)) {
+                e.isCancelled = actionable.onInteract(e, instance)
+                break
+            }
         }
     }
 
@@ -149,7 +153,6 @@ fun main() {
     }
 
     GlobalEventHandler.listen<PlayerTickEvent> { e ->
-//        println("${players[e.player.uuid]?.power}")
         val playerData = players[e.player.uuid.toString()] ?: return@listen
 
         val target = e.player.getTargetBlockPosition(20)
@@ -184,6 +187,8 @@ fun main() {
                 else -> {
                     if (block == playerData.block) {
                         OwnedBlockItem.setItemSlot(e.player)
+                    } else if (block == Block.DIAMOND_BLOCK) {
+                        e.player.inventory.idle()
                     }
                 }
             }
@@ -207,7 +212,7 @@ fun main() {
 }
 
 fun clearBlock(block: Block) {
-    SchedulerManager.scheduleTask({
+    scheduleImmediately {
         println("clear block")
         for (x in 0..300) {
             for (z in 0..300) {
@@ -219,8 +224,10 @@ fun clearBlock(block: Block) {
                 }
             }
         }
-    }, TaskSchedule.immediate(), TaskSchedule.stop())
+    }
 }
+
+fun scheduleImmediately(fn: () -> Unit) = SchedulerManager.scheduleTask(fn, TaskSchedule.immediate(), TaskSchedule.stop())
 
 fun PlayerInventory.idle() {
     set(0, idleItem())
@@ -235,4 +242,16 @@ fun attackItem(target: String, powerCost: Int): ItemStack = item(Material.IRON_S
 fun idleItem(): ItemStack = item(Material.GRAY_DYE) {
     itemName = "".asMini()
     amount = 1
+}
+
+fun initItems() {
+    BarracksItem
+    ClaimItem
+    ColonyItem
+    MatterContainerItem
+    MatterExtractorItem
+    OwnedBlockItem
+    SelectBlockItem
+    SelectBuildingItem
+    TrainingCampItem
 }

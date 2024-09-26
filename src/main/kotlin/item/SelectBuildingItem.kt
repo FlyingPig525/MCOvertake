@@ -22,6 +22,11 @@ import net.minestom.server.item.Material
 import java.util.*
 
 object SelectBuildingItem : Actionable {
+
+    init {
+        Actionable.registry += this
+    }
+
     override fun getItem(uuid: UUID): ItemStack {
         return item(Material.BRICK) {
             itemName = "<gold>$BUILDING_SYMBOL <bold>Blueprint Constructor</bold> $BUILDING_SYMBOL".asMini()
@@ -29,15 +34,28 @@ object SelectBuildingItem : Actionable {
     }
 
     override fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean {
-        val inventory = Inventory(InventoryType.CHEST_4_ROW, "Select Blueprint")
+        val inventory = Inventory(InventoryType.CHEST_5_ROW, "Select Blueprint")
         val playerData = players[event.player.uuid.toString()]!!
         val clearItem = item(Material.BARRIER) { itemName = "<red><bold>Clear Selected Item".asMini() }
 
+        val blackItem = item(Material.BLACK_STAINED_GLASS_PANE) { itemName = "".asMini()}
+        val whiteItem = item(Material.YELLOW_STAINED_GLASS_PANE) { itemName = "".asMini()}
+        for (i in 0..8) {
+            inventory[i, 0] = if (i % 2 == 0) blackItem else whiteItem
+            inventory[i, 4] = if (i % 2 == 0) blackItem else whiteItem
+        }
+        inventory[0, 1] = whiteItem
+        inventory[8, 1] = whiteItem
+        inventory[0, 2] = blackItem
+        inventory[8, 2] = blackItem
+        inventory[0, 3] = whiteItem
+        inventory[8, 3] = whiteItem
 
-        inventory[2, 1] = TrainingCamp.getItem(playerData.trainingCampCost)
-        inventory[3, 1] = Barrack.getItem(playerData.barracksCost)
-        inventory[5, 1] = MatterExtractor.getItem(playerData.extractorCost)
-        inventory[6, 1] = MatterContainer.getItem(playerData.containerCost)
+        for ((i, building) in Building.BuildingCompanion.registry.withIndex()) {
+            val x = (i % 7) + 1
+            val y = (i / 7) + 1
+            inventory[x, y] = building.getItem(playerData)
+        }
         inventory[4, 3] = clearItem
         event.player.openInventory(inventory)
 
@@ -46,16 +64,16 @@ object SelectBuildingItem : Actionable {
                 val data = players[e.player.uuid.toString()]!!
                 var close = true
                 when(e.clickedItem) {
-                    TrainingCamp.getItem(playerData.trainingCampCost) -> {
+                    TrainingCamp.getItem(playerData) -> {
                         data.trainingCamps.select(e.player, playerData.trainingCampCost)
                     }
-                    MatterExtractor.getItem(playerData.extractorCost) -> {
+                    MatterExtractor.getItem(playerData) -> {
                         data.matterExtractors.select(e.player, playerData.extractorCost)
                     }
-                    MatterContainer.getItem(playerData.containerCost) -> {
+                    MatterContainer.getItem(playerData) -> {
                         data.matterContainers.select(e.player, playerData.containerCost)
                     }
-                    Barrack.getItem(playerData.barracksCost) -> {
+                    Barrack.getItem(playerData) -> {
                         data.barracks.select(e.player, playerData.barracksCost)
                     }
                     clearItem -> {

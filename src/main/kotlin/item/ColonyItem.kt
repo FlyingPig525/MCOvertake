@@ -21,6 +21,11 @@ import java.time.Instant
 import java.util.UUID
 
 object ColonyItem : Actionable {
+
+    init {
+        Actionable.registry += this
+    }
+
     override fun getItem(uuid: UUID): ItemStack {
         val playerData = players[uuid.toString()]!!
         return item(Material.CHEST) {
@@ -44,6 +49,7 @@ object ColonyItem : Actionable {
                     (data.colonyCooldown.duration.toMillis() / 50).toInt()
                 )
             )
+            data.updateBossBars()
         } else throw IllegalStateException("Colony target is not grass!!!!!!! wtf is going on!!!! AAAAAAAAAAAAAAAAAAAAAA")
         return true
     }

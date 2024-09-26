@@ -31,6 +31,11 @@ import java.time.Instant
 import java.util.*
 
 object ClaimItem : Actionable {
+
+    init {
+        Actionable.registry += this
+    }
+
     override fun getItem(uuid: UUID): ItemStack {
         val data = players[uuid.toString()]!!
         val item = listOf(Material.WOODEN_HOE, Material.IRON_HOE, Material.DIAMOND_HOE)[data.claimLevel]

@@ -21,18 +21,15 @@ interface Actionable {
 
 
     fun setItemSlot(player: Player)
+
+    companion object {
+        val registry: MutableList<Actionable> = mutableListOf()
+    }
 }
 
 fun claimWithParticle(player: Player, target: Point, resultBlock: Block) {
     val block = instance.getBlock(target)
-    instance.setBlock(target, resultBlock)
-    val particle = particle {
-        particle = Particle.BLOCK.withBlock(block)
-        count = 30
-        position = target.add(0.5, 1.0, 0.5)
-        this.offset = Vec(0.2, 0.0, 0.2)
-    }
-    player.sendPacket(particle)
+    claimWithParticle(player, target, block, resultBlock)
 }
 
 fun claimWithParticle(player: Player, target: Point, targetBlock: Block, resultBlock: Block) {
