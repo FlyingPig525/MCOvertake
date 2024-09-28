@@ -8,6 +8,7 @@ import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.dsl.listen
 import net.bladehunt.kotstom.extension.adventure.asMini
+import net.bladehunt.kotstom.extension.get
 import net.bladehunt.kotstom.extension.set
 import net.minestom.server.entity.Player
 import net.minestom.server.event.EventFilter
@@ -91,5 +92,25 @@ object SelectBuildingItem : Actionable {
 
     override fun setItemSlot(player: Player) {
         player.inventory[4] = getItem(player.uuid)
+    }
+
+    fun updatePlayerItem(player: Player) {
+        val data = players[player.uuid.toString()]!!
+        when(player.inventory[4].material()) {
+            TrainingCamp.getItem(data).material() -> {
+                data.trainingCamps.select(player, data.trainingCampCost)
+            }
+            MatterExtractor.getItem(data).material() -> {
+                data.matterExtractors.select(player, data.extractorCost)
+            }
+            MatterContainer.getItem(data).material() -> {
+                data.matterContainers.select(player, data.containerCost)
+            }
+            Barrack.getItem(data).material() -> {
+                data.barracks.select(player, data.barracksCost)
+            }
+
+            else -> {}
+        }
     }
 }

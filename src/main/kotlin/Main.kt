@@ -1,6 +1,7 @@
 package io.github.flyingpig525
 
 import io.github.flyingpig525.data.PlayerData
+import io.github.flyingpig525.data.PlayerData.Companion.toBlockSortedList
 import io.github.flyingpig525.item.*
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -10,13 +11,17 @@ import net.bladehunt.kotstom.SchedulerManager
 import net.bladehunt.kotstom.dsl.item.amount
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
+import net.bladehunt.kotstom.dsl.kbar
+import net.bladehunt.kotstom.dsl.line
 import net.bladehunt.kotstom.dsl.listen
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.bladehunt.kotstom.extension.set
+import net.bladehunt.kotstom.util.KBar
 import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.GameMode
+import net.minestom.server.event.instance.InstanceTickEvent
 import net.minestom.server.event.player.*
 import net.minestom.server.extras.MojangAuth
 import net.minestom.server.instance.InstanceContainer
@@ -31,6 +36,7 @@ import net.minestom.server.potion.Potion
 import net.minestom.server.potion.PotionEffect
 import net.minestom.server.timer.TaskSchedule
 import java.io.File
+import java.util.UUID
 
 const val POWER_SYMBOL = "✘"
 const val ATTACK_SYMBOL = "\uD83D\uDDE1"
@@ -41,18 +47,16 @@ const val COLONY_SYMBOL = "⚐"
 const val BUILDING_SYMBOL = "⧈"
 const val RESOURCE_SYMBOL = "⌘"
 
-val players = Json.decodeFromString<MutableMap<String, PlayerData>>(
-    if (File("./player-data.json").exists())
-        File("./player-data.json").readText()
-    else "{}"
-)
 lateinit var instance: InstanceContainer private set
+
+lateinit var players: MutableMap<String, PlayerData> private set
 
 fun main() {
     // Initialize the server
     val minecraftServer = MinecraftServer.init()
-    MojangAuth.init()
-    MinecraftServer.getBrandName()
+    // TODO: dont forget to turn this back on
+//    MojangAuth.init()
+//    MinecraftServer.getBrandName()
 
     initItems()
 
@@ -61,7 +65,7 @@ fun main() {
 
         setGenerator { unit ->
             unit.modifier().setAll { x, y, z ->
-                if (x in 0..300 && y in 1 until 40 && z in 0..300) {
+                if (x in 0..300 && y == 39 && z in 0..300) {
                     return@setAll Block.GRASS_BLOCK
                 }
                 if (x in -1..301 && y == 39 && z in -1..301) {
@@ -72,6 +76,13 @@ fun main() {
         }
         setChunkSupplier(::LightingChunk)
     }
+
+    players = Json.decodeFromString<MutableMap<String, PlayerData>>(
+        if (File("./player-data.json").exists())
+            File("./player-data.json").readText()
+        else "{}"
+    )
+
 
     GlobalEventHandler.listen<AsyncPlayerConfigurationEvent> { event ->
         event.spawningInstance = instance
@@ -88,9 +99,7 @@ fun main() {
         if (data == null) {
             SelectBlockItem.setAllSlots(e.player)
         } else {
-            data.showBossBars(e.player)
-            SelectBuildingItem.setItemSlot(e.player)
-            SelectBlockItem.setItemSlot(e.player)
+            data.setupPlayer(e.player)
             if (e.isFirstSpawn) {
                 e.player.sendPackets(
                     SetCooldownPacket(
@@ -105,6 +114,29 @@ fun main() {
             }
         }
     }
+
+    var scoreboardTitleProgress = -1.0
+    // Scoreboard tick
+    SchedulerManager.scheduleTask({
+        scoreboardTitleProgress += 0.02
+        if (scoreboardTitleProgress >= 1.0) {
+            scoreboardTitleProgress = -1.0
+        }
+        val scoreboard =  kbar("<gradient:green:gold:$scoreboardTitleProgress><bold>MCOvertake - v0.1".asMini()) {
+            for ((i, player) in players.toBlockSortedList().withIndex()) {
+                if (player.playerDisplayName == null) continue
+                line("<dark_green><bold>${player.playerDisplayName}".asMini()) {
+                    isVisible = true
+                    line = player.blocks
+                    id = player.playerDisplayName + "$i"
+                }
+            }
+        }
+        for (player in instance.players) {
+            scoreboard.addViewer(player)
+        }
+    }, TaskSchedule.tick(1), TaskSchedule.tick(1))
+
 
     // General player tick/extractor tick
     SchedulerManager.scheduleTask({
@@ -140,12 +172,21 @@ fun main() {
         val item = e.player.getItemInHand(e.hand)
         val uuid = e.player.uuid
         e.isCancelled = true
+        if (item == SelectBlockItem.getItem(uuid)) {
+            e.isCancelled = SelectBlockItem.onInteract(e, instance)
+            return@listen
+        }
         for (actionable in Actionable.registry) {
             if (item == actionable.getItem(uuid)) {
                 e.isCancelled = actionable.onInteract(e, instance)
                 break
             }
         }
+    }
+
+    GlobalEventHandler.listen<PlayerBlockInteractEvent> { e ->
+        val item = e.player.getItemInHand(e.hand)
+        GlobalEventHandler.call(PlayerUseItemEvent(e.player, e.hand, item, 0))
     }
 
     GlobalEventHandler.listen<PlayerSwapItemEvent> {
@@ -157,40 +198,51 @@ fun main() {
 
         val target = e.player.getTargetBlockPosition(20)
         if (target != null) {
-            when (val block = instance.getBlock(target)) {
-                Block.GRASS_BLOCK -> {
-                    var canAccess = false
-                    for (x in (target.blockX() - 1)..(target.blockX() + 1)) {
-                        for (z in (target.blockZ() - 1)..(target.blockZ() + 1)) {
-                            if (x == target.blockX() && z == target.blockZ()) continue
-                            if (instance.getBlock(
-                                    Vec(
-                                        x.toDouble(),
-                                        target.blockY().toDouble(),
-                                        z.toDouble()
-                                    )
-                                ) == playerData.block
-                            ) {
-                                canAccess = true
-                                break
+            var block = instance.getBlock(target)
+            repeat(2) {
+                if (block == Block.AIR) return@repeat
+                when (block) {
+                    Block.GRASS_BLOCK -> {
+                        var canAccess = false
+                        for (x in (target.blockX() - 1)..(target.blockX() + 1)) {
+                            for (z in (target.blockZ() - 1)..(target.blockZ() + 1)) {
+                                if (x == target.blockX() && z == target.blockZ()) continue
+                                if (instance.getBlock(
+                                        Vec(
+                                            x.toDouble(),
+                                            target.blockY().toDouble(),
+                                            z.toDouble()
+                                        )
+                                    ) == playerData.block
+                                ) {
+                                    canAccess = true
+                                    break
+                                }
                             }
+                            if (canAccess) break
                         }
-                        if (canAccess) break
+                        if (canAccess) {
+                            ClaimItem.setItemSlot(e.player)
+                        } else {
+                            ColonyItem.setItemSlot(e.player)
+                        }
                     }
-                    if (canAccess) {
-                        ClaimItem.setItemSlot(e.player)
-                    } else {
-                        ColonyItem.setItemSlot(e.player)
-                    }
-                }
 
-                else -> {
-                    if (block == playerData.block) {
-                        OwnedBlockItem.setItemSlot(e.player)
-                    } else if (block == Block.DIAMOND_BLOCK) {
+                    Block.DIAMOND_BLOCK -> {
                         e.player.inventory.idle()
                     }
+
+                    else -> {
+                        if (block == playerData.block) {
+                            OwnedBlockItem.setItemSlot(e.player)
+                        } else if (block == Block.DIAMOND_BLOCK) {
+                            e.player.inventory.idle()
+                        } else if (instance.getBlock(target.sub(0.0, 1.0, 0.0)) != playerData.block) {
+                            AttackItem.setItemSlot(e.player)
+                        }
+                    }
                 }
+                block = instance.getBlock(target.sub(0.0, 1.0, 0.0))
             }
         } else {
             e.player.inventory.idle()
@@ -243,6 +295,8 @@ fun idleItem(): ItemStack = item(Material.GRAY_DYE) {
     itemName = "".asMini()
     amount = 1
 }
+
+fun String.toUUID() = UUID.fromString(this)
 
 fun initItems() {
     BarracksItem

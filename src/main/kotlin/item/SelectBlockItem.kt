@@ -95,15 +95,14 @@ object SelectBlockItem : Actionable {
                 clearBlock(data.block)
                 e.player.hideBossBar(data.matterBossBar)
                 e.player.hideBossBar(data.powerBossBar)
+                e.player.hideBossBar(data.resourcesBossBar)
             }
             players[e.player.uuid.toString()] = PlayerData(e.player.uuid.toString(), e.clickedItem.material().block()!!)
             e.player.closeInventory()
             for (i in 0..8) {
                 e.player.inventory[i] = ItemStack.AIR
             }
-            players[e.player.uuid.toString()]!!.updateBossBars()
-            SelectBuildingItem.setItemSlot(e.player)
-            setItemSlot(e.player)
+            players[e.player.uuid.toString()]!!.setupPlayer(e.player)
         }
 
         GlobalEventHandler.addChild(inventoryEventNode)

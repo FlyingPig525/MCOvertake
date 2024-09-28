@@ -1,5 +1,6 @@
 package io.github.flyingpig525.building
 
+import io.github.flyingpig525.building.Building.BuildingCompanion.Companion.registry
 import io.github.flyingpig525.data.PlayerData
 import net.minestom.server.coordinate.Point
 import net.minestom.server.entity.Player
@@ -13,6 +14,8 @@ interface Building {
 
     fun place(playerTarget: Point, instance: Instance)
     fun select(player: Player, cost: Int)
+
+
     interface BuildingCompanion {
         val block: Block
         fun getItem(cost: Int, count: Int): ItemStack
@@ -22,6 +25,16 @@ interface Building {
 
         companion object {
             val registry: MutableList<BuildingCompanion> = mutableListOf()
+        }
+    }
+
+    companion object {
+        fun blockIsBuilding(block: Block): Boolean {
+            val registry = BuildingCompanion.registry
+            for (entry in registry) {
+                if (entry.block == block) return true
+            }
+            return false
         }
     }
 }

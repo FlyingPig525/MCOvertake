@@ -1,17 +1,21 @@
 package io.github.flyingpig525.data
 
-import io.github.flyingpig525.MATTER_SYMBOL
-import io.github.flyingpig525.POWER_SYMBOL
-import io.github.flyingpig525.RESOURCE_SYMBOL
+import io.github.flyingpig525.*
 import io.github.flyingpig525.building.*
+import io.github.flyingpig525.item.SelectBlockItem
+import io.github.flyingpig525.item.SelectBuildingItem
 import io.github.flyingpig525.serializers.BlockSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
+import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.extension.adventure.asMini
+import net.bladehunt.kotstom.extension.adventure.toPlainText
 import net.kyori.adventure.bossbar.BossBar
+import net.minestom.server.coordinate.Point
 import net.minestom.server.entity.Player
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
+import net.minestom.server.item.Material
 import net.minestom.server.utils.time.Cooldown
 import java.time.Duration
 import java.util.*
@@ -19,6 +23,7 @@ import kotlin.collections.Map
 
 @Serializable
 class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val block: Block) {
+    val playerDisplayName = instance.getPlayerByUuid(uuid.toUUID())?.name?.toPlainText()
     var blocks: Int = 0
     val trainingCamps = TrainingCamp()
     val trainingCampCost: Int get() = (trainingCamps.count * 25) + 25
@@ -86,6 +91,9 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
         BossBar.Color.WHITE,
         BossBar.Overlay.PROGRESS
     )
+    val baseAttackCost: Int get() {
+        return 15
+    }
 
     fun tick(instance: Instance) {
         organicMatter =
@@ -101,25 +109,42 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
         powerBossBar.progress((power / maxPower).toFloat())
         matterBossBar.name("<green>$MATTER_SYMBOL Organic Matter <gray>-<green> $organicMatter/$maxMatter".asMini())
         matterBossBar.progress((organicMatter / maxMatter).toFloat())
-        if (disposableResourcesUsed > 30) {
-            val overflow = disposableResourcesUsed > maxDisposableResources
-            resourcesBossBar.name("<${if (overflow) "light_purple" else "white"}>$RESOURCE_SYMBOL Disposable Resources <gray>- <${if (overflow) "light_purple" else "white"}>$disposableResourcesUsed/$maxDisposableResources".asMini())
-            resourcesBossBar.progress((disposableResourcesUsed.toFloat() / maxDisposableResources.toFloat()).coerceIn(0f..1f))
-            resourcesBossBar.color(if (disposableResourcesUsed > maxDisposableResources) BossBar.Color.PURPLE else BossBar.Color.WHITE)
-        }
+        val overflow = disposableResourcesUsed > maxDisposableResources
+        resourcesBossBar.name("<${if (overflow) "light_purple" else "white"}>$RESOURCE_SYMBOL Disposable Resources <gray>- <${if (overflow) "light_purple" else "white"}>$disposableResourcesUsed/$maxDisposableResources".asMini())
+        resourcesBossBar.progress((disposableResourcesUsed.toFloat() / maxDisposableResources.toFloat()).coerceIn(0f..1f))
+        resourcesBossBar.color(if (disposableResourcesUsed > maxDisposableResources) BossBar.Color.PURPLE else BossBar.Color.WHITE)
     }
 
     fun showBossBars(player: Player) {
-        player.apply {
+        with(player) {
             showBossBar(powerBossBar)
             showBossBar(matterBossBar)
             showBossBar(resourcesBossBar)
         }
     }
 
+
+
+    fun setupPlayer(player: Player) {
+        showBossBars(player)
+        updateBossBars()
+        SelectBuildingItem.setItemSlot(player)
+        SelectBlockItem.setItemSlot(player)
+
+        player.inventory.helmet = item(Material.fromNamespaceId(block.namespace())!!)
+    }
+
     companion object {
         fun Map<String, PlayerData>.getDataByBlock(block: Block): PlayerData? {
             return values.find { it.block == block }
+        }
+        fun Map<String, PlayerData>.getDataByPoint(point: Point): PlayerData? {
+            val block = instance.getBlock(point)
+            val under = instance.getBlock(point.sub(0.0, 1.0, 0.0))
+            return values.find { it.block == block || it.block == under }
+        }
+        fun Map<String, PlayerData>.toBlockSortedList(): List<PlayerData> {
+            return values.sortedByDescending { it.blocks }
         }
     }
 }
