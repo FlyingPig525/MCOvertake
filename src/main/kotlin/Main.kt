@@ -296,7 +296,7 @@ fun idleItem(): ItemStack = item(Material.GRAY_DYE) {
     amount = 1
 }
 
-fun String.toUUID() = UUID.fromString(this)
+fun String.toUUID(): UUID? = UUID.fromString(this)
 
 fun initItems() {
     BarracksItem
