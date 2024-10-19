@@ -55,7 +55,7 @@ fun main() {
     // Initialize the server
     val minecraftServer = MinecraftServer.init()
     // TODO: dont forget to turn this back on
-//    MojangAuth.init()
+    MojangAuth.init()
 //    MinecraftServer.getBrandName()
 
     initItems()
@@ -283,12 +283,6 @@ fun scheduleImmediately(fn: () -> Unit) = SchedulerManager.scheduleTask(fn, Task
 
 fun PlayerInventory.idle() {
     set(0, idleItem())
-}
-
-fun attackItem(target: String, powerCost: Int): ItemStack = item(Material.IRON_SWORD) {
-    itemName =
-        "<red>$ATTACK_SYMBOL <bold>Attack $target's Land</bold> <dark_gray>-<red> $POWER_SYMBOL $powerCost".asMini()
-    amount = 1
 }
 
 fun idleItem(): ItemStack = item(Material.GRAY_DYE) {
