@@ -40,17 +40,17 @@ object SelectBuildingItem : Actionable {
         val clearItem = item(Material.BARRIER) { itemName = "<red><bold>Clear Selected Item".asMini() }
 
         val blackItem = item(Material.BLACK_STAINED_GLASS_PANE) { itemName = "".asMini()}
-        val whiteItem = item(Material.YELLOW_STAINED_GLASS_PANE) { itemName = "".asMini()}
+        val yellowItem = item(Material.YELLOW_STAINED_GLASS_PANE) { itemName = "".asMini()}
         for (i in 0..8) {
-            inventory[i, 0] = if (i % 2 == 0) blackItem else whiteItem
-            inventory[i, 4] = if (i % 2 == 0) blackItem else whiteItem
+            inventory[i, 0] = if (i % 2 == 0) blackItem else yellowItem
+            inventory[i, 4] = if (i % 2 == 0) blackItem else yellowItem
         }
-        inventory[0, 1] = whiteItem
-        inventory[8, 1] = whiteItem
+        inventory[0, 1] = yellowItem
+        inventory[8, 1] = yellowItem
         inventory[0, 2] = blackItem
         inventory[8, 2] = blackItem
-        inventory[0, 3] = whiteItem
-        inventory[8, 3] = whiteItem
+        inventory[0, 3] = yellowItem
+        inventory[8, 3] = yellowItem
 
         for ((i, building) in Building.BuildingCompanion.registry.withIndex()) {
             val x = (i % 7) + 1

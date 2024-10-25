@@ -6,7 +6,9 @@ import io.github.flyingpig525.data.PlayerData
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
+import net.bladehunt.kotstom.dsl.item.lore
 import net.bladehunt.kotstom.extension.adventure.asMini
+import net.bladehunt.kotstom.extension.adventure.noItalic
 import net.bladehunt.kotstom.extension.set
 import net.minestom.server.coordinate.Point
 import net.minestom.server.entity.Player
@@ -35,6 +37,11 @@ class TrainingCamp : Building {
         override fun getItem(cost: Int, count: Int): ItemStack {
             return item(Material.POLISHED_BLACKSTONE_BUTTON) {
                 itemName = "<red>$POWER_SYMBOL Training Camp</red> <gray>-</gray><green> $MATTER_SYMBOL $cost".asMini()
+                lore {
+                    +"<gray>Generates 0.5 $power".asMini().noItalic()
+                    resourcesConsumed(3)
+                    amountOwned(count)
+                }
             }
         }
 

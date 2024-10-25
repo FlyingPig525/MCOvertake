@@ -37,6 +37,8 @@ import net.minestom.server.potion.PotionEffect
 import net.minestom.server.timer.TaskSchedule
 import java.io.File
 import java.util.UUID
+import java.util.logging.Level
+import java.util.logging.Logger
 
 const val POWER_SYMBOL = "✘"
 const val ATTACK_SYMBOL = "\uD83D\uDDE1"
@@ -259,7 +261,6 @@ fun main() {
         instance.saveChunksToStorage()
     }
 
-    // Start the server
     minecraftServer.start("0.0.0.0", 25565)
 }
 

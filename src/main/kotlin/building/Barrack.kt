@@ -39,8 +39,9 @@ class Barrack : Building {
             return item(Material.SOUL_LANTERN) {
                 itemName = "<red>$POWER_SYMBOL Barracks</red> <gray>-</gray><green> $MATTER_SYMBOL $cost".asMini()
                 lore {
-                    +"<gray>Increases Max <red>$POWER_SYMBOL <bold>Power</bold><gray> Storage".asMini().noItalic()
-                    +"<gray>Amount Owned: <gold>$count".asMini().noItalic()
+                    +"<gray>Increases Max $power Storage".asMini().noItalic()
+                    resourcesConsumed(2)
+                    amountOwned(count)
                 }
             }
         }

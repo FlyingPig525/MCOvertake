@@ -123,8 +123,6 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
         }
     }
 
-
-
     fun setupPlayer(player: Player) {
         showBossBars(player)
         updateBossBars()

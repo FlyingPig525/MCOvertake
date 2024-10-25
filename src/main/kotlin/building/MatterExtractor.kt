@@ -6,7 +6,9 @@ import io.github.flyingpig525.data.PlayerData
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
+import net.bladehunt.kotstom.dsl.item.lore
 import net.bladehunt.kotstom.extension.adventure.asMini
+import net.bladehunt.kotstom.extension.adventure.noItalic
 import net.bladehunt.kotstom.extension.set
 import net.minestom.server.coordinate.Point
 import net.minestom.server.entity.Player
@@ -35,6 +37,11 @@ class MatterExtractor : Building {
         override fun getItem(cost: Int, count: Int): ItemStack {
             return item(Material.BREWING_STAND) {
                 itemName = "<green>$MATTER_SYMBOL Organic Matter Extractor <gray>-<green> $MATTER_SYMBOL $cost".asMini()
+                lore {
+                    +"<gray>Generates 0.5 $organicMatter".asMini().noItalic()
+                    resourcesConsumed(3)
+                    amountOwned(count)
+                }
             }
         }
 

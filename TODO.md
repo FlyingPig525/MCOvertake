@@ -11,6 +11,7 @@ TODO:
 - [ ] co-op
 - [ ] biomes? more details needed
 - [ ] vacation mode?
+- [ ] natural resources periodically spawn in ocean
 
 MULTI-TILE BUILDINGS
 - [ ] oil deposit (like a normal building, 4 oil extractors per deposit) - black carpet

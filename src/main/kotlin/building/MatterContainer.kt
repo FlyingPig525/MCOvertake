@@ -5,7 +5,9 @@ import io.github.flyingpig525.data.PlayerData
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
+import net.bladehunt.kotstom.dsl.item.lore
 import net.bladehunt.kotstom.extension.adventure.asMini
+import net.bladehunt.kotstom.extension.adventure.noItalic
 import net.bladehunt.kotstom.extension.set
 import net.minestom.server.coordinate.Point
 import net.minestom.server.entity.Player
@@ -34,6 +36,11 @@ class MatterContainer : Building {
         override fun getItem(cost: Int, count: Int): ItemStack {
             return item(Material.LANTERN) {
                 itemName = "<green>$MATTER_SYMBOL Organic Matter Container <gray>-<green> $MATTER_SYMBOL $cost".asMini()
+                lore {
+                    +"<gray>Increases Max $organicMatter Storage".asMini().noItalic()
+                    resourcesConsumed(2)
+                    amountOwned(count)
+                }
             }
         }
 
