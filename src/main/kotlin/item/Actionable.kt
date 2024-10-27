@@ -24,6 +24,7 @@ interface Actionable {
 
     companion object {
         val registry: MutableList<Actionable> = mutableListOf()
+        val persistentRegistry: MutableList<Actionable> = mutableListOf()
     }
 }
 

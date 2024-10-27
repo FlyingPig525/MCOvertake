@@ -30,7 +30,6 @@ interface Building {
 
     companion object {
         fun blockIsBuilding(block: Block): Boolean {
-            val registry = BuildingCompanion.registry
             for (entry in registry) {
                 if (entry.block == block) return true
             }

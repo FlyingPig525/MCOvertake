@@ -48,7 +48,7 @@ object AttackItem : Actionable {
         // TODO: AFTER ADDING WALLS ADD WALL THINGS HERE
         val targetData = getAttacking(player)
         val targetUUID = targetData?.uuid ?: ""
-        val targetAttackCost = (targetData?.baseAttackCost ?: 15)
+        val targetAttackCost = getAttackCost(targetData, target)
         return targetAttackCost
     }
 

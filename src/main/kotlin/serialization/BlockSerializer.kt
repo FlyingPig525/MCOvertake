@@ -1,4 +1,4 @@
-package io.github.flyingpig525.serializers
+package io.github.flyingpig525.serialization
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind

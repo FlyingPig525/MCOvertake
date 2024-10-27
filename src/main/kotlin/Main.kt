@@ -3,25 +3,25 @@ package io.github.flyingpig525
 import io.github.flyingpig525.data.PlayerData
 import io.github.flyingpig525.data.PlayerData.Companion.toBlockSortedList
 import io.github.flyingpig525.item.*
+import io.github.flyingpig525.wall.blockIsWall
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import net.bladehunt.kotstom.GlobalEventHandler
-import net.bladehunt.kotstom.InstanceManager
-import net.bladehunt.kotstom.SchedulerManager
+import net.bladehunt.kotstom.*
 import net.bladehunt.kotstom.dsl.item.amount
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.dsl.kbar
+import net.bladehunt.kotstom.dsl.kommand.buildSyntax
+import net.bladehunt.kotstom.dsl.kommand.kommand
 import net.bladehunt.kotstom.dsl.line
 import net.bladehunt.kotstom.dsl.listen
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.bladehunt.kotstom.extension.set
-import net.bladehunt.kotstom.util.KBar
 import net.minestom.server.MinecraftServer
+import net.minestom.server.coordinate.Point
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.GameMode
-import net.minestom.server.event.instance.InstanceTickEvent
 import net.minestom.server.event.player.*
 import net.minestom.server.extras.MojangAuth
 import net.minestom.server.instance.InstanceContainer
@@ -36,9 +36,7 @@ import net.minestom.server.potion.Potion
 import net.minestom.server.potion.PotionEffect
 import net.minestom.server.timer.TaskSchedule
 import java.io.File
-import java.util.UUID
-import java.util.logging.Level
-import java.util.logging.Logger
+import java.util.*
 
 const val POWER_SYMBOL = "✘"
 const val ATTACK_SYMBOL = "\uD83D\uDDE1"
@@ -48,6 +46,7 @@ const val CLAIM_SYMBOL = "◎"
 const val COLONY_SYMBOL = "⚐"
 const val BUILDING_SYMBOL = "⧈"
 const val RESOURCE_SYMBOL = "⌘"
+const val WALL_SYMBOL = "\uD83E\uDE93"
 
 lateinit var instance: InstanceContainer private set
 
@@ -56,9 +55,7 @@ lateinit var players: MutableMap<String, PlayerData> private set
 fun main() {
     // Initialize the server
     val minecraftServer = MinecraftServer.init()
-    // TODO: dont forget to turn this back on
     MojangAuth.init()
-//    MinecraftServer.getBrandName()
 
     initItems()
 
@@ -124,9 +121,10 @@ fun main() {
         if (scoreboardTitleProgress >= 1.0) {
             scoreboardTitleProgress = -1.0
         }
-        val scoreboard =  kbar("<gradient:green:gold:$scoreboardTitleProgress><bold>MCOvertake - v0.1".asMini()) {
+        val scoreboard = kbar("<gradient:green:gold:$scoreboardTitleProgress><bold>MCOvertake - v0.1".asMini()) {
             for ((i, player) in players.toBlockSortedList().withIndex()) {
-                if (player.playerDisplayName == null) continue
+                if (player.playerDisplayName == null) player.playerDisplayName =
+                    instance.getPlayerByUuid(player.uuid.toUUID())?.username ?: continue
                 line("<dark_green><bold>${player.playerDisplayName}".asMini()) {
                     isVisible = true
                     line = player.blocks
@@ -200,29 +198,12 @@ fun main() {
 
         val target = e.player.getTargetBlockPosition(20)
         if (target != null) {
-            var block = instance.getBlock(target)
+            var block = instance.getBlock(target).defaultState()
             repeat(2) {
                 if (block == Block.AIR) return@repeat
                 when (block) {
                     Block.GRASS_BLOCK -> {
-                        var canAccess = false
-                        for (x in (target.blockX() - 1)..(target.blockX() + 1)) {
-                            for (z in (target.blockZ() - 1)..(target.blockZ() + 1)) {
-                                if (x == target.blockX() && z == target.blockZ()) continue
-                                if (instance.getBlock(
-                                        Vec(
-                                            x.toDouble(),
-                                            target.blockY().toDouble(),
-                                            z.toDouble()
-                                        )
-                                    ) == playerData.block
-                                ) {
-                                    canAccess = true
-                                    break
-                                }
-                            }
-                            if (canAccess) break
-                        }
+                        val canAccess = anyAdjacentBlocksMatch(target, playerData.block)
                         if (canAccess) {
                             ClaimItem.setItemSlot(e.player)
                         } else {
@@ -239,8 +220,21 @@ fun main() {
                             OwnedBlockItem.setItemSlot(e.player)
                         } else if (block == Block.DIAMOND_BLOCK) {
                             e.player.inventory.idle()
-                        } else if (instance.getBlock(target.sub(0.0, 1.0, 0.0)) != playerData.block) {
+                        } else if (
+                            instance.getBlock(target.sub(0.0, 1.0, 0.0)) != playerData.block
+                            && (anyAdjacentBlocksMatch(target, playerData.block) || anyAdjacentBlocksMatch(
+                                target.sub(
+                                    0.0,
+                                    1.0,
+                                    0.0
+                                ), playerData.block
+                            ))
+                        ) {
                             AttackItem.setItemSlot(e.player)
+                        } else if (blockIsWall(block) && instance.getBlock(target.sub(0.0, 1.0, 0.0)) == playerData.block) {
+                            UpgradeWallItem.setItemSlot(e.player)
+                        } else {
+                            e.player.inventory.idle()
                         }
                     }
                 }
@@ -261,7 +255,22 @@ fun main() {
         instance.saveChunksToStorage()
     }
 
-    minecraftServer.start("0.0.0.0", 25565)
+    val restartCommand = kommand {
+        name = "stop"
+
+        buildSyntax {
+            onlyPlayers()
+            executor {
+                player.sendMessage("Stopping server...")
+                MinecraftServer.process().stop()
+
+            }
+        }
+    }
+    CommandManager.register(restartCommand)
+
+    minecraftServer.start("127.0.0.1", 25565)
+    println("Server online!")
 }
 
 fun clearBlock(block: Block) {
@@ -280,7 +289,8 @@ fun clearBlock(block: Block) {
     }
 }
 
-fun scheduleImmediately(fn: () -> Unit) = SchedulerManager.scheduleTask(fn, TaskSchedule.immediate(), TaskSchedule.stop())
+fun scheduleImmediately(fn: () -> Unit) =
+    SchedulerManager.scheduleTask(fn, TaskSchedule.immediate(), TaskSchedule.stop())
 
 fun PlayerInventory.idle() {
     set(0, idleItem())
@@ -293,6 +303,34 @@ fun idleItem(): ItemStack = item(Material.GRAY_DYE) {
 
 fun String.toUUID(): UUID? = UUID.fromString(this)
 
+fun anyAdjacentBlocksMatch(point: Point, block: Block): Boolean {
+    for (x in (point.blockX() - 1)..(point.blockX() + 1)) {
+        for (z in (point.blockZ() - 1)..(point.blockZ() + 1)) {
+            if (x == point.blockX() && z == point.blockZ()) continue
+            if (instance.getBlock(
+                    Vec(
+                        x.toDouble(),
+                        point.blockY().toDouble(),
+                        z.toDouble()
+                    )
+                ) == block
+            ) {
+                return true
+            }
+        }
+    }
+    return false
+}
+
+fun repeatAdjacent(point: Point, fn: (point: Point) -> Unit) {
+    for (x in (point.blockX() - 1)..(point.blockX() + 1)) {
+        for (z in (point.blockZ() - 1)..(point.blockZ() + 1)) {
+            if (x == point.blockX() && z == point.blockZ()) continue
+            fn(Vec(x.toDouble(), point.y(), z.toDouble()))
+        }
+    }
+}
+
 fun initItems() {
     BarracksItem
     ClaimItem
@@ -303,4 +341,6 @@ fun initItems() {
     SelectBlockItem
     SelectBuildingItem
     TrainingCampItem
+    WallItem
+    UpgradeWallItem
 }

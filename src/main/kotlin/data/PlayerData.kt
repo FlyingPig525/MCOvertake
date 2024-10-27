@@ -2,9 +2,8 @@ package io.github.flyingpig525.data
 
 import io.github.flyingpig525.*
 import io.github.flyingpig525.building.*
-import io.github.flyingpig525.item.SelectBlockItem
-import io.github.flyingpig525.item.SelectBuildingItem
-import io.github.flyingpig525.serializers.BlockSerializer
+import io.github.flyingpig525.item.Actionable
+import io.github.flyingpig525.serialization.BlockSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import net.bladehunt.kotstom.dsl.item.item
@@ -23,7 +22,7 @@ import kotlin.collections.Map
 
 @Serializable
 class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val block: Block) {
-    val playerDisplayName = instance.getPlayerByUuid(uuid.toUUID())?.name?.toPlainText()
+    var playerDisplayName = instance.getPlayerByUuid(uuid.toUUID())?.name?.toPlainText()
     var blocks: Int = 0
     val trainingCamps = TrainingCamp()
     val trainingCampCost: Int get() = (trainingCamps.count * 25) + 25
@@ -42,6 +41,7 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
     val colonyCost: Int get() = claimCost * 10
     @Transient var colonyCooldown = Cooldown(Duration.ofSeconds(if (blocks > 0) 15 else 0))
     @Transient var attackCooldown = Cooldown(Duration.ofSeconds(1))
+    @Transient var wallCooldown = Cooldown(Duration.ofSeconds(2))
     var power: Double = 100.0
         set(value) {
             field = value.coerceIn(0.0..maxPower.toDouble())
@@ -126,8 +126,9 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
     fun setupPlayer(player: Player) {
         showBossBars(player)
         updateBossBars()
-        SelectBuildingItem.setItemSlot(player)
-        SelectBlockItem.setItemSlot(player)
+        Actionable.persistentRegistry.forEach {
+            it.setItemSlot(player)
+        }
 
         player.inventory.helmet = item(Material.fromNamespaceId(block.namespace())!!)
     }

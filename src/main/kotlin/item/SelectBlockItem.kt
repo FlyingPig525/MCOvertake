@@ -31,6 +31,7 @@ object SelectBlockItem : Actionable {
 
     init {
         Actionable.registry += this
+        Actionable.persistentRegistry += this
     }
 
     override fun getItem(uuid: UUID): ItemStack {

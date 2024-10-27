@@ -3,6 +3,7 @@ TODO:
 - [ ] better wall upgrading
 - - auto repair (after 2x cooldown) (maybe some kind of drone)
 - [ ] research
+- - more tiles adjacent to enemy tile, the lower the cooldown for attacking
 - [ ] world generation
 - [ ] sky islands (collect a gaseous resource?)
 - [ ] underground (where you can do oil) (less digging more cave systems?)
