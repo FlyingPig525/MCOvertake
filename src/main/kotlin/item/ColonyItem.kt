@@ -2,6 +2,7 @@ package io.github.flyingpig525.item
 
 import io.github.flyingpig525.COLONY_SYMBOL
 import io.github.flyingpig525.POWER_SYMBOL
+import io.github.flyingpig525.getTrueTarget
 import io.github.flyingpig525.players
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -37,7 +38,7 @@ object ColonyItem : Actionable {
         val data = players[event.player.uuid.toString()]!!
         if (data.power - data.colonyCost < 0) return true
         if (!data.colonyCooldown.isReady(Instant.now().toEpochMilli())) return true
-        val target = event.player.getTargetBlockPosition(20) ?: return true
+        val target = event.player.getTrueTarget(20) ?: return true
         if (instance.getBlock(target) == Block.GRASS_BLOCK) {
             claimWithParticle(event.player, target, Block.GRASS_BLOCK, data.block)
             data.blocks++

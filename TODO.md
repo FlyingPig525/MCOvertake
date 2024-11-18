@@ -1,5 +1,5 @@
 TODO:
-- [ ] walls
+- [x] walls
 - [ ] better wall upgrading
 - - auto repair (after 2x cooldown) (maybe some kind of drone)
 - [ ] research

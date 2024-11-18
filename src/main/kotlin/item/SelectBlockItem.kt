@@ -51,6 +51,7 @@ object SelectBlockItem : Actionable {
 
         val inventoryEventNode = EventNode.type("select-category-inv", EventFilter.INVENTORY, {_, inv -> inventory == inv}).listen<InventoryClickEvent> { e ->
             if (e.clickedItem.material() == Material.AIR) return@listen
+            e.player.inventory.cursorItem = ItemStack.AIR
             when(e.clickedItem) {
                 NATURAL_CATEGORY -> openCategory(NaturalCategory.entries, e)
                 UNDERGROUND_CATEGORY -> openCategory(UndergroundCategory.entries, e)
@@ -75,6 +76,7 @@ object SelectBlockItem : Actionable {
     private fun openCategory(entries: EnumEntries<*>, e: InventoryClickEvent) {
         val inventory = Inventory(InventoryType.CHEST_6_ROW, "Select Block")
 
+
         for ((i, block) in entries.withIndex()) {
             if (block is CategoryBlock) {
                 val item = item(block.material) {
@@ -86,7 +88,6 @@ object SelectBlockItem : Actionable {
                 inventory[i % 9, i / 9] = item
             } else throw InvalidTypeException("block is not type CategoryBlock")
         }
-
         e.player.openInventory(inventory)
 
         val inventoryEventNode = EventNode.type("select-block-inv", EventFilter.INVENTORY, {_, inv -> inventory == inv}).listen<InventoryClickEvent> { e ->

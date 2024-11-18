@@ -5,6 +5,10 @@ import io.github.flyingpig525.building.*
 import io.github.flyingpig525.data.PlayerData
 import io.github.flyingpig525.data.PlayerData.Companion.getDataByBlock
 import io.github.flyingpig525.data.PlayerData.Companion.getDataByPoint
+import io.github.flyingpig525.wall.blockIsWall
+import io.github.flyingpig525.wall.getWallAttackCost
+import io.github.flyingpig525.wall.lastWall
+import io.github.flyingpig525.wall.wallLevel
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.extension.adventure.asMini
@@ -27,9 +31,8 @@ object AttackItem : Actionable {
     override fun getItem(uuid: UUID): ItemStack {
         return item(Material.DIAMOND_SWORD) {
             val player = instance.getPlayerByUuid(uuid)!!
-            val target = player.getTargetBlockPosition(20) ?: return item {}
-            val targetUUID = getAttacking(player)?.uuid ?: ""
-            val targetData = players[targetUUID]
+            val target = player.getTrueTarget(20) ?: return ERROR_ITEM
+            val targetData = getAttacking(player)
             val targetName = targetData?.playerDisplayName ?: ""
             val attackCost = getAttackCost(targetData, target)
 
@@ -38,30 +41,34 @@ object AttackItem : Actionable {
     }
 
     private fun getAttacking(player: Player): PlayerData? {
-        val target = player.getTargetBlockPosition(20)!!
+        val target = player.getTrueTarget(20)!!
         // TODO: AFTER ADDING WALLS ADD WALL THINGS HERE
         return players.getDataByPoint(target)
     }
 
     private fun getAttackCost(player: Player): Int {
-        val target = player.getTargetBlockPosition(20)!!
-        // TODO: AFTER ADDING WALLS ADD WALL THINGS HERE
+        val target = player.getTrueTarget(20)!!
         val targetData = getAttacking(player)
-        val targetUUID = targetData?.uuid ?: ""
         val targetAttackCost = getAttackCost(targetData, target)
         return targetAttackCost
     }
 
-    private fun getAttackCost(targetData: PlayerData?, target: Point): Int {
+    private fun getAttackCost(targetData: PlayerData?, playerTarget: Point): Int {
         // TODO: AFTER ADDING WALLS ADD WALL THINGS HERE
-        return (targetData?.baseAttackCost ?: 15)
+        val wallPosition = if (playerTarget.blockY() == 39) playerTarget.add(0.0, 1.0, 0.0) else playerTarget
+        val building = instance.getBlock(wallPosition)
+        var additiveModifier = 0
+        if (blockIsWall(building)) additiveModifier += getWallAttackCost(building)!!
+        return (targetData?.baseAttackCost ?: 15) + additiveModifier
     }
 
     override fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean {
-        val target = event.player.getTargetBlockPosition(20) ?: return true
-        val block = instance.getBlock(target)
+        val target = event.player.getTrueTarget(20) ?: return true
+        val buildingPoint = if (target.blockY() == 40) target else target.add(0.0, 1.0, 0.0)
+        val playerBlock = instance.getBlock(if (target.blockY() == 39) target else target.sub(0.0, 1.0, 0.0))
+        val buildingBlock = instance.getBlock(buildingPoint)
         val data = players[event.player.uuid.toString()]!!
-        if (block == Block.GRASS_BLOCK || block == data.block) {
+        if (playerBlock == Block.GRASS_BLOCK || playerBlock == data.block) {
             return true
         }
         val attackCost = getAttackCost(event.player)
@@ -71,7 +78,8 @@ object AttackItem : Actionable {
         }
         val targetData = getAttacking(event.player) ?: return true
         val targetPlayer = instance.getPlayerByUuid(targetData.uuid.toUUID())
-        val taken = when(block) {
+        val taken = when(buildingBlock) {
+            Block.AIR -> { true }
             Barrack.block -> {
                 targetData.barracks.count--
                 data.barracks.count++
@@ -93,14 +101,22 @@ object AttackItem : Actionable {
                 true
             }
             else -> {
-                // TODO: ADD WALL THINGS
-                true
+                // TODO: ADD PARTICLES
+                val wallLevel = buildingBlock.wallLevel!!
+                if (wallLevel == 1) {
+                    instance.setBlock(buildingPoint, Block.AIR)
+                    // PARTICLES
+                } else {
+                    instance.setBlock(buildingPoint, lastWall(wallLevel))
+                    // PARTICLES
+                }
+                false
             }
         }
         if (taken) {
             data.blocks++
             targetData.blocks--
-            if (Building.blockIsBuilding(block)) {
+            if (Building.blockIsBuilding(buildingBlock)) {
                 claimWithParticle(event.player, target.sub(0.0, 1.0, 0.0), data.block)
                 if (targetPlayer != null) {
                     SelectBuildingItem.updatePlayerItem(targetPlayer)
@@ -110,6 +126,7 @@ object AttackItem : Actionable {
                 claimWithParticle(event.player, target, data.block)
             }
         }
+        data.power -= attackCost
         data.updateBossBars()
         targetData.updateBossBars()
 

@@ -1,6 +1,7 @@
 package io.github.flyingpig525.item
 
 import io.github.flyingpig525.building.MatterContainer
+import io.github.flyingpig525.getTrueTarget
 import io.github.flyingpig525.players
 import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerUseItemEvent
@@ -24,7 +25,7 @@ object MatterContainerItem : Actionable {
             SelectBuildingItem.onInteract(event, instance)
             return true
         }
-        val target = event.player.getTargetBlockPosition(20) ?: return true
+        val target = event.player.getTrueTarget(20) ?: return true
         val playerData = players[event.player.uuid.toString()]!!
         if (MatterContainer.getResourceUse(playerData.matterContainers.count + 1) > playerData.maxDisposableResources) return true
         if (instance.getBlock(target) != playerData.block) return true

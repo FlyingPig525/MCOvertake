@@ -18,7 +18,7 @@ repositories {
 
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
-    implementation("net.minestom:minestom-snapshots:6fc64e3a5d")
+    implementation("net.minestom:minestom-snapshots:bb7acc2e77")
     implementation("net.bladehunt:kotstom:0.3.0")
     implementation("net.kyori:adventure-text-minimessage:4.17.0")
 }

@@ -6,7 +6,10 @@ import io.github.flyingpig525.item.*
 import io.github.flyingpig525.wall.blockIsWall
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import net.bladehunt.kotstom.*
+import net.bladehunt.kotstom.CommandManager
+import net.bladehunt.kotstom.GlobalEventHandler
+import net.bladehunt.kotstom.InstanceManager
+import net.bladehunt.kotstom.SchedulerManager
 import net.bladehunt.kotstom.dsl.item.amount
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -15,12 +18,17 @@ import net.bladehunt.kotstom.dsl.kommand.buildSyntax
 import net.bladehunt.kotstom.dsl.kommand.kommand
 import net.bladehunt.kotstom.dsl.line
 import net.bladehunt.kotstom.dsl.listen
+import net.bladehunt.kotstom.dsl.particle
 import net.bladehunt.kotstom.extension.adventure.asMini
+import net.bladehunt.kotstom.extension.roundToBlock
 import net.bladehunt.kotstom.extension.set
 import net.minestom.server.MinecraftServer
+import net.minestom.server.collision.ShapeImpl
+import net.minestom.server.color.Color
 import net.minestom.server.coordinate.Point
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.coordinate.Vec
+import net.minestom.server.entity.Entity
 import net.minestom.server.entity.GameMode
 import net.minestom.server.event.player.*
 import net.minestom.server.extras.MojangAuth
@@ -31,7 +39,9 @@ import net.minestom.server.instance.block.Block
 import net.minestom.server.inventory.PlayerInventory
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
+import net.minestom.server.network.packet.server.SendablePacket
 import net.minestom.server.network.packet.server.play.SetCooldownPacket
+import net.minestom.server.particle.Particle
 import net.minestom.server.potion.Potion
 import net.minestom.server.potion.PotionEffect
 import net.minestom.server.timer.TaskSchedule
@@ -196,54 +206,75 @@ fun main() {
     GlobalEventHandler.listen<PlayerTickEvent> { e ->
         val playerData = players[e.player.uuid.toString()] ?: return@listen
 
-        val target = e.player.getTargetBlockPosition(20)
+        val target = e.player.getTrueTarget(20)
         if (target != null) {
-            var block = instance.getBlock(target).defaultState()
-            repeat(2) {
-                if (block == Block.AIR) return@repeat
-                when (block) {
-                    Block.GRASS_BLOCK -> {
-                        val canAccess = anyAdjacentBlocksMatch(target, playerData.block)
-                        if (canAccess) {
-                            ClaimItem.setItemSlot(e.player)
-                        } else {
-                            ColonyItem.setItemSlot(e.player)
-                        }
-                    }
-
-                    Block.DIAMOND_BLOCK -> {
-                        e.player.inventory.idle()
-                    }
-
-                    else -> {
-                        if (block == playerData.block) {
-                            OwnedBlockItem.setItemSlot(e.player)
-                        } else if (block == Block.DIAMOND_BLOCK) {
-                            e.player.inventory.idle()
-                        } else if (
-                            instance.getBlock(target.sub(0.0, 1.0, 0.0)) != playerData.block
-                            && (anyAdjacentBlocksMatch(target, playerData.block) || anyAdjacentBlocksMatch(
-                                target.sub(
-                                    0.0,
-                                    1.0,
-                                    0.0
-                                ), playerData.block
-                            ))
-                        ) {
-                            AttackItem.setItemSlot(e.player)
-                        } else if (blockIsWall(block) && instance.getBlock(target.sub(0.0, 1.0, 0.0)) == playerData.block) {
-                            UpgradeWallItem.setItemSlot(e.player)
-                        } else {
-                            e.player.inventory.idle()
-                        }
+            val buildingPoint = target.withY(40.0)
+            val playerPoint = target.withY(39.0)
+            val targetBlock = instance.getBlock(target)
+            val buildingBlock = instance.getBlock(buildingPoint)
+            when (val playerBlock = instance.getBlock(playerPoint)) {
+                Block.GRASS_BLOCK -> {
+                    val canAccess = anyAdjacentBlocksMatch(target, playerData.block)
+                    if (canAccess) {
+                        ClaimItem.setItemSlot(e.player)
+                    } else {
+                        ColonyItem.setItemSlot(e.player)
                     }
                 }
-                block = instance.getBlock(target.sub(0.0, 1.0, 0.0))
+
+                Block.DIAMOND_BLOCK -> {
+                    e.player.inventory.idle()
+                }
+
+                else -> {
+                    if (playerBlock == playerData.block) {
+                        OwnedBlockItem.setItemSlot(e.player)
+                        if (blockIsWall(targetBlock)) {
+                            UpgradeWallItem.setItemSlot(e.player)
+                        }
+                    } else if (
+                        playerBlock != playerData.block
+                        && anyAdjacentBlocksMatch(playerPoint, playerData.block)
+                    ) {
+                        AttackItem.setItemSlot(e.player)
+                    } else {
+                        e.player.inventory.idle()
+                    }
+                }
             }
+            val y40 = target.withY(40.0)
+            val targetParticles = mutableListOf<SendablePacket>()
+            for (i in 1..5) {
+                val dustParticle = Particle.DUST.withColor(Color(25, 25, 25)).withScale(0.6f)
+                targetParticles += particle {
+                    particle = dustParticle
+                    position = y40.add(0.2 * i, 0.0, 0.0)
+                    count = 1
+                    offset = Vec(0.0, 0.0, 0.0)
+                }
+                targetParticles += particle {
+                    particle = dustParticle
+                    position = y40.add(0.2 * i, 0.0, 1.0)
+                    count = 1
+                    offset = Vec(0.0, 0.0, 0.0)
+                }
+                targetParticles += particle {
+                    particle = dustParticle
+                    position = y40.add(0.0, 0.0, 0.2 * i)
+                    count = 1
+                    offset = Vec(0.0, 0.0, 0.0)
+                }
+                targetParticles += particle {
+                    particle = dustParticle
+                    position = y40.add(1.0, 0.0, 0.2 * i)
+                    count = 1
+                    offset = Vec(0.0, 0.0, 0.0)
+                }
+            }
+            e.player.sendPackets(targetParticles)
         } else {
             e.player.inventory.idle()
         }
-
     }
 
     GlobalEventHandler.listen<PlayerDisconnectEvent> { e ->
@@ -287,6 +318,31 @@ fun clearBlock(block: Block) {
             }
         }
     }
+}
+
+fun Entity.getTrueTarget(maxDistance: Int, onRayStep: (pos: Point) -> Unit = {}): Point? {
+    val playerEyePos = position.add(0.0, eyeHeight, 0.0)
+    val playerDirection = playerEyePos.direction().mul(0.5, 0.5, 0.5)
+    var point = playerEyePos.asVec()
+    for (i in 0..maxDistance * 2) {
+        point = point.add(playerDirection)
+        val block = instance.getBlock(point)
+        onRayStep(point)
+        if (!block.isAir) {
+            val blockShape = block.registry().collisionShape()
+            if (blockShape is ShapeImpl) {
+                for (box in blockShape.collisionBoundingBoxes()) {
+                    if (box.boundingBoxRayIntersectionCheck(
+                            point.sub(playerDirection),
+                            playerDirection,
+                            point.asPosition().roundToBlock()
+                        )
+                    ) return point.roundToBlock()
+                }
+            }
+        }
+    }
+    return null
 }
 
 fun scheduleImmediately(fn: () -> Unit) =

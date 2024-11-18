@@ -2,6 +2,7 @@ package io.github.flyingpig525.item
 
 import io.github.flyingpig525.CLAIM_SYMBOL
 import io.github.flyingpig525.POWER_SYMBOL
+import io.github.flyingpig525.getTrueTarget
 import io.github.flyingpig525.players
 import net.bladehunt.kotstom.SchedulerManager
 import net.bladehunt.kotstom.dsl.ParticleBuilder
@@ -43,13 +44,14 @@ object ClaimItem : Actionable {
             itemName = "<gold>$CLAIM_SYMBOL <bold>Expand</bold> <dark_gray>-<red> $POWER_SYMBOL ${data.claimCost}".asMini()
             amount = 1
         }
+
     }
 
     override fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean {
         val data = players[event.player.uuid.toString()]!!
         if (data.power - data.claimCost < 0) return true
         if (!data.claimCooldown.isReady(Instant.now().toEpochMilli())) return true
-        val target = event.player.getTargetBlockPosition(20) ?: return true
+        val target = event.player.getTrueTarget(20) ?: return true
         if (instance.getBlock(target) == Block.GRASS_BLOCK) {
             claimWithParticle(event.player, target, Block.GRASS_BLOCK, data.block)
             data.blocks++

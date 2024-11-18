@@ -37,7 +37,7 @@ object WallItem : Actionable {
         val data = players[event.player.uuid.toString()]!!
         if (data.organicMatter - 15 < 0) return true
         if (!data.wallCooldown.isReady(Instant.now().toEpochMilli())) return true
-        val target = event.player.getTargetBlockPosition(20) ?: return true
+        val target = event.player.getTrueTarget(20) ?: return true
         if (instance.getBlock(target) == data.block && instance.getBlock(target.add(0.0, 1.0, 0.0)) == Block.AIR) {
             data.organicMatter -= 15
             data.wallCooldown = Cooldown(Duration.ofMillis(500))
