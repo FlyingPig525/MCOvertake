@@ -13,6 +13,7 @@ TODO:
 - [ ] biomes? more details needed
 - [ ] vacation mode?
 - [ ] natural resources periodically spawn in ocean
+- [ ] multiple instances at the same time (refactor the game into a class)
 
 MULTI-TILE BUILDINGS
 - [ ] oil deposit (like a normal building, 4 oil extractors per deposit) - black carpet
