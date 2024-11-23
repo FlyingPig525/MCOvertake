@@ -1,0 +1,33 @@
+package io.github.flyingpig525.console
+
+import io.github.flyingpig525.config
+import io.github.flyingpig525.data.Config
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import java.io.File
+
+// TODO: Add config manipulation
+object ConfigCommand : Command {
+    init {
+        Command.registry += ConfigCommand
+    }
+
+    override val arguments: Int = 1
+    override val name: String = "config"
+
+    override fun validate(arguments: List<String>): Boolean {
+        return arguments.size == 1 && arguments[0] == name
+    }
+
+    override fun execute(arguments: List<String>) {
+        val configFile = File("config.json")
+        if (!configFile.exists()) {
+            configFile.createNewFile()
+            configFile.writeText(Json.encodeToString(Config()))
+        }
+        config = Json.decodeFromString<Config>(configFile.readText())
+        println("Config refreshed")
+    }
+}

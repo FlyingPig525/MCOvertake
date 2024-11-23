@@ -8,4 +8,6 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class Config(
     @EncodeDefault val serverAddress: String = "0.0.0.0",
-    @EncodeDefault val serverPort: Int = 25565)
+    @EncodeDefault val serverPort: Int = 25565,
+    @EncodeDefault val whitelisted: List<String> = emptyList()
+)

@@ -1,13 +1,18 @@
 package io.github.flyingpig525
 
+import io.github.flyingpig525.console.Command
+import io.github.flyingpig525.console.ConfigCommand
 import io.github.flyingpig525.data.Config
 import io.github.flyingpig525.data.PlayerData
 import io.github.flyingpig525.data.PlayerData.Companion.toBlockSortedList
 import io.github.flyingpig525.item.*
 import io.github.flyingpig525.wall.blockIsWall
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.decodeFromStream
 import net.bladehunt.kotstom.CommandManager
 import net.bladehunt.kotstom.GlobalEventHandler
 import net.bladehunt.kotstom.InstanceManager
@@ -24,9 +29,6 @@ import net.bladehunt.kotstom.dsl.particle
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.bladehunt.kotstom.extension.roundToBlock
 import net.bladehunt.kotstom.extension.set
-import net.kyori.adventure.resource.ResourcePackInfo
-import net.kyori.adventure.resource.ResourcePackInfoLike
-import net.kyori.adventure.resource.ResourcePackRequest
 import net.minestom.server.MinecraftServer
 import net.minestom.server.collision.ShapeImpl
 import net.minestom.server.color.Color
@@ -50,10 +52,7 @@ import net.minestom.server.particle.Particle
 import net.minestom.server.potion.Potion
 import net.minestom.server.potion.PotionEffect
 import net.minestom.server.timer.TaskSchedule
-import team.unnamed.creative.ResourcePack
-import team.unnamed.creative.server.ResourcePackServer
 import java.io.File
-import java.net.URI
 import java.util.*
 
 const val POWER_SYMBOL = "✘"
@@ -66,23 +65,30 @@ const val BUILDING_SYMBOL = "⧈"
 const val RESOURCE_SYMBOL = "⌘"
 const val WALL_SYMBOL = "\uD83E\uDE93"
 
+var runConsoleLoop = true
+
 lateinit var instance: InstanceContainer private set
 
 lateinit var players: MutableMap<String, PlayerData> private set
 
-fun main() {
+lateinit var config: Config
+
+suspend fun main() {
     // Initialize the servers
     val minecraftServer = MinecraftServer.init()
     MojangAuth.init()
 
     val configFile = File("config.json")
     if (!configFile.exists()) {
-        configFile.createNewFile()
+        withContext(Dispatchers.IO) {
+            configFile.createNewFile()
+        }
         configFile.writeText(Json.encodeToString(Config()))
     }
-    val config = Json.decodeFromString<Config>(configFile.readText())
+    config = Json.decodeFromString<Config>(configFile.readText())
+    configFile.writeText(Json.encodeToString(config))
+    println("Config imported...")
 
-    initItems()
 
     instance = InstanceManager.createInstanceContainer().apply {
         chunkLoader = AnvilLoader("world/world")
@@ -100,16 +106,26 @@ fun main() {
         }
         setChunkSupplier(::LightingChunk)
     }
+    println("World loaded...")
 
     players = Json.decodeFromString<MutableMap<String, PlayerData>>(
         if (File("./player-data.json").exists())
             File("./player-data.json").readText()
         else "{}"
     )
+    println("Player data imported...")
+    println("Filesystem actions complete...")
 
+    initItems()
+    println("Items initialized...")
     GlobalEventHandler.listen<AsyncPlayerConfigurationEvent> { event ->
         event.spawningInstance = instance
         val player = event.player
+        if (config.whitelisted.isNotEmpty() && player.username !in config.whitelisted) {
+            player.kick(
+                "<red><bold>Player not whitelisted <gray></bold>-<gold><bold> Please contact the server owner if you believe this is a mistake"
+            )
+        }
         player.respawnPoint = Pos(5.0, 41.0, 5.0)
     }
 
@@ -138,6 +154,7 @@ fun main() {
             }
         }
     }
+    println("Player spawning setup...")
 
     var scoreboardTitleProgress = -1.0
     // Scoreboard tick
@@ -178,6 +195,7 @@ fun main() {
             data.updateBossBars()
         }
     }, TaskSchedule.tick(70), TaskSchedule.tick(70))
+    println("Game loops scheduled...")
 
     GlobalEventHandler.listen<PlayerMoveEvent> { e ->
         with(e) {
@@ -213,6 +231,7 @@ fun main() {
         val item = e.player.getItemInHand(e.hand)
         GlobalEventHandler.call(PlayerUseItemEvent(e.player, e.hand, item, 0))
     }
+    println("Item use event registered")
 
     GlobalEventHandler.listen<PlayerSwapItemEvent> {
         it.isCancelled = true
@@ -291,6 +310,7 @@ fun main() {
             e.player.inventory.idle()
         }
     }
+    println("Player loop started...")
 
     GlobalEventHandler.listen<PlayerDisconnectEvent> { e ->
         val file = File("./player-data.json")
@@ -301,22 +321,43 @@ fun main() {
         instance.saveChunksToStorage()
     }
 
-    val restartCommand = kommand {
-        name = "stop"
+    minecraftServer.start(config.serverAddress, config.serverPort)
+    println("GameServer online!")
 
-        buildSyntax {
-            onlyPlayers()
-            executor {
-                player.sendMessage("Stopping server...")
-                MinecraftServer.process().stop()
-
+    initConsoleCommands()
+    println("Console commands initialized...")
+    coroutineScope {
+        launch {
+            val scanner = Scanner(System.`in`)
+            while(runConsoleLoop) {
+                if (scanner.hasNext()) {
+                    var last = ""
+                    val args = scanner.next().split(' ').mapNotNull {
+                        if (last != "") {
+                            last += " $it"
+                            return@mapNotNull null
+                        }
+                        if (it.startsWith('"')) {
+                            last = it
+                            return@mapNotNull null
+                        }
+                        if (it.endsWith('"')) {
+                            val ret = "$last $it"
+                            last = ""
+                            return@mapNotNull ret
+                        }
+                        it
+                    }
+                    for (entry in Command.registry) {
+                        if (entry.validate(args)) {
+                            entry.execute(args)
+                        }
+                    }
+                }
             }
         }
     }
-    CommandManager.register(restartCommand)
-
-    minecraftServer.start(config.serverAddress, config.serverPort)
-    println("GameServer online!")
+    println("Console loop running!")
 }
 
 fun clearBlock(block: Block) {
@@ -414,4 +455,8 @@ fun initItems() {
     TrainingCampItem
     WallItem
     UpgradeWallItem
+}
+
+fun initConsoleCommands() {
+    ConfigCommand
 }
