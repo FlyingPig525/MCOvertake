@@ -1,13 +1,12 @@
 package io.github.flyingpig525.data
 
-import kotlinx.serialization.EncodeDefault
-import kotlinx.serialization.ExperimentalSerializationApi
+import io.github.flyingpig525.DASH_BANNER
 import kotlinx.serialization.Serializable
-
-@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 data class Config(
-    @EncodeDefault val serverAddress: String = "0.0.0.0",
-    @EncodeDefault val serverPort: Int = 25565,
-    @EncodeDefault val whitelisted: List<String> = emptyList()
+    val serverAddress: String = "0.0.0.0",
+    val serverPort: Int = 25565,
+    val whitelisted: List<String> = emptyList(),
+    val notWhitelistedMessage: String = "<red><bold>Player not whitelisted\n</bold><grey>$DASH_BANNER\n<gold><bold>Please contact the server owner if you believe this is a mistake",
+    val printSaveMessages: Boolean = false
 )

@@ -2,6 +2,7 @@ package io.github.flyingpig525
 
 import io.github.flyingpig525.console.Command
 import io.github.flyingpig525.console.ConfigCommand
+import io.github.flyingpig525.console.SaveCommand
 import io.github.flyingpig525.data.Config
 import io.github.flyingpig525.data.PlayerData
 import io.github.flyingpig525.data.PlayerData.Companion.toBlockSortedList
@@ -13,7 +14,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import net.bladehunt.kotstom.CommandManager
 import net.bladehunt.kotstom.GlobalEventHandler
 import net.bladehunt.kotstom.InstanceManager
 import net.bladehunt.kotstom.SchedulerManager
@@ -21,8 +21,6 @@ import net.bladehunt.kotstom.dsl.item.amount
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.dsl.kbar
-import net.bladehunt.kotstom.dsl.kommand.buildSyntax
-import net.bladehunt.kotstom.dsl.kommand.kommand
 import net.bladehunt.kotstom.dsl.line
 import net.bladehunt.kotstom.dsl.listen
 import net.bladehunt.kotstom.dsl.particle
@@ -65,7 +63,11 @@ const val BUILDING_SYMBOL = "⧈"
 const val RESOURCE_SYMBOL = "⌘"
 const val WALL_SYMBOL = "\uD83E\uDE93"
 
+const val DASH_BANNER = "----------------------------------------------"
+
 var runConsoleLoop = true
+
+val json = Json { prettyPrint = true; encodeDefaults = true}
 
 lateinit var instance: InstanceContainer private set
 
@@ -78,15 +80,16 @@ suspend fun main() {
     val minecraftServer = MinecraftServer.init()
     MojangAuth.init()
 
+
     val configFile = File("config.json")
     if (!configFile.exists()) {
         withContext(Dispatchers.IO) {
             configFile.createNewFile()
         }
-        configFile.writeText(Json.encodeToString(Config()))
+        configFile.writeText(json.encodeToString(Config()))
     }
-    config = Json.decodeFromString<Config>(configFile.readText())
-    configFile.writeText(Json.encodeToString(config))
+    config = json.decodeFromString<Config>(configFile.readText())
+    configFile.writeText(json.encodeToString(config))
     println("Config imported...")
 
 
@@ -123,7 +126,7 @@ suspend fun main() {
         val player = event.player
         if (config.whitelisted.isNotEmpty() && player.username !in config.whitelisted) {
             player.kick(
-                "<red><bold>Player not whitelisted <gray></bold>-<gold><bold> Please contact the server owner if you believe this is a mistake"
+                config.notWhitelistedMessage.asMini()
             )
         }
         player.respawnPoint = Pos(5.0, 41.0, 5.0)
@@ -195,6 +198,19 @@ suspend fun main() {
             data.updateBossBars()
         }
     }, TaskSchedule.tick(70), TaskSchedule.tick(70))
+
+    // Save loop
+    SchedulerManager.scheduleTask({
+        val file = File("./player-data.json")
+        if (!file.exists()) {
+            file.createNewFile()
+        }
+        file.writeText(Json.encodeToString(players))
+        instance.saveChunksToStorage()
+        if (config.printSaveMessages) {
+            println("Game data saved...")
+        }
+    }, TaskSchedule.minutes(1), TaskSchedule.minutes(1))
     println("Game loops scheduled...")
 
     GlobalEventHandler.listen<PlayerMoveEvent> { e ->
@@ -459,4 +475,5 @@ fun initItems() {
 
 fun initConsoleCommands() {
     ConfigCommand
+    SaveCommand
 }

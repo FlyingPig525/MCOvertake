@@ -2,8 +2,6 @@ package io.github.flyingpig525.console
 
 import io.github.flyingpig525.config
 import io.github.flyingpig525.data.Config
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
