@@ -1,6 +1,5 @@
 package io.github.flyingpig525.item
 
-import io.github.flyingpig525.building.MatterContainer
 import io.github.flyingpig525.building.MatterExtractor
 import io.github.flyingpig525.getTrueTarget
 import io.github.flyingpig525.players

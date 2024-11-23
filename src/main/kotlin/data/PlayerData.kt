@@ -115,7 +115,7 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
         resourcesBossBar.color(if (disposableResourcesUsed > maxDisposableResources) BossBar.Color.PURPLE else BossBar.Color.WHITE)
     }
 
-    fun showBossBars(player: Player) {
+    private fun showBossBars(player: Player) {
         with(player) {
             showBossBar(powerBossBar)
             showBossBar(matterBossBar)

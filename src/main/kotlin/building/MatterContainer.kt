@@ -32,6 +32,7 @@ class MatterContainer : Building {
 
     companion object : Building.BuildingCompanion {
         override val block: Block = Block.LANTERN
+        override val identifier: String = "matter:container"
 
         override fun getItem(cost: Int, count: Int): ItemStack {
             return item(Material.LANTERN) {

@@ -18,6 +18,7 @@ interface Building {
 
     interface BuildingCompanion {
         val block: Block
+        val identifier: String
         fun getItem(cost: Int, count: Int): ItemStack
         fun getItem(playerData: PlayerData): ItemStack
 

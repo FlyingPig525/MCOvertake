@@ -33,6 +33,7 @@ class MatterExtractor : Building {
 
     companion object : Building.BuildingCompanion {
         override val block: Block = Block.BREWING_STAND
+        override val identifier: String = "matter:generator"
 
         override fun getItem(cost: Int, count: Int): ItemStack {
             return item(Material.BREWING_STAND) {

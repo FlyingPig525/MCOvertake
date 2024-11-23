@@ -33,6 +33,7 @@ class TrainingCamp : Building {
 
     companion object : Building.BuildingCompanion {
         override val block: Block = Block.POLISHED_BLACKSTONE_BUTTON.withProperty("face", "floor")
+        override val identifier: String = "power:generator"
 
         override fun getItem(cost: Int, count: Int): ItemStack {
             return item(Material.POLISHED_BLACKSTONE_BUTTON) {

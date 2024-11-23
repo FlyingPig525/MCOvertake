@@ -1,11 +1,13 @@
 package io.github.flyingpig525
 
+import io.github.flyingpig525.data.Config
 import io.github.flyingpig525.data.PlayerData
 import io.github.flyingpig525.data.PlayerData.Companion.toBlockSortedList
 import io.github.flyingpig525.item.*
 import io.github.flyingpig525.wall.blockIsWall
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.decodeFromStream
 import net.bladehunt.kotstom.CommandManager
 import net.bladehunt.kotstom.GlobalEventHandler
 import net.bladehunt.kotstom.InstanceManager
@@ -22,6 +24,9 @@ import net.bladehunt.kotstom.dsl.particle
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.bladehunt.kotstom.extension.roundToBlock
 import net.bladehunt.kotstom.extension.set
+import net.kyori.adventure.resource.ResourcePackInfo
+import net.kyori.adventure.resource.ResourcePackInfoLike
+import net.kyori.adventure.resource.ResourcePackRequest
 import net.minestom.server.MinecraftServer
 import net.minestom.server.collision.ShapeImpl
 import net.minestom.server.color.Color
@@ -45,7 +50,10 @@ import net.minestom.server.particle.Particle
 import net.minestom.server.potion.Potion
 import net.minestom.server.potion.PotionEffect
 import net.minestom.server.timer.TaskSchedule
+import team.unnamed.creative.ResourcePack
+import team.unnamed.creative.server.ResourcePackServer
 import java.io.File
+import java.net.URI
 import java.util.*
 
 const val POWER_SYMBOL = "✘"
@@ -63,9 +71,16 @@ lateinit var instance: InstanceContainer private set
 lateinit var players: MutableMap<String, PlayerData> private set
 
 fun main() {
-    // Initialize the server
+    // Initialize the servers
     val minecraftServer = MinecraftServer.init()
     MojangAuth.init()
+
+    val configFile = File("config.json")
+    if (!configFile.exists()) {
+        configFile.createNewFile()
+        configFile.writeText(Json.encodeToString(Config()))
+    }
+    val config = Json.decodeFromString<Config>(configFile.readText())
 
     initItems()
 
@@ -74,10 +89,10 @@ fun main() {
 
         setGenerator { unit ->
             unit.modifier().setAll { x, y, z ->
-                if (x in 0..300 && y == 39 && z in 0..300) {
-                    return@setAll Block.GRASS_BLOCK
+                if (x in 0..300 && z in 0..300) {
+                    if (y in 38..39)return@setAll Block.GRASS_BLOCK
                 }
-                if (x in -1..301 && y == 39 && z in -1..301) {
+                if (x in -1..301 && z in -1..301 && y < 40) {
                     return@setAll Block.DIAMOND_BLOCK
                 }
                 Block.AIR
@@ -92,12 +107,12 @@ fun main() {
         else "{}"
     )
 
-
     GlobalEventHandler.listen<AsyncPlayerConfigurationEvent> { event ->
         event.spawningInstance = instance
         val player = event.player
-        player.respawnPoint = Pos(5.0, 40.0, 5.0)
+        player.respawnPoint = Pos(5.0, 41.0, 5.0)
     }
+
 
     GlobalEventHandler.listen<PlayerSpawnEvent> { e ->
         e.player.gameMode = GameMode.ADVENTURE
@@ -300,8 +315,8 @@ fun main() {
     }
     CommandManager.register(restartCommand)
 
-    minecraftServer.start("127.0.0.1", 25565)
-    println("Server online!")
+    minecraftServer.start(config.serverAddress, config.serverPort)
+    println("GameServer online!")
 }
 
 fun clearBlock(block: Block) {

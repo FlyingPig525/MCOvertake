@@ -34,6 +34,7 @@ class Barrack : Building {
 
     companion object : Building.BuildingCompanion {
         override val block: Block = Block.SOUL_LANTERN
+        override val identifier: String = "power:container"
 
         override fun getItem(cost: Int, count: Int): ItemStack {
             return item(Material.SOUL_LANTERN) {
