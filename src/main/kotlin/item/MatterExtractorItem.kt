@@ -7,6 +7,7 @@ import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerUseItemEvent
 import net.minestom.server.instance.Instance
 import net.minestom.server.item.ItemStack
+import net.minestom.server.tag.Tag
 import java.util.*
 
 object MatterExtractorItem : Actionable {
@@ -14,6 +15,7 @@ object MatterExtractorItem : Actionable {
     init {
         Actionable.registry += this
     }
+    override val identifier: String = "matter:generator"
 
     override fun getItem(uuid: UUID): ItemStack {
         val data = players[uuid.toString()]!!
@@ -27,9 +29,8 @@ object MatterExtractorItem : Actionable {
         }
         val target = event.player.getTrueTarget(20) ?: return true
         val playerData = players[event.player.uuid.toString()]!!
+        if (!checkBlockAvailable(playerData, target)) return true
         if (MatterExtractor.getResourceUse(playerData.matterExtractors.count + 1) > playerData.maxDisposableResources) return true
-
-        if (instance.getBlock(target) != playerData.block) return true
         if (playerData.organicMatter - playerData.extractorCost < 0) return true
         playerData.organicMatter -= playerData.extractorCost
         playerData.matterExtractors.place(target, instance)

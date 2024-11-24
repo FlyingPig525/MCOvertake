@@ -20,6 +20,7 @@ import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
+import net.minestom.server.tag.Tag
 import java.util.*
 
 object AttackItem : Actionable {
@@ -27,6 +28,8 @@ object AttackItem : Actionable {
     init {
         Actionable.registry += this
     }
+
+    override val identifier: String = "block:attack"
 
     override fun getItem(uuid: UUID): ItemStack {
         return item(Material.DIAMOND_SWORD) {
@@ -37,6 +40,7 @@ object AttackItem : Actionable {
             val attackCost = getAttackCost(targetData, target)
 
             itemName = "<red>$ATTACK_SYMBOL <bold>Attack $targetName</bold> <gray>- <red>$POWER_SYMBOL <bold>$attackCost".asMini().asComponent()
+            set(Tag.String("identifier"), identifier)
         }
     }
 
@@ -63,6 +67,7 @@ object AttackItem : Actionable {
     }
 
     override fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean {
+        // TODO: ADD COOLDOWN
         val target = event.player.getTrueTarget(20) ?: return true
         val buildingPoint = if (target.blockY() == 40) target else target.add(0.0, 1.0, 0.0)
         val playerBlock = instance.getBlock(if (target.blockY() == 39) target else target.sub(0.0, 1.0, 0.0))
@@ -108,8 +113,10 @@ object AttackItem : Actionable {
                     // PARTICLES
                 } else {
                     instance.setBlock(buildingPoint, lastWall(wallLevel))
+                    UpgradeWallItem.updateWall(buildingPoint)
                     // PARTICLES
                 }
+                repeatAdjacent(buildingPoint) { UpgradeWallItem.updateWall(it) }
                 false
             }
         }

@@ -8,6 +8,7 @@ import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerUseItemEvent
 import net.minestom.server.instance.Instance
 import net.minestom.server.item.ItemStack
+import net.minestom.server.tag.Tag
 import java.util.*
 
 object BarracksItem : Actionable {
@@ -16,9 +17,12 @@ object BarracksItem : Actionable {
         Actionable.registry += this
     }
 
+    override val identifier: String = "power:container"
+
+
     override fun getItem(uuid: UUID): ItemStack {
         val data = players[uuid.toString()]!!
-        return Barrack.getItem(data)
+        return Barrack.getItem(data).withTag(Tag.String("identifier"), identifier)
     }
 
     override fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean {
@@ -28,8 +32,8 @@ object BarracksItem : Actionable {
         }
         val target = event.player.getTrueTarget(20) ?: return true
         val playerData = players[event.player.uuid.toString()]!!
+        if (!checkBlockAvailable(playerData, target)) return true
         if (Barrack.getResourceUse(playerData.barracks.count + 1) > playerData.maxDisposableResources) return true
-        if (instance.getBlock(target) != playerData.block) return true
         if (playerData.organicMatter - playerData.barracksCost < 0) return true
         playerData.organicMatter -= playerData.barracksCost
         playerData.barracks.place(target, instance)

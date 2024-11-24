@@ -16,6 +16,7 @@ import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import net.minestom.server.network.packet.server.play.SetCooldownPacket
+import net.minestom.server.tag.Tag
 import net.minestom.server.utils.time.Cooldown
 import java.time.Duration
 import java.time.Instant
@@ -26,11 +27,14 @@ object ColonyItem : Actionable {
     init {
         Actionable.registry += this
     }
+    override val identifier: String = "block:colony"
+
 
     override fun getItem(uuid: UUID): ItemStack {
         val playerData = players[uuid.toString()]!!
         return item(Material.CHEST) {
             itemName = "<green>$COLONY_SYMBOL<bold> Instantiate Colony</bold> <dark_gray>-<red> $POWER_SYMBOL ${playerData.colonyCost}".asMini()
+            set(Tag.String("identifier"), identifier)
         }
     }
 
@@ -51,7 +55,7 @@ object ColonyItem : Actionable {
                 )
             )
             data.updateBossBars()
-        } else throw IllegalStateException("Colony target is not grass!!!!!!! wtf is going on!!!! AAAAAAAAAAAAAAAAAAAAAA")
+        }
         return true
     }
 

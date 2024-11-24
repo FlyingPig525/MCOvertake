@@ -9,6 +9,7 @@ import net.minestom.server.event.player.PlayerUseItemEvent
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
+import net.minestom.server.tag.Tag
 import java.util.*
 
 object TrainingCampItem : Actionable {
@@ -17,9 +18,12 @@ object TrainingCampItem : Actionable {
         Actionable.registry += this
     }
 
+    override val identifier: String = "power:generator"
+
+
     override fun getItem(uuid: UUID): ItemStack {
         val data = players[uuid.toString()]!!
-        return TrainingCamp.getItem(data)
+        return TrainingCamp.getItem(data).withTag(Tag.String("identifier"), identifier)
     }
 
     override fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean {
@@ -29,8 +33,8 @@ object TrainingCampItem : Actionable {
         }
         val target = event.player.getTrueTarget(20) ?: return true
         val playerData = players[event.player.uuid.toString()]!!
+        if (!checkBlockAvailable(playerData, target)) return true
         if (TrainingCamp.getResourceUse(playerData.trainingCamps.count + 1) > playerData.maxDisposableResources) return true
-        if (instance.getBlock(target) != playerData.block || instance.getBlock(target.withY(40.0)) != Block.AIR) return true
         if (playerData.organicMatter - playerData.trainingCampCost < 0) return true
         playerData.organicMatter -= playerData.trainingCampCost
         playerData.trainingCamps.place(target, instance)

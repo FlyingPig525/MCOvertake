@@ -13,6 +13,7 @@ import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
+import net.minestom.server.tag.Tag
 import java.util.*
 
 object UpgradeWallItem : Actionable {
@@ -21,11 +22,15 @@ object UpgradeWallItem : Actionable {
         Actionable.registry += this
     }
 
+    override val identifier: String = "building:upgrade_wall"
+
+
     override fun getItem(uuid: UUID): ItemStack {
         val target = instance.getPlayerByUuid(uuid)!!.getTrueTarget(20) ?: return ERROR_ITEM
         val upgradeCost = getWallUpgradeCost(instance.getBlock(target).defaultState()) ?: return ERROR_ITEM
         return item(Material.IRON_AXE) {
             itemName = "<gold>$WALL_SYMBOL <bold>Upgrade Wall</bold><dark_grey> - <green>$MATTER_SYMBOL $upgradeCost".asMini()
+            set(Tag.String("identifier"), identifier)
         }
     }
 

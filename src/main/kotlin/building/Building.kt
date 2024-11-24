@@ -14,6 +14,7 @@ interface Building {
 
     fun place(playerTarget: Point, instance: Instance)
     fun select(player: Player, cost: Int)
+    fun select(player: Player, data: PlayerData)
 
 
     interface BuildingCompanion {
@@ -32,9 +33,16 @@ interface Building {
     companion object {
         fun blockIsBuilding(block: Block): Boolean {
             for (entry in registry) {
-                if (entry.block == block) return true
+                if (entry.block == block.defaultState()) return true
             }
             return false
+        }
+
+        fun getBuildingIdentifier(block: Block): String? {
+            for (entry in registry) {
+                if (entry.block == block.defaultState()) return entry.identifier
+            }
+            return null
         }
     }
 }

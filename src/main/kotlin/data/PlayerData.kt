@@ -19,18 +19,19 @@ import net.minestom.server.utils.time.Cooldown
 import java.time.Duration
 import java.util.*
 import kotlin.collections.Map
+import kotlin.reflect.KProperty0
 
 @Serializable
 class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val block: Block) {
-    var playerDisplayName = instance.getPlayerByUuid(uuid.toUUID())?.name?.toPlainText()
+    var playerDisplayName = instance.getPlayerByUuid(uuid.toUUID())?.username
     var blocks: Int = 0
     val trainingCamps = TrainingCamp()
-    val trainingCampCost: Int get() = (trainingCamps.count * 25) + 25
+    val trainingCampCost: Int get() = computeGeneratorCost(trainingCamps.count)
     val barracks = Barrack()
     val maxPower: Int get() = 100 + barracks.count * 25
     val barracksCost: Int get() = (barracks.count * 20) + 20
     val matterExtractors = MatterExtractor()
-    val extractorCost: Int get() = (matterExtractors.count * 25) + 25
+    val extractorCost: Int get() = computeGeneratorCost(matterExtractors.count)
     val matterContainers = MatterContainer()
     val containerCost: Int get() = (matterContainers.count * 20) + 20
     val maxMatter: Int get() = 100 + matterContainers.count * 25
@@ -100,15 +101,18 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
             ((matterExtractors.count * 0.5 + 0.5) + organicMatter)
         val player = instance.getPlayerByUuid(UUID.fromString(uuid))
         if (player != null) {
+            if (playerDisplayName == null) playerDisplayName = player.username
             updateBossBars()
         }
     }
 
     fun updateBossBars() {
         powerBossBar.name("<red>$POWER_SYMBOL Power <gray>-<red> $power/$maxPower".asMini())
-        powerBossBar.progress((power / maxPower).toFloat())
+        powerBossBar.progress((power / maxPower).toFloat().coerceIn(0f..1f))
+
         matterBossBar.name("<green>$MATTER_SYMBOL Organic Matter <gray>-<green> $organicMatter/$maxMatter".asMini())
-        matterBossBar.progress((organicMatter / maxMatter).toFloat())
+        matterBossBar.progress((organicMatter / maxMatter).toFloat().coerceIn(0f..1f))
+
         val overflow = disposableResourcesUsed > maxDisposableResources
         resourcesBossBar.name("<${if (overflow) "light_purple" else "white"}>$RESOURCE_SYMBOL Disposable Resources <gray>- <${if (overflow) "light_purple" else "white"}>$disposableResourcesUsed/$maxDisposableResources".asMini())
         resourcesBossBar.progress((disposableResourcesUsed.toFloat() / maxDisposableResources.toFloat()).coerceIn(0f..1f))
@@ -133,6 +137,16 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
         player.inventory.helmet = item(Material.fromNamespaceId(block.namespace())!!)
     }
 
+    fun getBuildingReferenceByIdentifier(identifier: String): KProperty0<Building>? {
+        return when(identifier) {
+            "power:container" -> ::barracks
+            "power:generator" -> ::trainingCamps
+            "matter:container" -> ::matterContainers
+            "matter:generator" -> ::matterExtractors
+            else -> null
+        }
+    }
+
     companion object {
         fun Map<String, PlayerData>.getDataByBlock(block: Block): PlayerData? {
             return values.find { it.block == block }
@@ -144,6 +158,18 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
         }
         fun Map<String, PlayerData>.toBlockSortedList(): List<PlayerData> {
             return values.sortedByDescending { it.blocks }
+        }
+        fun Map<String, PlayerData>.toBlockList(): List<Block> {
+            return values.map { it.block }
+        }
+        fun computeGeneratorCost(generatorCount: Int): Int {
+            val generalCost = (generatorCount * 25) + 25
+            if (generalCost > 10000) {
+                return (generalCost/1000) * 1000
+            } else if (generalCost > 1000) {
+                return (generalCost/100) * 100
+            }
+            return generalCost
         }
     }
 }

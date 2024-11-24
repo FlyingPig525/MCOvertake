@@ -1,8 +1,8 @@
 {
     "serverAddress": "0.0.0.0",
     "serverPort": 25565,
-    "whitelisted": [
-        "w"
-    ],
-    "notWhitelistedMessage": "<red><bold>Player not whitelisted\n</bold><grey>----------------------------------------------\n<gold><bold>Please contact the server owner if you believe this is a mistake"
+    "whitelisted": [],
+    "notWhitelistedMessage": "<red><bold>Player not whitelisted\n</bold><grey>----------------------------------------------\n<gold><bold>Please contact the server owner if you believe this is a mistake",
+    "printSaveMessages": false,
+    "consolePollingDelay": 2500
 }

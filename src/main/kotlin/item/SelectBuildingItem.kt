@@ -20,6 +20,7 @@ import net.minestom.server.inventory.Inventory
 import net.minestom.server.inventory.InventoryType
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
+import net.minestom.server.tag.Tag
 import java.util.*
 
 object SelectBuildingItem : Actionable {
@@ -29,9 +30,13 @@ object SelectBuildingItem : Actionable {
         Actionable.persistentRegistry += this
     }
 
+    override val identifier: String = "item:select_building"
+
+
     override fun getItem(uuid: UUID): ItemStack {
         return item(Material.BRICK) {
             itemName = "<gold>$BUILDING_SYMBOL <bold>Blueprint Constructor</bold> $BUILDING_SYMBOL".asMini()
+            set(Tag.String("identifier"), identifier)
         }
     }
 

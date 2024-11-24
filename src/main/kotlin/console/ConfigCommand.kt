@@ -2,6 +2,7 @@ package io.github.flyingpig525.console
 
 import io.github.flyingpig525.config
 import io.github.flyingpig525.data.Config
+import io.github.flyingpig525.log
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
@@ -26,6 +27,6 @@ object ConfigCommand : Command {
             configFile.writeText(Json.encodeToString(Config()))
         }
         config = Json.decodeFromString<Config>(configFile.readText())
-        println("Config refreshed")
+        log("Config refreshed")
     }
 }

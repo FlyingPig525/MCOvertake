@@ -4,6 +4,7 @@ import com.sun.jdi.InvalidTypeException
 import io.github.flyingpig525.COLONY_SYMBOL
 import io.github.flyingpig525.clearBlock
 import io.github.flyingpig525.data.PlayerData
+import io.github.flyingpig525.data.PlayerData.Companion.toBlockList
 import io.github.flyingpig525.data.block.*
 import io.github.flyingpig525.players
 import net.bladehunt.kotstom.GlobalEventHandler
@@ -23,6 +24,7 @@ import net.minestom.server.inventory.Inventory
 import net.minestom.server.inventory.InventoryType
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
+import net.minestom.server.tag.Tag
 import java.util.*
 import kotlin.enums.EnumEntries
 
@@ -34,9 +36,13 @@ object SelectBlockItem : Actionable {
         Actionable.persistentRegistry += this
     }
 
+    override val identifier: String = "item:select_block"
+
+
     override fun getItem(uuid: UUID): ItemStack {
         return item(Material.STRUCTURE_VOID) {
             itemName = "<green>$COLONY_SYMBOL <bold>Select Block</bold> $COLONY_SYMBOL".asMini()
+            set(Tag.String("identifier"), identifier)
         }
     }
 
@@ -91,7 +97,7 @@ object SelectBlockItem : Actionable {
         e.player.openInventory(inventory)
 
         val inventoryEventNode = EventNode.type("select-block-inv", EventFilter.INVENTORY, {_, inv -> inventory == inv}).listen<InventoryClickEvent> { e ->
-            if (e.clickedItem.material() == Material.AIR) return@listen
+            if (e.clickedItem.material() == Material.AIR || e.clickedItem.material().block() in players.toBlockList()) return@listen
             if (players[e.player.uuid.toString()] != null) {
                 val data = players[e.player.uuid.toString()]!!
                 clearBlock(data.block)

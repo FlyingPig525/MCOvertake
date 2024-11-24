@@ -1,6 +1,7 @@
 package io.github.flyingpig525.building
 
 import io.github.flyingpig525.MATTER_SYMBOL
+import io.github.flyingpig525.building.MatterExtractor.Companion
 import io.github.flyingpig525.data.PlayerData
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item
@@ -15,6 +16,7 @@ import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
+import net.minestom.server.tag.Tag
 
 @Serializable
 class MatterContainer : Building {
@@ -30,6 +32,10 @@ class MatterContainer : Building {
         player.inventory[4] = getItem(cost, count)
     }
 
+    override fun select(player: Player, data: PlayerData) {
+        player.inventory[4] = Barrack.getItem(data)
+    }
+
     companion object : Building.BuildingCompanion {
         override val block: Block = Block.LANTERN
         override val identifier: String = "matter:container"
@@ -42,6 +48,8 @@ class MatterContainer : Building {
                     resourcesConsumed(2)
                     amountOwned(count)
                 }
+                set(Tag.String("identifier"), MatterExtractor.identifier)
+
             }
         }
 

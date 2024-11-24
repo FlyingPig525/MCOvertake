@@ -24,6 +24,7 @@ import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import net.minestom.server.network.packet.server.play.SetCooldownPacket
 import net.minestom.server.particle.Particle
+import net.minestom.server.tag.Tag
 import net.minestom.server.utils.NamespaceID
 import net.minestom.server.utils.PacketUtils
 import net.minestom.server.utils.time.Cooldown
@@ -37,12 +38,16 @@ object ClaimItem : Actionable {
         Actionable.registry += this
     }
 
+    override val identifier: String = "block:claim"
+
+
     override fun getItem(uuid: UUID): ItemStack {
         val data = players[uuid.toString()]!!
         val item = listOf(Material.WOODEN_HOE, Material.IRON_HOE, Material.DIAMOND_HOE)[data.claimLevel]
         return item(item) {
             itemName = "<gold>$CLAIM_SYMBOL <bold>Expand</bold> <dark_gray>-<red> $POWER_SYMBOL ${data.claimCost}".asMini()
             amount = 1
+            set(Tag.String("identifier"), identifier)
         }
 
     }
@@ -62,7 +67,7 @@ object ClaimItem : Actionable {
                     getItem(event.player.uuid).material().id(),
                     (data.claimCooldown.duration.toMillis() / 50).toInt()
                 ))
-        } else throw IllegalStateException("Claim target is not grass!!!!!!! wtf is going on!!!! AAAAAAAAAAAAAAAAAAAAAA")
+        }
         return true
     }
 

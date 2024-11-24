@@ -1,6 +1,7 @@
 package io.github.flyingpig525.console
 
 import io.github.flyingpig525.instance
+import io.github.flyingpig525.log
 import io.github.flyingpig525.players
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -25,5 +26,6 @@ object SaveCommand : Command {
         }
         file.writeText(Json.encodeToString(players))
         instance.saveChunksToStorage()
+        log("Game data saved")
     }
 }

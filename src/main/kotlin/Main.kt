@@ -2,16 +2,14 @@ package io.github.flyingpig525
 
 import io.github.flyingpig525.console.Command
 import io.github.flyingpig525.console.ConfigCommand
+import io.github.flyingpig525.console.LogCommand
 import io.github.flyingpig525.console.SaveCommand
 import io.github.flyingpig525.data.Config
 import io.github.flyingpig525.data.PlayerData
 import io.github.flyingpig525.data.PlayerData.Companion.toBlockSortedList
 import io.github.flyingpig525.item.*
 import io.github.flyingpig525.wall.blockIsWall
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.bladehunt.kotstom.GlobalEventHandler
@@ -35,7 +33,9 @@ import net.minestom.server.coordinate.Pos
 import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.Entity
 import net.minestom.server.entity.GameMode
+import net.minestom.server.event.inventory.InventoryClickEvent
 import net.minestom.server.event.player.*
+import net.minestom.server.event.trait.InventoryEvent
 import net.minestom.server.extras.MojangAuth
 import net.minestom.server.instance.InstanceContainer
 import net.minestom.server.instance.LightingChunk
@@ -49,9 +49,14 @@ import net.minestom.server.network.packet.server.play.SetCooldownPacket
 import net.minestom.server.particle.Particle
 import net.minestom.server.potion.Potion
 import net.minestom.server.potion.PotionEffect
+import net.minestom.server.tag.Tag
 import net.minestom.server.timer.TaskSchedule
 import java.io.File
+import java.io.PrintStream
 import java.util.*
+import java.util.logging.Handler
+import java.util.logging.LogRecord
+import java.util.logging.Logger
 
 const val POWER_SYMBOL = "✘"
 const val ATTACK_SYMBOL = "\uD83D\uDDE1"
@@ -62,12 +67,13 @@ const val COLONY_SYMBOL = "⚐"
 const val BUILDING_SYMBOL = "⧈"
 const val RESOURCE_SYMBOL = "⌘"
 const val WALL_SYMBOL = "\uD83E\uDE93"
+const val PICKAXE_SYMBOL = "⛏"
 
 const val DASH_BANNER = "----------------------------------------------"
 
 var runConsoleLoop = true
-
-val json = Json { prettyPrint = true; encodeDefaults = true}
+val logStream = PrintStream("log.log")
+val json = Json { prettyPrint = true; encodeDefaults = true }
 
 lateinit var instance: InstanceContainer private set
 
@@ -75,7 +81,7 @@ lateinit var players: MutableMap<String, PlayerData> private set
 
 lateinit var config: Config
 
-suspend fun main() {
+fun main() = runBlocking { try {
     // Initialize the servers
     val minecraftServer = MinecraftServer.init()
     MojangAuth.init()
@@ -90,7 +96,7 @@ suspend fun main() {
     }
     config = json.decodeFromString<Config>(configFile.readText())
     configFile.writeText(json.encodeToString(config))
-    println("Config imported...")
+    log("Config imported...")
 
 
     instance = InstanceManager.createInstanceContainer().apply {
@@ -99,7 +105,7 @@ suspend fun main() {
         setGenerator { unit ->
             unit.modifier().setAll { x, y, z ->
                 if (x in 0..300 && z in 0..300) {
-                    if (y in 38..39)return@setAll Block.GRASS_BLOCK
+                    if (y in 38..39) return@setAll Block.GRASS_BLOCK
                 }
                 if (x in -1..301 && z in -1..301 && y < 40) {
                     return@setAll Block.DIAMOND_BLOCK
@@ -109,18 +115,18 @@ suspend fun main() {
         }
         setChunkSupplier(::LightingChunk)
     }
-    println("World loaded...")
+    log("World loaded...")
 
     players = Json.decodeFromString<MutableMap<String, PlayerData>>(
         if (File("./player-data.json").exists())
             File("./player-data.json").readText()
         else "{}"
     )
-    println("Player data imported...")
-    println("Filesystem actions complete...")
+    log("Player data imported...")
+    log("Filesystem actions complete...")
 
     initItems()
-    println("Items initialized...")
+    log("Items initialized...")
     GlobalEventHandler.listen<AsyncPlayerConfigurationEvent> { event ->
         event.spawningInstance = instance
         val player = event.player
@@ -157,7 +163,9 @@ suspend fun main() {
             }
         }
     }
-    println("Player spawning setup...")
+    log("Player spawning setup...")
+
+
 
     var scoreboardTitleProgress = -1.0
     // Scoreboard tick
@@ -170,6 +178,7 @@ suspend fun main() {
             for ((i, player) in players.toBlockSortedList().withIndex()) {
                 if (player.playerDisplayName == null) player.playerDisplayName =
                     instance.getPlayerByUuid(player.uuid.toUUID())?.username ?: continue
+                if (player.blocks == 0) continue
                 line("<dark_green><bold>${player.playerDisplayName}".asMini()) {
                     isVisible = true
                     line = player.blocks
@@ -208,10 +217,10 @@ suspend fun main() {
         file.writeText(Json.encodeToString(players))
         instance.saveChunksToStorage()
         if (config.printSaveMessages) {
-            println("Game data saved...")
+            log("Game data saved")
         }
     }, TaskSchedule.minutes(1), TaskSchedule.minutes(1))
-    println("Game loops scheduled...")
+    log("Game loops scheduled...")
 
     GlobalEventHandler.listen<PlayerMoveEvent> { e ->
         with(e) {
@@ -229,14 +238,12 @@ suspend fun main() {
 
     GlobalEventHandler.listen<PlayerUseItemEvent> { e ->
         val item = e.player.getItemInHand(e.hand)
-        val uuid = e.player.uuid
         e.isCancelled = true
-        if (item == SelectBlockItem.getItem(uuid)) {
-            e.isCancelled = SelectBlockItem.onInteract(e, instance)
-            return@listen
-        }
+        println(item.getTag(Tag.String("identifier")))
+        println()
         for (actionable in Actionable.registry) {
-            if (item == actionable.getItem(uuid)) {
+            println(actionable.identifier)
+            if (item.getTag(Tag.String("identifier")) == actionable.identifier) {
                 e.isCancelled = actionable.onInteract(e, instance)
                 break
             }
@@ -247,7 +254,7 @@ suspend fun main() {
         val item = e.player.getItemInHand(e.hand)
         GlobalEventHandler.call(PlayerUseItemEvent(e.player, e.hand, item, 0))
     }
-    println("Item use event registered")
+    log("Item use event registered")
 
     GlobalEventHandler.listen<PlayerSwapItemEvent> {
         it.isCancelled = true
@@ -326,7 +333,7 @@ suspend fun main() {
             e.player.inventory.idle()
         }
     }
-    println("Player loop started...")
+    log("Player loop started...")
 
     GlobalEventHandler.listen<PlayerDisconnectEvent> { e ->
         val file = File("./player-data.json")
@@ -338,47 +345,52 @@ suspend fun main() {
     }
 
     minecraftServer.start(config.serverAddress, config.serverPort)
-    println("GameServer online!")
+    log("GameServer online!")
 
     initConsoleCommands()
-    println("Console commands initialized...")
-    coroutineScope {
-        launch {
-            val scanner = Scanner(System.`in`)
-            while(runConsoleLoop) {
-                if (scanner.hasNext()) {
-                    var last = ""
-                    val args = scanner.next().split(' ').mapNotNull {
-                        if (last != "") {
-                            last += " $it"
-                            return@mapNotNull null
-                        }
-                        if (it.startsWith('"')) {
-                            last = it
-                            return@mapNotNull null
-                        }
-                        if (it.endsWith('"')) {
-                            val ret = "$last $it"
-                            last = ""
-                            return@mapNotNull ret
-                        }
-                        it
+    log("Console commands initialized...")
+    launch {
+        val scanner = Scanner(System.`in`)
+        while (runConsoleLoop) {
+            for (line in scanner) {
+                var last = ""
+                val args = line.split(' ').mapNotNull {
+                    if (last != "") {
+                        last += " $it"
+                        return@mapNotNull null
                     }
-                    for (entry in Command.registry) {
-                        if (entry.validate(args)) {
-                            entry.execute(args)
-                        }
+                    if (it.startsWith('"')) {
+                        last = it
+                        return@mapNotNull null
+                    }
+                    if (it.endsWith('"')) {
+                        val ret = "$last $it"
+                        last = ""
+                        return@mapNotNull ret
+                    }
+                    it
+                }
+                for (entry in Command.registry) {
+                    if (entry.validate(args)) {
+                        log(line)
+                        entry.execute(args)
                     }
                 }
             }
+            delay(config.consolePollingDelay)
         }
     }
-    println("Console loop running!")
-}
+
+    log("Console loop running!")
+
+} catch (e: Error) {
+    e.printStackTrace()
+    e.printStackTrace(logStream)
+}}
 
 fun clearBlock(block: Block) {
     scheduleImmediately {
-        println("clear block")
+        log("clear block")
         for (x in 0..300) {
             for (z in 0..300) {
                 instance.loadChunk(Vec(x.toDouble(), z.toDouble())).thenRun {
@@ -459,6 +471,11 @@ fun repeatAdjacent(point: Point, fn: (point: Point) -> Unit) {
     }
 }
 
+fun log(msg: Any) {
+    println(msg)
+    logStream.println(msg)
+}
+
 fun initItems() {
     BarracksItem
     ClaimItem
@@ -471,9 +488,11 @@ fun initItems() {
     TrainingCampItem
     WallItem
     UpgradeWallItem
+    BreakBuildingItem
 }
 
 fun initConsoleCommands() {
     ConfigCommand
     SaveCommand
+    LogCommand
 }

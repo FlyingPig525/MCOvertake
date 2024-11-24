@@ -7,6 +7,7 @@ import net.bladehunt.kotstom.extension.set
 import net.minestom.server.entity.Player
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
+import net.minestom.server.tag.Tag
 import java.util.*
 
 object OwnedBlockItem : Actionable {
@@ -15,9 +16,12 @@ object OwnedBlockItem : Actionable {
         Actionable.registry += this
     }
 
+    override val identifier: String = "block:owned"
+
     override fun getItem(uuid: UUID): ItemStack {
         return item(Material.LIME_DYE) {
             itemName = "<green><bold>Your Land".asMini()
+            set(Tag.String("identifier"), identifier)
         }
     }
 

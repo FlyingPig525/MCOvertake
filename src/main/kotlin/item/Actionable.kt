@@ -1,5 +1,6 @@
 package io.github.flyingpig525.item
 
+import io.github.flyingpig525.data.PlayerData
 import io.github.flyingpig525.instance
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -22,6 +23,8 @@ val ERROR_ITEM = item(Material.BARRIER) {
 }
 
 interface Actionable {
+    val identifier: String
+
     fun getItem(uuid: UUID): ItemStack
 
     fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean { return true }
@@ -51,3 +54,6 @@ fun claimWithParticle(player: Player, target: Point, targetBlock: Block, resultB
     }
     player.sendPacket(particle)
 }
+
+fun checkBlockAvailable(data: PlayerData, target: Point) =
+    instance.getBlock(target.withY(39.0)).defaultState() == data.block && instance.getBlock(target.withY(40.0)).defaultState() == Block.AIR
