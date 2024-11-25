@@ -22,7 +22,7 @@ object BarracksItem : Actionable {
 
     override fun getItem(uuid: UUID): ItemStack {
         val data = players[uuid.toString()]!!
-        return Barrack.getItem(data).withTag(Tag.String("identifier"), identifier)
+        return Barrack.getItem(data)
     }
 
     override fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean {

@@ -23,7 +23,7 @@ object TrainingCampItem : Actionable {
 
     override fun getItem(uuid: UUID): ItemStack {
         val data = players[uuid.toString()]!!
-        return TrainingCamp.getItem(data).withTag(Tag.String("identifier"), identifier)
+        return TrainingCamp.getItem(data)
     }
 
     override fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean {

@@ -1,5 +1,11 @@
 package io.github.flyingpig525
 
+import de.articdive.jnoise.core.api.functions.Interpolation
+import de.articdive.jnoise.generators.noise_parameters.fade_functions.FadeFunction
+import de.articdive.jnoise.generators.noise_parameters.simplex_variants.Simplex2DVariant
+import de.articdive.jnoise.generators.noisegen.opensimplex.SuperSimplexNoiseGenerator
+import de.articdive.jnoise.generators.noisegen.perlin.PerlinNoiseGenerator
+import de.articdive.jnoise.pipeline.JNoise
 import io.github.flyingpig525.console.Command
 import io.github.flyingpig525.console.ConfigCommand
 import io.github.flyingpig525.console.LogCommand
@@ -45,18 +51,20 @@ import net.minestom.server.inventory.PlayerInventory
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import net.minestom.server.network.packet.server.SendablePacket
+import net.minestom.server.network.packet.server.play.BlockChangePacket
 import net.minestom.server.network.packet.server.play.SetCooldownPacket
 import net.minestom.server.particle.Particle
 import net.minestom.server.potion.Potion
 import net.minestom.server.potion.PotionEffect
 import net.minestom.server.tag.Tag
 import net.minestom.server.timer.TaskSchedule
+import org.slf4j.LoggerFactory
+import org.slf4j.spi.SLF4JServiceProvider
 import java.io.File
 import java.io.PrintStream
+import java.sql.Time
+import java.time.Instant
 import java.util.*
-import java.util.logging.Handler
-import java.util.logging.LogRecord
-import java.util.logging.Logger
 
 const val POWER_SYMBOL = "✘"
 const val ATTACK_SYMBOL = "\uD83D\uDDE1"
@@ -77,7 +85,7 @@ val json = Json { prettyPrint = true; encodeDefaults = true }
 
 lateinit var instance: InstanceContainer private set
 
-lateinit var players: MutableMap<String, PlayerData> private set
+lateinit var players: MutableMap<String, PlayerData>
 
 lateinit var config: Config
 
@@ -98,10 +106,15 @@ fun main() = runBlocking { try {
     configFile.writeText(json.encodeToString(config))
     log("Config imported...")
 
-
     instance = InstanceManager.createInstanceContainer().apply {
         chunkLoader = AnvilLoader("world/world")
 
+        val noise = JNoise.newBuilder().superSimplex(SuperSimplexNoiseGenerator.newBuilder().setVariant2D(Simplex2DVariant.CLASSIC).setSeed(
+            (Long.MIN_VALUE..Long.MAX_VALUE).random()
+        ))
+            .scale(config.noiseScale)
+            .clamp(-1.0, 1.0)
+            .build()
         setGenerator { unit ->
             unit.modifier().setAll { x, y, z ->
                 if (x in 0..300 && z in 0..300) {
@@ -109,6 +122,11 @@ fun main() = runBlocking { try {
                 }
                 if (x in -1..301 && z in -1..301 && y < 40) {
                     return@setAll Block.DIAMOND_BLOCK
+                }
+                if (config.doNoiseTest && y == 45 && x in 0..300 && z in 0..300) {
+                    val eval = noise.evaluateNoise(x.toDouble(), z.toDouble()) + if (x in 125..175 && z in 125..175) 0.07999 else 0.0
+                    println(eval)
+                    if (eval > config.noiseThreshold) return@setAll Block.OBSIDIAN
                 }
                 Block.AIR
             }
@@ -239,10 +257,7 @@ fun main() = runBlocking { try {
     GlobalEventHandler.listen<PlayerUseItemEvent> { e ->
         val item = e.player.getItemInHand(e.hand)
         e.isCancelled = true
-        println(item.getTag(Tag.String("identifier")))
-        println()
         for (actionable in Actionable.registry) {
-            println(actionable.identifier)
             if (item.getTag(Tag.String("identifier")) == actionable.identifier) {
                 e.isCancelled = actionable.onInteract(e, instance)
                 break
@@ -360,11 +375,11 @@ fun main() = runBlocking { try {
                         return@mapNotNull null
                     }
                     if (it.startsWith('"')) {
-                        last = it
+                        last = it.drop(1)
                         return@mapNotNull null
                     }
                     if (it.endsWith('"')) {
-                        val ret = "$last $it"
+                        val ret = "$last ${it.dropLast(1)}"
                         last = ""
                         return@mapNotNull ret
                     }
@@ -372,7 +387,7 @@ fun main() = runBlocking { try {
                 }
                 for (entry in Command.registry) {
                     if (entry.validate(args)) {
-                        log(line)
+                        logStream.println(line)
                         entry.execute(args)
                     }
                 }
@@ -387,6 +402,12 @@ fun main() = runBlocking { try {
     e.printStackTrace()
     e.printStackTrace(logStream)
 }}
+
+fun log(msg: Any) {
+    val time = Time.from(Instant.now()).toString().dropLast(9).drop(11)
+    println("[$time]: $msg")
+    logStream.println("[$time]: $msg")
+}
 
 fun clearBlock(block: Block) {
     scheduleImmediately {
@@ -469,11 +490,6 @@ fun repeatAdjacent(point: Point, fn: (point: Point) -> Unit) {
             fn(Vec(x.toDouble(), point.y(), z.toDouble()))
         }
     }
-}
-
-fun log(msg: Any) {
-    println(msg)
-    logStream.println(msg)
 }
 
 fun initItems() {

@@ -19,7 +19,7 @@ object MatterContainerItem : Actionable {
 
     override fun getItem(uuid: UUID): ItemStack {
         val data = players[uuid.toString()]!!
-        return MatterContainer.getItem(data).withTag(Tag.String("identifier"), identifier)
+        return MatterContainer.getItem(data)
     }
 
     override fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean {

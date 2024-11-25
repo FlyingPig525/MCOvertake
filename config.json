@@ -4,5 +4,8 @@
     "whitelisted": [],
     "notWhitelistedMessage": "<red><bold>Player not whitelisted\n</bold><grey>----------------------------------------------\n<gold><bold>Please contact the server owner if you believe this is a mistake",
     "printSaveMessages": false,
-    "consolePollingDelay": 2500
+    "consolePollingDelay": 2500,
+    "doNoiseTest": false,
+    "noiseScale": 0.05,
+    "noiseThreshold": 0.15
 }

@@ -21,12 +21,13 @@ object ConfigCommand : Command {
     }
 
     override fun execute(arguments: List<String>) {
+        log("Reading config file")
         val configFile = File("config.json")
         if (!configFile.exists()) {
             configFile.createNewFile()
             configFile.writeText(Json.encodeToString(Config()))
         }
         config = Json.decodeFromString<Config>(configFile.readText())
-        log("Config refreshed")
+        log("Loaded config refreshed")
     }
 }

@@ -1,5 +1,6 @@
 package io.github.flyingpig525.console
 
+import io.github.flyingpig525.data.PlayerData
 import io.github.flyingpig525.instance
 import io.github.flyingpig525.log
 import io.github.flyingpig525.players
@@ -16,16 +17,27 @@ object SaveCommand : Command {
     override val name: String = "save"
 
     override fun validate(arguments: List<String>): Boolean {
-        return arguments.size == 1 && arguments[0] == name
+        return arguments.size in 1..2 && arguments[0] == name
     }
 
     override fun execute(arguments: List<String>) {
-        val file = File("./player-data.json")
-        if (!file.exists()) {
-            file.createNewFile()
+        if (arguments.size == 1) {
+            log("Saving...")
+            val file = File("./player-data.json")
+            if (!file.exists()) {
+                file.createNewFile()
+            }
+            file.writeText(Json.encodeToString(players))
+            instance.saveChunksToStorage()
+            log("Game data saved")
+        } else if (arguments[1] == "reload") {
+            log("Reading save...")
+            players = Json.decodeFromString<MutableMap<String, PlayerData>>(
+                if (File("./player-data.json").exists())
+                    File("./player-data.json").readText()
+                else "{}"
+            )
+            log("Save loaded")
         }
-        file.writeText(Json.encodeToString(players))
-        instance.saveChunksToStorage()
-        log("Game data saved")
     }
 }

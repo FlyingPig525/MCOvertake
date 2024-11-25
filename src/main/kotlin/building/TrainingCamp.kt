@@ -49,7 +49,7 @@ class TrainingCamp : Building {
                     resourcesConsumed(3)
                     amountOwned(count)
                 }
-                set(Tag.String("identifier"), MatterExtractor.identifier)
+                set(Tag.String("identifier"), identifier)
             }
         }
 

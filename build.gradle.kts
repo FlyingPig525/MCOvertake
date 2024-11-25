@@ -26,6 +26,8 @@ dependencies {
     implementation("net.minestom:minestom-snapshots:bb7acc2e77")
     implementation("net.bladehunt:kotstom:0.3.0")
     implementation("net.kyori:adventure-text-minimessage:4.17.0")
+
+    implementation("de.articdive:jnoise-pipeline:4.1.0")
 }
 
 tasks.test {

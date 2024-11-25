@@ -50,7 +50,7 @@ class Barrack : Building {
                     resourcesConsumed(2)
                     amountOwned(count)
                 }
-                set(Tag.String("identifier"), MatterExtractor.identifier)
+                set(Tag.String("identifier"), identifier)
 
             }
         }
