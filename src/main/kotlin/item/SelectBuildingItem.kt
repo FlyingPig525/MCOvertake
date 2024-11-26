@@ -68,7 +68,7 @@ object SelectBuildingItem : Actionable {
 
         val inventoryEventNode = EventNode.type("select-building-inv", EventFilter.INVENTORY) { _, inv -> inventory == inv }
             .listen<InventoryClickEvent> { e ->
-                val data = players[e.player.uuid.toString()]!!
+                val data = players[e.player.uuid.toString()] ?: return@listen
                 var close = true
                 when(e.clickedItem) {
                     TrainingCamp.getItem(playerData) -> {
@@ -101,7 +101,7 @@ object SelectBuildingItem : Actionable {
     }
 
     fun updatePlayerItem(player: Player) {
-        val data = players[player.uuid.toString()]!!
+        val data = players[player.uuid.toString()] ?: return
         when(player.inventory[4].material()) {
             TrainingCamp.getItem(data).material() -> {
                 data.trainingCamps.select(player, data.trainingCampCost)

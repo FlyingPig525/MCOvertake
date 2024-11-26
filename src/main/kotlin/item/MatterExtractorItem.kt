@@ -18,7 +18,7 @@ object MatterExtractorItem : Actionable {
     override val identifier: String = "matter:generator"
 
     override fun getItem(uuid: UUID): ItemStack {
-        val data = players[uuid.toString()]!!
+        val data = players[uuid.toString()] ?: return ERROR_ITEM
         return MatterExtractor.getItem(data)
     }
 
@@ -28,7 +28,7 @@ object MatterExtractorItem : Actionable {
             return true
         }
         val target = event.player.getTrueTarget(20) ?: return true
-        val playerData = players[event.player.uuid.toString()]!!
+        val playerData = players[event.player.uuid.toString()] ?: return true
         if (!checkBlockAvailable(playerData, target)) return true
         if (MatterExtractor.getResourceUse(playerData.matterExtractors.count + 1) > playerData.maxDisposableResources) return true
         if (playerData.organicMatter - playerData.extractorCost < 0) return true

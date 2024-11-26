@@ -18,7 +18,7 @@ object MatterContainerItem : Actionable {
     override val identifier: String = "matter:container"
 
     override fun getItem(uuid: UUID): ItemStack {
-        val data = players[uuid.toString()]!!
+        val data = players[uuid.toString()] ?: return ERROR_ITEM
         return MatterContainer.getItem(data)
     }
 
@@ -28,7 +28,7 @@ object MatterContainerItem : Actionable {
             return true
         }
         val target = event.player.getTrueTarget(20) ?: return true
-        val playerData = players[event.player.uuid.toString()]!!
+        val playerData = players[event.player.uuid.toString()] ?: return true
         if (!checkBlockAvailable(playerData, target)) return true
         if (MatterContainer.getResourceUse(playerData.matterContainers.count + 1) > playerData.maxDisposableResources) return true
         if (playerData.organicMatter - playerData.containerCost < 0) return true
@@ -40,7 +40,7 @@ object MatterContainerItem : Actionable {
     }
 
     override fun setItemSlot(player: Player) {
-        val data = players[player.uuid.toString()]!!
+        val data = players[player.uuid.toString()] ?: return
         data.matterContainers.select(player, data.containerCost)
     }
 }

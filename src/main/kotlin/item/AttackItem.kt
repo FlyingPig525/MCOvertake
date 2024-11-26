@@ -33,7 +33,7 @@ object AttackItem : Actionable {
 
     override fun getItem(uuid: UUID): ItemStack {
         return item(Material.DIAMOND_SWORD) {
-            val player = instance.getPlayerByUuid(uuid)!!
+            val player = instance.getPlayerByUuid(uuid) ?: return ERROR_ITEM
             val target = player.getTrueTarget(20) ?: return ERROR_ITEM
             val targetData = getAttacking(player)
             val targetName = targetData?.playerDisplayName ?: ""
@@ -72,7 +72,7 @@ object AttackItem : Actionable {
         val buildingPoint = if (target.blockY() == 40) target else target.add(0.0, 1.0, 0.0)
         val playerBlock = instance.getBlock(if (target.blockY() == 39) target else target.sub(0.0, 1.0, 0.0))
         val buildingBlock = instance.getBlock(buildingPoint)
-        val data = players[event.player.uuid.toString()]!!
+        val data = players[event.player.uuid.toString()] ?: return true
         if (playerBlock == Block.GRASS_BLOCK || playerBlock == data.block) {
             return true
         }
@@ -107,7 +107,7 @@ object AttackItem : Actionable {
             }
             else -> {
                 // TODO: ADD PARTICLES
-                val wallLevel = buildingBlock.wallLevel!!
+                val wallLevel = buildingBlock.wallLevel ?: return true
                 if (wallLevel == 1) {
                     instance.setBlock(buildingPoint, Block.AIR)
                     // PARTICLES

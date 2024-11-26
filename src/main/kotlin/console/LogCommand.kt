@@ -1,5 +1,6 @@
 package io.github.flyingpig525.console
 
+import io.github.flyingpig525.logStream
 import java.io.File
 import kotlin.io.path.Path
 import kotlin.io.path.createDirectories
@@ -22,5 +23,6 @@ object LogCommand : Command {
             logFile.delete()
         }
         logFile.createNewFile()
+        logStream
     }
 }

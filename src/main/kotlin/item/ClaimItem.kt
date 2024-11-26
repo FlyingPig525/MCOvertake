@@ -42,7 +42,7 @@ object ClaimItem : Actionable {
 
 
     override fun getItem(uuid: UUID): ItemStack {
-        val data = players[uuid.toString()]!!
+        val data = players[uuid.toString()] ?: return ERROR_ITEM
         val item = listOf(Material.WOODEN_HOE, Material.IRON_HOE, Material.DIAMOND_HOE)[data.claimLevel]
         return item(item) {
             itemName = "<gold>$CLAIM_SYMBOL <bold>Expand</bold> <dark_gray>-<red> $POWER_SYMBOL ${data.claimCost}".asMini()
@@ -53,7 +53,7 @@ object ClaimItem : Actionable {
     }
 
     override fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean {
-        val data = players[event.player.uuid.toString()]!!
+        val data = players[event.player.uuid.toString()] ?: return true
         if (data.power - data.claimCost < 0) return true
         if (!data.claimCooldown.isReady(Instant.now().toEpochMilli())) return true
         val target = event.player.getTrueTarget(20) ?: return true

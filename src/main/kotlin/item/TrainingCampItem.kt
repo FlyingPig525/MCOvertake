@@ -32,7 +32,7 @@ object TrainingCampItem : Actionable {
             return true
         }
         val target = event.player.getTrueTarget(20) ?: return true
-        val playerData = players[event.player.uuid.toString()]!!
+        val playerData = players[event.player.uuid.toString()] ?: return true
         if (!checkBlockAvailable(playerData, target)) return true
         if (TrainingCamp.getResourceUse(playerData.trainingCamps.count + 1) > playerData.maxDisposableResources) return true
         if (playerData.organicMatter - playerData.trainingCampCost < 0) return true
@@ -44,7 +44,7 @@ object TrainingCampItem : Actionable {
     }
 
     override fun setItemSlot(player: Player) {
-        val data = players[player.uuid.toString()]!!
+        val data = players[player.uuid.toString()] ?: return
         data.trainingCamps.select(player, data.trainingCampCost)
     }
 }

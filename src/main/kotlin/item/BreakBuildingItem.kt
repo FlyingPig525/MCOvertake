@@ -35,13 +35,13 @@ object BreakBuildingItem : Actionable {
     }
 
     override fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean {
-        val data = players[event.player.uuid.toString()]!!
+        val data = players[event.player.uuid.toString()] ?: return true
         val target = event.player.getTrueTarget(20) ?: return true
         val buildingPos = target.withY(40.0)
         val buildingBlock = instance.getBlock(buildingPos)
         if (!Building.blockIsBuilding(buildingBlock)) return true
-        val identifier = Building.getBuildingIdentifier(buildingBlock)!!
-        val ref = data.getBuildingReferenceByIdentifier(identifier)!!
+        val identifier = Building.getBuildingIdentifier(buildingBlock) ?: return true
+        val ref = data.getBuildingReferenceByIdentifier(identifier) ?: return true
         ref.get().count--
         ref.get().select(event.player, data)
         instance.setBlock(buildingPos, Block.AIR)

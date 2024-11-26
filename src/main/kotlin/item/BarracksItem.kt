@@ -21,7 +21,7 @@ object BarracksItem : Actionable {
 
 
     override fun getItem(uuid: UUID): ItemStack {
-        val data = players[uuid.toString()]!!
+        val data = players[uuid.toString()] ?: return ERROR_ITEM
         return Barrack.getItem(data)
     }
 
@@ -31,7 +31,7 @@ object BarracksItem : Actionable {
             return true
         }
         val target = event.player.getTrueTarget(20) ?: return true
-        val playerData = players[event.player.uuid.toString()]!!
+        val playerData = players[event.player.uuid.toString()] ?: return true
         if (!checkBlockAvailable(playerData, target)) return true
         if (Barrack.getResourceUse(playerData.barracks.count + 1) > playerData.maxDisposableResources) return true
         if (playerData.organicMatter - playerData.barracksCost < 0) return true
@@ -43,7 +43,7 @@ object BarracksItem : Actionable {
     }
 
     override fun setItemSlot(player: Player) {
-        val data = players[player.uuid.toString()]!!
+        val data = players[player.uuid.toString()] ?: return
         data.barracks.select(player, data.barracksCost)
     }
 }

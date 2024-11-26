@@ -62,6 +62,7 @@ import org.slf4j.LoggerFactory
 import org.slf4j.spi.SLF4JServiceProvider
 import java.io.File
 import java.io.PrintStream
+import java.lang.Exception
 import java.sql.Time
 import java.time.Instant
 import java.util.*
@@ -259,7 +260,13 @@ fun main() = runBlocking { try {
         e.isCancelled = true
         for (actionable in Actionable.registry) {
             if (item.getTag(Tag.String("identifier")) == actionable.identifier) {
-                e.isCancelled = actionable.onInteract(e, instance)
+                e.isCancelled = try {
+                    actionable.onInteract(e, instance)
+                } catch(e: Exception) {
+                    e.printStackTrace()
+                    e.printStackTrace(logStream)
+                    true
+                }
                 break
             }
         }
@@ -395,10 +402,8 @@ fun main() = runBlocking { try {
             delay(config.consolePollingDelay)
         }
     }
-
     log("Console loop running!")
-
-} catch (e: Error) {
+} catch (e: Exception) {
     e.printStackTrace()
     e.printStackTrace(logStream)
 }}

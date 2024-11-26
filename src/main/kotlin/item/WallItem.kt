@@ -38,7 +38,7 @@ object WallItem : Actionable {
     }
 
     override fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean {
-        val data = players[event.player.uuid.toString()]!!
+        val data = players[event.player.uuid.toString()] ?: return true
         if (data.organicMatter - 15 < 0) return true
         if (!data.wallCooldown.isReady(Instant.now().toEpochMilli())) return true
         val target = event.player.getTrueTarget(20) ?: return true

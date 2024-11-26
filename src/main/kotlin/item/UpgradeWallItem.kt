@@ -35,11 +35,11 @@ object UpgradeWallItem : Actionable {
     }
 
     override fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean {
-        val data = players[event.player.uuid.toString()]!!
-        val target = event.player.getTrueTarget(20)!!
+        val data = players[event.player.uuid.toString()] ?: return true
+        val target = event.player.getTrueTarget(20) ?: return true
         val block = instance.getBlock(target).defaultState()
-        val level = block.wallLevel!!
-        val cost = getWallUpgradeCost(block)!!
+        val level = block.wallLevel ?: return true
+        val cost = getWallUpgradeCost(block) ?: return true
         if (data.organicMatter < cost) return true
         data.organicMatter -= cost
         instance.setBlock(target, nextWall(level))
@@ -72,7 +72,7 @@ object UpgradeWallItem : Actionable {
         }
     }
 
-    fun updateWallDirections(point: Point, range: IntRange, block: Block = instance.getBlock(point).defaultState()) {
+    private fun updateWallDirections(point: Point, range: IntRange, block: Block = instance.getBlock(point).defaultState()) {
         val north = instance.getBlock(point.add(0.0, 0.0, -1.0)).defaultState().wallLevel in range
         val south = instance.getBlock(point.add(0.0, 0.0, 1.0)).defaultState().wallLevel in range
         val east = instance.getBlock(point.add(1.0, 0.0, 0.0)).defaultState().wallLevel in range
