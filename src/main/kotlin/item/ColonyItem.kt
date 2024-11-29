@@ -1,15 +1,11 @@
 package io.github.flyingpig525.item
 
-import io.github.flyingpig525.COLONY_SYMBOL
-import io.github.flyingpig525.POWER_SYMBOL
-import io.github.flyingpig525.getTrueTarget
-import io.github.flyingpig525.players
+import io.github.flyingpig525.*
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.bladehunt.kotstom.extension.set
 import net.minestom.server.entity.Player
-import net.minestom.server.event.player.PlayerBlockPlaceEvent
 import net.minestom.server.event.player.PlayerUseItemEvent
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
@@ -20,7 +16,7 @@ import net.minestom.server.tag.Tag
 import net.minestom.server.utils.time.Cooldown
 import java.time.Duration
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 object ColonyItem : Actionable {
 
@@ -28,6 +24,7 @@ object ColonyItem : Actionable {
         Actionable.registry += this
     }
     override val identifier: String = "block:colony"
+    override val itemMaterial: Material = Material.CHEST
 
 
     override fun getItem(uuid: UUID): ItemStack {
@@ -40,8 +37,8 @@ object ColonyItem : Actionable {
 
     override fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean {
         val data = players[event.player.uuid.toString()] ?: return true
-        if (data.power - data.colonyCost < 0) return true
         if (!data.colonyCooldown.isReady(Instant.now().toEpochMilli())) return true
+        if (data.power - data.colonyCost < 0) return true
         val target = event.player.getTrueTarget(20)?.withY(38.0) ?: return true
         if (instance.getBlock(target) == Block.GRASS_BLOCK) {
             claimWithParticle(event.player, target, Block.GRASS_BLOCK, data.block)
@@ -51,7 +48,7 @@ object ColonyItem : Actionable {
             event.player.sendPacket(
                 SetCooldownPacket(
                     getItem(event.player.uuid).material().id(),
-                    (data.colonyCooldown.duration.toMillis() / 50).toInt()
+                    data.colonyCooldown.ticks
                 )
             )
             data.updateBossBars()

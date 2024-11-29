@@ -3,7 +3,6 @@ package io.github.flyingpig525.item
 import io.github.flyingpig525.*
 import io.github.flyingpig525.building.*
 import io.github.flyingpig525.data.PlayerData
-import io.github.flyingpig525.data.PlayerData.Companion.getDataByBlock
 import io.github.flyingpig525.data.PlayerData.Companion.getDataByPoint
 import io.github.flyingpig525.wall.blockIsWall
 import io.github.flyingpig525.wall.getWallAttackCost
@@ -20,7 +19,11 @@ import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
+import net.minestom.server.network.packet.server.play.SetCooldownPacket
 import net.minestom.server.tag.Tag
+import net.minestom.server.utils.time.Cooldown
+import java.time.Duration
+import java.time.Instant
 import java.util.*
 
 object AttackItem : Actionable {
@@ -30,9 +33,10 @@ object AttackItem : Actionable {
     }
 
     override val identifier: String = "block:attack"
+    override val itemMaterial: Material = Material.DIAMOND_SWORD
 
     override fun getItem(uuid: UUID): ItemStack {
-        return item(Material.DIAMOND_SWORD) {
+        return item(itemMaterial) {
             val player = instance.getPlayerByUuid(uuid) ?: return ERROR_ITEM
             val target = player.getTrueTarget(20) ?: return ERROR_ITEM
             val targetData = getAttacking(player)
@@ -59,13 +63,33 @@ object AttackItem : Actionable {
         return (targetData?.baseAttackCost ?: 15) + additiveModifier
     }
 
+    private fun getAttackCooldown(targetData: PlayerData?, wallLevel: Int): Cooldown {
+        // TODO: When research-like things get implemented, add them
+        var cooldownTicks = 20L
+        if (wallLevel <= 10) {
+            cooldownTicks += 3 * wallLevel
+        } else {
+            cooldownTicks += (wallLevel * wallLevel) / 3
+        }
+        return Cooldown(Duration.ofMillis(cooldownTicks*50))
+    }
+
+    private fun attackRaft(targetData: PlayerData, point: Point) {
+        ClaimWaterItem.destroyPlayerRaft(point.withY(40.0))
+        targetData.blocks--
+        instance.setBlock(point.withY(38.0), Block.SAND)
+        instance.setBlock(point.withY(40.0), Block.AIR)
+        // TODO: PARTICLES
+    }
+
     override fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean {
-        // TODO: ADD COOLDOWN
+        val data = players[event.player.uuid.toString()] ?: return true
+        if (!data.attackCooldown.isReady(Instant.now().toEpochMilli())) return true
         val target = event.player.getTrueTarget(20) ?: return true
         val buildingPoint = target.withY(40.0)
         val playerBlock = instance.getBlock(target.withY(38.0))
+        val waterBlock = instance.getBlock(target.withY(39.0))
         val buildingBlock = instance.getBlock(buildingPoint)
-        val data = players[event.player.uuid.toString()] ?: return true
         if (playerBlock == Block.GRASS_BLOCK || playerBlock == Block.SAND || playerBlock == data.block) {
             return true
         }
@@ -85,31 +109,60 @@ object AttackItem : Actionable {
                 instance.setBlock(buildingPoint, Block.AIR)
                 false
             }
-            Barrack.block -> {
+            Barrack.block -> run {
                 targetData.barracks.count--
-                data.barracks.count++
-                true
+                if (waterBlock.defaultState() != Block.WATER) {
+                    data.barracks.count++
+                    return@run true
+                }
+                attackRaft(targetData, target)
+                if (targetPlayer != null) {
+                    SelectBuildingItem.updatePlayerItem(targetPlayer)
+                }
+                false
             }
-            MatterContainer.block -> {
+            MatterContainer.block -> run {
                 targetData.matterContainers.count--
-                data.matterContainers.count++
-                true
+                if (waterBlock.defaultState() != Block.WATER) {
+                    data.matterContainers.count++
+                    return@run true
+                }
+                attackRaft(targetData, target)
+                if (targetPlayer != null) {
+                    SelectBuildingItem.updatePlayerItem(targetPlayer)
+                }
+                false
             }
-            MatterExtractor.block -> {
+            MatterExtractor.block -> run {
                 targetData.matterExtractors.count--
-                data.matterExtractors.count++
-                true
+                if (waterBlock.defaultState() != Block.WATER) {
+                    data.matterExtractors.count++
+                    return@run true
+                }
+                attackRaft(targetData, target)
+                if (targetPlayer != null) {
+                    SelectBuildingItem.updatePlayerItem(targetPlayer)
+                }
+                false
             }
-            TrainingCamp.block -> {
+            TrainingCamp.block -> run {
                 targetData.trainingCamps.count--
-                data.trainingCamps.count++
-                true
+                if (waterBlock.defaultState() != Block.WATER) {
+                    data.trainingCamps.count++
+                    return@run true
+                }
+                attackRaft(targetData, target)
+                if (targetPlayer != null) {
+                    SelectBuildingItem.updatePlayerItem(targetPlayer)
+                }
+                false
             }
-            else -> {
+            else -> run {
                 // TODO: ADD PARTICLES
-                val wallLevel = buildingBlock.wallLevel ?: return true
+                val wallLevel = buildingBlock.wallLevel
+                if (wallLevel == 0) return@run true
                 if (wallLevel == 1) {
-                    instance.setBlock(buildingPoint, Block.AIR)
+                    instance.setBlock(buildingPoint, if (waterBlock.defaultState() == Block.WATER) Block.LILY_PAD else Block.AIR)
                     // PARTICLES
                 } else {
                     instance.setBlock(buildingPoint, lastWall(wallLevel))
@@ -133,6 +186,13 @@ object AttackItem : Actionable {
                 claimWithParticle(event.player, target, data.block)
             }
         }
+        data.attackCooldown = getAttackCooldown(targetData, buildingBlock.wallLevel)
+        event.player.sendPacket(
+            SetCooldownPacket(
+                getItem(event.player.uuid).material().id(),
+                data.attackCooldown.ticks
+            )
+        )
         data.power -= attackCost
         data.updateBossBars()
         targetData.updateBossBars()

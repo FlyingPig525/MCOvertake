@@ -1,7 +1,9 @@
 package io.github.flyingpig525.item
 
-import io.github.flyingpig525.*
+import io.github.flyingpig525.PICKAXE_SYMBOL
 import io.github.flyingpig525.building.Building
+import io.github.flyingpig525.getTrueTarget
+import io.github.flyingpig525.players
 import io.github.flyingpig525.wall.blockIsWall
 import net.bladehunt.kotstom.dsl.item.amount
 import net.bladehunt.kotstom.dsl.item.item
@@ -25,6 +27,7 @@ object BreakBuildingItem : Actionable {
     }
 
     override val identifier: String = "building:destroy"
+    override val itemMaterial: Material = Material.IRON_PICKAXE
 
 
     override fun getItem(uuid: UUID): ItemStack {

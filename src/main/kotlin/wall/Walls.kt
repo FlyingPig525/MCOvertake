@@ -1,7 +1,5 @@
 package io.github.flyingpig525.wall
 
-import io.github.flyingpig525.instance
-import net.minestom.server.coordinate.Point
 import net.minestom.server.instance.block.Block
 import net.minestom.server.instance.block.Block.*
 
@@ -60,18 +58,6 @@ fun getWallAttackCost(block: Block): Int? {
     return level * 2
 }
 
-fun getWallAttackCost(point: Point): Int? {
-    val block = instance.getBlock(point)
-    if (walls.containsKey(block)) {
-        return getWallAttackCost(block)!!
-    }
-    val above = instance.getBlock(point.add(0.0, 1.0, 0.0))
-    if (walls.containsKey(above)) {
-        return getWallAttackCost(block)!!
-    }
-    return null
-}
-
 fun getWallUpgradeCost(wall: Block): Int? {
     if (blockIsWall(wall.defaultState())) {
         val level = walls[wall.defaultState()]!! + 1
@@ -81,10 +67,9 @@ fun getWallUpgradeCost(wall: Block): Int? {
 }
 
 
-val Block.wallLevel: Int?
+val Block.wallLevel: Int
     get() {
-        if (blockIsWall(this)) return walls[this.defaultState()]!!
-        return null
+        return walls[this.defaultState()] ?: 0
     }
 
 

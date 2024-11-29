@@ -2,23 +2,22 @@ package io.github.flyingpig525.data
 
 import io.github.flyingpig525.*
 import io.github.flyingpig525.building.*
-import io.github.flyingpig525.item.Actionable
+import io.github.flyingpig525.item.*
 import io.github.flyingpig525.serialization.BlockSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.extension.adventure.asMini
-import net.bladehunt.kotstom.extension.adventure.toPlainText
 import net.kyori.adventure.bossbar.BossBar
 import net.minestom.server.coordinate.Point
 import net.minestom.server.entity.Player
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.item.Material
+import net.minestom.server.network.packet.server.play.SetCooldownPacket
 import net.minestom.server.utils.time.Cooldown
 import java.time.Duration
 import java.util.*
-import kotlin.collections.Map
 import kotlin.reflect.KProperty0
 
 @Serializable
@@ -35,14 +34,15 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
     val matterContainers = MatterContainer()
     val containerCost: Int get() = (matterContainers.count * 20) + 20
     val maxMatter: Int get() = 100 + matterContainers.count * 25
-    var claimLevel: Int = 0
     val claimCost: Int get() = blocks.floorDiv(500) + 5
-    @Transient var claimCooldown = Cooldown(Duration.ofMillis(maxClaimCooldown))
     val maxClaimCooldown get() = (((blocks.toLong() / 1000.0) * 50.0) + 1000.0).toLong()
     val colonyCost: Int get() = claimCost * 10
+    @Transient var claimCooldown = Cooldown(Duration.ofMillis(maxClaimCooldown))
     @Transient var colonyCooldown = Cooldown(Duration.ofSeconds(if (blocks > 0) 15 else 0))
-    @Transient var attackCooldown = Cooldown(Duration.ofSeconds(1))
+    @Transient var attackCooldown = Cooldown(Duration.ofSeconds(10))
     @Transient var wallCooldown = Cooldown(Duration.ofSeconds(2))
+    @Transient var wallUpgradeCooldown = Cooldown(Duration.ofSeconds(2))
+    @Transient var raftCooldown = Cooldown(Duration.ofSeconds(20))
     var power: Double = 100.0
         set(value) {
             field = value.coerceIn(0.0..maxPower.toDouble())
@@ -133,8 +133,28 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
         Actionable.persistentRegistry.forEach {
             it.setItemSlot(player)
         }
-
         player.inventory.helmet = item(Material.fromNamespaceId(block.namespace())!!)
+    }
+
+    fun sendCooldowns(player: Player) {
+        player.sendPackets(
+            SetCooldownPacket(
+                ClaimItem.itemMaterial.id(),
+                claimCooldown.ticks
+            ),
+            SetCooldownPacket(
+                ColonyItem.itemMaterial.id(),
+                colonyCooldown.ticks
+            ),
+            SetCooldownPacket(
+                AttackItem.itemMaterial.id(),
+                attackCooldown.ticks
+            ),
+            SetCooldownPacket(
+                ClaimWaterItem.itemMaterial.id(),
+                raftCooldown.ticks
+            )
+        )
     }
 
     fun getBuildingReferenceByIdentifier(identifier: String): KProperty0<Building>? {

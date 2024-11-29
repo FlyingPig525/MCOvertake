@@ -16,7 +16,7 @@ import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import net.minestom.server.particle.Particle
-import java.util.UUID
+import java.util.*
 
 val ERROR_ITEM = item(Material.BARRIER) {
     itemName = "<red><bold>ERROR".asMini()
@@ -24,6 +24,7 @@ val ERROR_ITEM = item(Material.BARRIER) {
 
 interface Actionable {
     val identifier: String
+    val itemMaterial: Material
 
     fun getItem(uuid: UUID): ItemStack
 

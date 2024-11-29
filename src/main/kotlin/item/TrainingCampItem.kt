@@ -1,15 +1,13 @@
 package io.github.flyingpig525.item
 
-import io.github.flyingpig525.building.MatterContainer
 import io.github.flyingpig525.building.TrainingCamp
 import io.github.flyingpig525.getTrueTarget
 import io.github.flyingpig525.players
 import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerUseItemEvent
 import net.minestom.server.instance.Instance
-import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
-import net.minestom.server.tag.Tag
+import net.minestom.server.item.Material
 import java.util.*
 
 object TrainingCampItem : Actionable {
@@ -19,6 +17,7 @@ object TrainingCampItem : Actionable {
     }
 
     override val identifier: String = "power:generator"
+    override val itemMaterial: Material = TrainingCamp.getItem(1, 1).material()
 
 
     override fun getItem(uuid: UUID): ItemStack {

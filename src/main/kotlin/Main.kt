@@ -38,9 +38,7 @@ import net.minestom.server.coordinate.Point
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.Entity
-import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.GameMode
-import net.minestom.server.entity.metadata.display.BlockDisplayMeta
 import net.minestom.server.event.player.*
 import net.minestom.server.extras.MojangAuth
 import net.minestom.server.instance.InstanceContainer
@@ -51,18 +49,17 @@ import net.minestom.server.inventory.PlayerInventory
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import net.minestom.server.network.packet.server.SendablePacket
-import net.minestom.server.network.packet.server.play.SetCooldownPacket
 import net.minestom.server.particle.Particle
 import net.minestom.server.potion.Potion
 import net.minestom.server.potion.PotionEffect
 import net.minestom.server.tag.Tag
 import net.minestom.server.timer.TaskSchedule
+import net.minestom.server.utils.time.Cooldown
 import team.unnamed.creative.serialize.minecraft.MinecraftResourcePackReader
 import team.unnamed.creative.serialize.minecraft.MinecraftResourcePackWriter
 import team.unnamed.creative.server.ResourcePackServer
 import java.io.File
 import java.io.PrintStream
-import java.lang.Exception
 import java.net.URI
 import java.sql.Time
 import java.time.Instant
@@ -97,6 +94,10 @@ fun main() = runBlocking { try {
     val minecraftServer = MinecraftServer.init()
     MojangAuth.init()
     MinecraftServer.setBrandName("MCOvertake")
+    MinecraftServer.getExceptionManager().setExceptionHandler {
+        it.printStackTrace()
+        it.printStackTrace(logStream)
+    }
 
     val configFile = File("config.json")
     if (!configFile.exists()) {
@@ -194,16 +195,7 @@ fun main() = runBlocking { try {
         } else {
             data.setupPlayer(e.player)
             if (e.isFirstSpawn) {
-                e.player.sendPackets(
-                    SetCooldownPacket(
-                        ClaimItem.getItem(e.player.uuid).material().id(),
-                        (data.claimCooldown.duration.toMillis() / 50).toInt()
-                    ),
-                    SetCooldownPacket(
-                        ColonyItem.getItem(e.player.uuid).material().id(),
-                        (data.colonyCooldown.duration.toMillis() / 50).toInt()
-                    )
-                )
+                data.sendCooldowns(e.player)
             }
         }
     }
@@ -537,6 +529,8 @@ inline fun repeatAdjacent(point: Point, fn: (point: Point) -> Unit) {
 var Entity.hasGravity: Boolean
     get() = !this.hasNoGravity()
     set(value) = this.setNoGravity(!value)
+
+val Cooldown.ticks: Int get() = (duration.toMillis() / 50).toInt()
 
 fun initItems() {
     BarracksItem

@@ -31,6 +31,7 @@ object SelectBuildingItem : Actionable {
     }
 
     override val identifier: String = "item:select_building"
+    override val itemMaterial: Material = Material.BRICK
 
 
     override fun getItem(uuid: UUID): ItemStack {

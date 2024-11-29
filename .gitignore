@@ -39,3 +39,4 @@ bin/
 world
 player-data.json
 /.idea/
+config.json

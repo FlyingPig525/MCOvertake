@@ -28,6 +28,7 @@ object WallItem : Actionable {
     }
 
     override val identifier: String = "building:wall"
+    override val itemMaterial: Material = Material.IRON_BARS
 
     override fun getItem(uuid: UUID): ItemStack {
         return item(Material.IRON_BARS) {

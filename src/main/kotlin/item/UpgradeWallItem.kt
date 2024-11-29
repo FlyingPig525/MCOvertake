@@ -23,6 +23,7 @@ object UpgradeWallItem : Actionable {
     }
 
     override val identifier: String = "building:upgrade_wall"
+    override val itemMaterial: Material = Material.IRON_AXE
 
 
     override fun getItem(uuid: UUID): ItemStack {
@@ -38,7 +39,7 @@ object UpgradeWallItem : Actionable {
         val data = players[event.player.uuid.toString()] ?: return true
         val target = event.player.getTrueTarget(20)?.withY(40.0) ?: return true
         val block = instance.getBlock(target).defaultState()
-        val level = block.wallLevel ?: return true
+        val level = block.wallLevel
         val cost = getWallUpgradeCost(block) ?: return true
         if (data.organicMatter < cost) return true
         data.organicMatter -= cost
@@ -50,7 +51,7 @@ object UpgradeWallItem : Actionable {
 
     fun updateWall(point: Point) {
         val block = instance.getBlock(point)
-        val level = block.wallLevel ?: return
+        val level = block.wallLevel
         when(level) {
             1 -> { WallItem.updateIronBar(point) }
 

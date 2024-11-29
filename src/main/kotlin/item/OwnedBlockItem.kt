@@ -17,6 +17,7 @@ object OwnedBlockItem : Actionable {
     }
 
     override val identifier: String = "block:owned"
+    override val itemMaterial: Material = Material.LIME_DYE
 
     override fun getItem(uuid: UUID): ItemStack {
         return item(Material.LIME_DYE) {

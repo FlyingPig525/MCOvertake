@@ -7,7 +7,7 @@ import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerUseItemEvent
 import net.minestom.server.instance.Instance
 import net.minestom.server.item.ItemStack
-import net.minestom.server.tag.Tag
+import net.minestom.server.item.Material
 import java.util.*
 
 object MatterContainerItem : Actionable {
@@ -16,6 +16,7 @@ object MatterContainerItem : Actionable {
         Actionable.registry += this
     }
     override val identifier: String = "matter:container"
+    override val itemMaterial: Material = MatterContainer.getItem(1, 1).material()
 
     override fun getItem(uuid: UUID): ItemStack {
         val data = players[uuid.toString()] ?: return ERROR_ITEM

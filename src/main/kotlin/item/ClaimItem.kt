@@ -1,32 +1,19 @@
 package io.github.flyingpig525.item
 
-import io.github.flyingpig525.CLAIM_SYMBOL
-import io.github.flyingpig525.POWER_SYMBOL
-import io.github.flyingpig525.getTrueTarget
-import io.github.flyingpig525.players
-import net.bladehunt.kotstom.SchedulerManager
-import net.bladehunt.kotstom.dsl.ParticleBuilder
+import io.github.flyingpig525.*
 import net.bladehunt.kotstom.dsl.item.amount
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
-import net.bladehunt.kotstom.dsl.particle
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.bladehunt.kotstom.extension.set
-import net.minestom.server.coordinate.Point
-import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerUseItemEvent
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
-import net.minestom.server.instance.block.BlockFace
-import net.minestom.server.instance.block.BlockHandler.Destroy
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import net.minestom.server.network.packet.server.play.SetCooldownPacket
-import net.minestom.server.particle.Particle
 import net.minestom.server.tag.Tag
-import net.minestom.server.utils.NamespaceID
-import net.minestom.server.utils.PacketUtils
 import net.minestom.server.utils.time.Cooldown
 import java.time.Duration
 import java.time.Instant
@@ -39,12 +26,12 @@ object ClaimItem : Actionable {
     }
 
     override val identifier: String = "block:claim"
+    override val itemMaterial: Material = Material.WOODEN_HOE
 
 
     override fun getItem(uuid: UUID): ItemStack {
         val data = players[uuid.toString()] ?: return ERROR_ITEM
-        val item = listOf(Material.WOODEN_HOE, Material.IRON_HOE, Material.DIAMOND_HOE)[data.claimLevel]
-        return item(item) {
+        return item(itemMaterial) {
             itemName = "<gold>$CLAIM_SYMBOL <bold>Expand</bold> <dark_gray>-<red> $POWER_SYMBOL ${data.claimCost}".asMini()
             amount = 1
             set(Tag.String("identifier"), identifier)
@@ -65,7 +52,7 @@ object ClaimItem : Actionable {
             event.player.sendPacket(
                 SetCooldownPacket(
                     getItem(event.player.uuid).material().id(),
-                    (data.claimCooldown.duration.toMillis() / 50).toInt()
+                    data.claimCooldown.ticks
                 ))
         }
         return true
