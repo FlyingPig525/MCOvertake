@@ -50,16 +50,9 @@ object AttackItem : Actionable {
         return players.getDataByPoint(target)
     }
 
-    private fun getAttackCost(player: Player): Int {
-        val target = player.getTrueTarget(20)!!
-        val targetData = getAttacking(player)
-        val targetAttackCost = getAttackCost(targetData, target)
-        return targetAttackCost
-    }
-
     private fun getAttackCost(targetData: PlayerData?, playerTarget: Point): Int {
         // TODO: AFTER ADDING WALLS ADD WALL THINGS HERE
-        val wallPosition = if (playerTarget.blockY() == 39) playerTarget.add(0.0, 1.0, 0.0) else playerTarget
+        val wallPosition = playerTarget.withY(40.0)
         val building = instance.getBlock(wallPosition)
         var additiveModifier = 0
         if (blockIsWall(building)) additiveModifier += getWallAttackCost(building)!!
@@ -69,22 +62,29 @@ object AttackItem : Actionable {
     override fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean {
         // TODO: ADD COOLDOWN
         val target = event.player.getTrueTarget(20) ?: return true
-        val buildingPoint = if (target.blockY() == 40) target else target.add(0.0, 1.0, 0.0)
-        val playerBlock = instance.getBlock(if (target.blockY() == 39) target else target.sub(0.0, 1.0, 0.0))
+        val buildingPoint = target.withY(40.0)
+        val playerBlock = instance.getBlock(target.withY(38.0))
         val buildingBlock = instance.getBlock(buildingPoint)
         val data = players[event.player.uuid.toString()] ?: return true
-        if (playerBlock == Block.GRASS_BLOCK || playerBlock == data.block) {
+        if (playerBlock == Block.GRASS_BLOCK || playerBlock == Block.SAND || playerBlock == data.block) {
             return true
         }
-        val attackCost = getAttackCost(event.player)
+        val targetData = getAttacking(event.player) ?: return true
+        val attackCost = getAttackCost(targetData, target)
         if (data.power < attackCost) {
             // TODO: ADD MESSAGE
             return true
         }
-        val targetData = getAttacking(event.player) ?: return true
         val targetPlayer = instance.getPlayerByUuid(targetData.uuid.toUUID())
         val taken = when(buildingBlock) {
             Block.AIR -> { true }
+            Block.LILY_PAD -> {
+                ClaimWaterItem.destroyPlayerRaft(buildingPoint)
+                targetData.blocks--
+                instance.setBlock(target.withY(38.0), Block.SAND)
+                instance.setBlock(buildingPoint, Block.AIR)
+                false
+            }
             Barrack.block -> {
                 targetData.barracks.count--
                 data.barracks.count++

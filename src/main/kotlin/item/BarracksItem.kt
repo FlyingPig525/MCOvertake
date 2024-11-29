@@ -33,7 +33,7 @@ object BarracksItem : Actionable {
         val target = event.player.getTrueTarget(20) ?: return true
         val playerData = players[event.player.uuid.toString()] ?: return true
         if (!checkBlockAvailable(playerData, target)) return true
-        if (Barrack.getResourceUse(playerData.barracks.count + 1) > playerData.maxDisposableResources) return true
+        if (Barrack.getResourceUse(playerData.disposableResourcesUsed) > playerData.maxDisposableResources) return true
         if (playerData.organicMatter - playerData.barracksCost < 0) return true
         playerData.organicMatter -= playerData.barracksCost
         playerData.barracks.place(target, instance)

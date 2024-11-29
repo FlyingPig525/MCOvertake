@@ -30,7 +30,7 @@ object MatterContainerItem : Actionable {
         val target = event.player.getTrueTarget(20) ?: return true
         val playerData = players[event.player.uuid.toString()] ?: return true
         if (!checkBlockAvailable(playerData, target)) return true
-        if (MatterContainer.getResourceUse(playerData.matterContainers.count + 1) > playerData.maxDisposableResources) return true
+        if (MatterContainer.getResourceUse(playerData.disposableResourcesUsed) > playerData.maxDisposableResources) return true
         if (playerData.organicMatter - playerData.containerCost < 0) return true
         playerData.organicMatter -= playerData.containerCost
         playerData.matterContainers.place(target, instance)

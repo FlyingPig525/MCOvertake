@@ -6,7 +6,7 @@ TODO:
 - - more tiles adjacent to enemy tile, the lower the cooldown for attacking
 - [ ] world generation
 - [ ] sky islands (collect a gaseous resource?)
-- [ ] underground (where you can do oil) (less digging more cave systems?)
+- [ ] underground (where you can do oil) (less digging more cave systems? maybe inverted ground noise)
 - [ ] mechanical parts
 - [ ] aoe buildings
 - [ ] co-op
@@ -18,7 +18,7 @@ TODO:
 MULTI-TILE BUILDINGS
 - [ ] oil deposit (like a normal building, 4 oil extractors per deposit) - black carpet
 - [ ] oil plant (next to oil deposit) - 4 black candles 
-- [ ] oil processor (in front of extractor) - campfire (no smoke)
+- [ ] oil processor (in front of extractor) - campfire (no smoke) - makes mechanical parts
 
 
 - [ ] personal area - late game (decays?)

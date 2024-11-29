@@ -3,6 +3,7 @@ package io.github.flyingpig525.data.block
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.extension.adventure.asMini
+import net.minestom.server.instance.block.predicate.BlockTypeFilter.Blocks
 import net.minestom.server.item.Material
 import net.minestom.server.item.Material.*
 
@@ -38,7 +39,6 @@ enum class NaturalCategory(override val material: Material) : CategoryBlock {
     Rooted_Dirt(ROOTED_DIRT),
     Mud(MUD),
     Clay(CLAY),
-    Sand(SAND),
     Red_Sand(RED_SAND),
     Moss_Block(MOSS_BLOCK),
     Slime_Block(SLIME_BLOCK),

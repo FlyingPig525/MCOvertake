@@ -2,6 +2,7 @@ package io.github.flyingpig525.item
 
 import io.github.flyingpig525.*
 import io.github.flyingpig525.building.Building
+import io.github.flyingpig525.wall.blockIsWall
 import net.bladehunt.kotstom.dsl.item.amount
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -37,15 +38,25 @@ object BreakBuildingItem : Actionable {
     override fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean {
         val data = players[event.player.uuid.toString()] ?: return true
         val target = event.player.getTrueTarget(20) ?: return true
+        val playerBlockPos = target.withY(38.0)
+        val groundPos = target.withY(39.0)
+        if (instance.getBlock(playerBlockPos).defaultState() != data.block) return true
         val buildingPos = target.withY(40.0)
         val buildingBlock = instance.getBlock(buildingPos)
-        if (!Building.blockIsBuilding(buildingBlock)) return true
-        val identifier = Building.getBuildingIdentifier(buildingBlock) ?: return true
-        val ref = data.getBuildingReferenceByIdentifier(identifier) ?: return true
-        ref.get().count--
-        ref.get().select(event.player, data)
-        instance.setBlock(buildingPos, Block.AIR)
-
+        if (buildingBlock.defaultState() == Block.LILY_PAD) return true
+        val identifier = Building.getBuildingIdentifier(buildingBlock)
+        if (identifier == null) {
+            if (!blockIsWall(buildingBlock)) return true
+        } else {
+            val ref = data.getBuildingReferenceByIdentifier(identifier) ?: return true
+            ref.get().count--
+            ref.get().select(event.player, data)
+        }
+        if (instance.getBlock(groundPos) == Block.WATER) {
+            instance.setBlock(buildingPos, Block.LILY_PAD)
+        } else {
+            instance.setBlock(buildingPos, Block.AIR)
+        }
         return true
     }
 

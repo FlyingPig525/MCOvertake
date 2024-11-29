@@ -34,7 +34,7 @@ object TrainingCampItem : Actionable {
         val target = event.player.getTrueTarget(20) ?: return true
         val playerData = players[event.player.uuid.toString()] ?: return true
         if (!checkBlockAvailable(playerData, target)) return true
-        if (TrainingCamp.getResourceUse(playerData.trainingCamps.count + 1) > playerData.maxDisposableResources) return true
+        if (TrainingCamp.getResourceUse(playerData.disposableResourcesUsed) > playerData.maxDisposableResources) return true
         if (playerData.organicMatter - playerData.trainingCampCost < 0) return true
         playerData.organicMatter -= playerData.trainingCampCost
         playerData.trainingCamps.place(target, instance)

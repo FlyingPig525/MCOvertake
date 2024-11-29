@@ -16,14 +16,13 @@ interface Building {
     fun select(player: Player, cost: Int)
     fun select(player: Player, data: PlayerData)
 
-
     interface BuildingCompanion {
         val block: Block
         val identifier: String
         fun getItem(cost: Int, count: Int): ItemStack
         fun getItem(playerData: PlayerData): ItemStack
 
-        fun getResourceUse(count: Int): Int
+        fun getResourceUse(currentDisposableResources: Int): Int
 
         companion object {
             val registry: MutableList<BuildingCompanion> = mutableListOf()
@@ -40,7 +39,7 @@ interface Building {
 
         fun getBuildingIdentifier(block: Block): String? {
             for (entry in registry) {
-                if (entry.block == block.defaultState()) return entry.identifier
+                if (entry.block.defaultState() == block.defaultState()) return entry.identifier
             }
             return null
         }

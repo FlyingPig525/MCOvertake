@@ -1,10 +1,8 @@
 package io.github.flyingpig525
 
-import de.articdive.jnoise.core.api.functions.Interpolation
-import de.articdive.jnoise.generators.noise_parameters.fade_functions.FadeFunction
 import de.articdive.jnoise.generators.noise_parameters.simplex_variants.Simplex2DVariant
 import de.articdive.jnoise.generators.noisegen.opensimplex.SuperSimplexNoiseGenerator
-import de.articdive.jnoise.generators.noisegen.perlin.PerlinNoiseGenerator
+import de.articdive.jnoise.modules.octavation.fractal_functions.FractalFunction
 import de.articdive.jnoise.pipeline.JNoise
 import io.github.flyingpig525.console.Command
 import io.github.flyingpig525.console.ConfigCommand
@@ -16,6 +14,7 @@ import io.github.flyingpig525.data.PlayerData.Companion.toBlockSortedList
 import io.github.flyingpig525.item.*
 import io.github.flyingpig525.wall.blockIsWall
 import kotlinx.coroutines.*
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.bladehunt.kotstom.GlobalEventHandler
@@ -31,6 +30,7 @@ import net.bladehunt.kotstom.dsl.particle
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.bladehunt.kotstom.extension.roundToBlock
 import net.bladehunt.kotstom.extension.set
+import net.kyori.adventure.resource.ResourcePackInfo
 import net.minestom.server.MinecraftServer
 import net.minestom.server.collision.ShapeImpl
 import net.minestom.server.color.Color
@@ -38,10 +38,10 @@ import net.minestom.server.coordinate.Point
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.Entity
+import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.GameMode
-import net.minestom.server.event.inventory.InventoryClickEvent
+import net.minestom.server.entity.metadata.display.BlockDisplayMeta
 import net.minestom.server.event.player.*
-import net.minestom.server.event.trait.InventoryEvent
 import net.minestom.server.extras.MojangAuth
 import net.minestom.server.instance.InstanceContainer
 import net.minestom.server.instance.LightingChunk
@@ -51,18 +51,19 @@ import net.minestom.server.inventory.PlayerInventory
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import net.minestom.server.network.packet.server.SendablePacket
-import net.minestom.server.network.packet.server.play.BlockChangePacket
 import net.minestom.server.network.packet.server.play.SetCooldownPacket
 import net.minestom.server.particle.Particle
 import net.minestom.server.potion.Potion
 import net.minestom.server.potion.PotionEffect
 import net.minestom.server.tag.Tag
 import net.minestom.server.timer.TaskSchedule
-import org.slf4j.LoggerFactory
-import org.slf4j.spi.SLF4JServiceProvider
+import team.unnamed.creative.serialize.minecraft.MinecraftResourcePackReader
+import team.unnamed.creative.serialize.minecraft.MinecraftResourcePackWriter
+import team.unnamed.creative.server.ResourcePackServer
 import java.io.File
 import java.io.PrintStream
 import java.lang.Exception
+import java.net.URI
 import java.sql.Time
 import java.time.Instant
 import java.util.*
@@ -82,7 +83,8 @@ const val DASH_BANNER = "----------------------------------------------"
 
 var runConsoleLoop = true
 val logStream = PrintStream("log.log")
-val json = Json { prettyPrint = true; encodeDefaults = true }
+@OptIn(ExperimentalSerializationApi::class)
+val json = Json { prettyPrint = true; encodeDefaults = true; allowComments = true;}
 
 lateinit var instance: InstanceContainer private set
 
@@ -94,7 +96,7 @@ fun main() = runBlocking { try {
     // Initialize the servers
     val minecraftServer = MinecraftServer.init()
     MojangAuth.init()
-
+    MinecraftServer.setBrandName("MCOvertake")
 
     val configFile = File("config.json")
     if (!configFile.exists()) {
@@ -107,34 +109,52 @@ fun main() = runBlocking { try {
     configFile.writeText(json.encodeToString(config))
     log("Config imported...")
 
+    val resourcePack = MinecraftResourcePackReader.minecraft().readFromZipFile(File("res/pack.zip"))
+    val builtResourcePack = MinecraftResourcePackWriter.minecraft().build(resourcePack)
+    val packServer = ResourcePackServer.server()
+        .address(config.serverAddress, config.packServerPort)
+        .pack(builtResourcePack)
+        .build()
+    log("Resource pack loaded...")
+
+    val noise = JNoise.newBuilder()
+        .superSimplex(SuperSimplexNoiseGenerator.newBuilder().setSeed(config.noiseSeed).setVariant2D(Simplex2DVariant.CLASSIC))
+        .octavate(2, 0.1, 1.0, FractalFunction.TURBULENCE, true)
+        .scale(config.noiseScale)
+        .clamp(-1.0, 1.0)
+        .build()
     instance = InstanceManager.createInstanceContainer().apply {
         chunkLoader = AnvilLoader("world/world")
 
-        val noise = JNoise.newBuilder().superSimplex(SuperSimplexNoiseGenerator.newBuilder().setVariant2D(Simplex2DVariant.CLASSIC).setSeed(
-            (Long.MIN_VALUE..Long.MAX_VALUE).random()
-        ))
-            .scale(config.noiseScale)
-            .clamp(-1.0, 1.0)
-            .build()
         setGenerator { unit ->
             unit.modifier().setAll { x, y, z ->
-                if (x in 0..300 && z in 0..300) {
-                    if (y in 38..39) return@setAll Block.GRASS_BLOCK
+                if (x in 0..config.mapSize && y in 38..39 && z in 0..config.mapSize) {
+                    val eval = noise.evaluateNoise(x.toDouble(), z.toDouble())
+                    if (eval > config.noiseThreshold) return@setAll Block.GRASS_BLOCK
+                    return@setAll if (y == 39) Block.WATER else Block.SAND
                 }
-                if (x in -1..301 && z in -1..301 && y < 40) {
+                if (x in -1..config.mapSize+1 && z in -1..config.mapSize+1 && y < 40) {
                     return@setAll Block.DIAMOND_BLOCK
-                }
-                if (config.doNoiseTest && y == 45 && x in 0..300 && z in 0..300) {
-                    val eval = noise.evaluateNoise(x.toDouble(), z.toDouble()) + if (x in 125..175 && z in 125..175) 0.07999 else 0.0
-                    println(eval)
-                    if (eval > config.noiseThreshold) return@setAll Block.OBSIDIAN
                 }
                 Block.AIR
             }
         }
         setChunkSupplier(::LightingChunk)
     }
+    log("Created instance...")
+    for (x in 0..config.mapSize) {
+        for (z in 0..config.mapSize) {
+            instance.loadChunk(Vec(x.toDouble(), 39.0, z.toDouble())).thenRunAsync {
+                val playerBlock = instance.getBlock(x, 38, z)
+                if (instance.getBlock(x, 39, z) == Block.WATER && instance.getBlock(x, 38, z) != Block.SAND) {
+                    ClaimWaterItem.spawnPlayerRaft(playerBlock, Vec(x.toDouble(), 40.0, z.toDouble()))
+                }
+            }
+        }
+    }
+    log("Spawned building rafts...")
     log("World loaded...")
+
 
     players = Json.decodeFromString<MutableMap<String, PlayerData>>(
         if (File("./player-data.json").exists())
@@ -155,6 +175,11 @@ fun main() = runBlocking { try {
             )
         }
         player.respawnPoint = Pos(5.0, 41.0, 5.0)
+        player.sendResourcePacks(ResourcePackInfo.resourcePackInfo()
+            .hash(builtResourcePack.hash())
+            .uri(URI("http://${config.serverAddress}:${config.packServerPort}/${builtResourcePack.hash()}.zip"))
+            .build()
+        )
     }
 
 
@@ -243,11 +268,11 @@ fun main() = runBlocking { try {
 
     GlobalEventHandler.listen<PlayerMoveEvent> { e ->
         with(e) {
-            if (newPosition.x !in 0.0..301.0 || newPosition.z !in 0.0..301.0) {
+            if (newPosition.x !in 0.0..config.mapSize + 1.0 || newPosition.z !in 0.0..config.mapSize + 1.0) {
                 newPosition = Pos(
-                    newPosition.x.coerceIn(0.0..301.0),
+                    newPosition.x.coerceIn(0.0..config.mapSize + 1.0),
                     newPosition.y,
-                    newPosition.z.coerceIn(0.0..301.0),
+                    newPosition.z.coerceIn(0.0..config.mapSize + 1.0),
                     newPosition.yaw,
                     newPosition.pitch
                 )
@@ -288,12 +313,12 @@ fun main() = runBlocking { try {
         val target = e.player.getTrueTarget(20)
         if (target != null) {
             val buildingPoint = target.withY(40.0)
-            val playerPoint = target.withY(39.0)
+            val playerPoint = target.withY(38.0)
             val targetBlock = instance.getBlock(target)
             val buildingBlock = instance.getBlock(buildingPoint)
             when (val playerBlock = instance.getBlock(playerPoint)) {
                 Block.GRASS_BLOCK -> {
-                    val canAccess = anyAdjacentBlocksMatch(target, playerData.block)
+                    val canAccess = anyAdjacentBlocksMatch(playerPoint, playerData.block)
                     if (canAccess) {
                         ClaimItem.setItemSlot(e.player)
                     } else {
@@ -303,6 +328,15 @@ fun main() = runBlocking { try {
 
                 Block.DIAMOND_BLOCK -> {
                     e.player.inventory.idle()
+                }
+
+                Block.SAND -> {
+                    val canAccess = anyAdjacentBlocksMatch(playerPoint, playerData.block)
+                    if (canAccess) {
+                            ClaimWaterItem.setItemSlot(e.player)
+                    } else {
+                        e.player.inventory.idle()
+                    }
                 }
 
                 else -> {
@@ -368,20 +402,20 @@ fun main() = runBlocking { try {
 
     minecraftServer.start(config.serverAddress, config.serverPort)
     log("GameServer online!")
+    packServer.start()
+    log("PackServer online!")
 
     initConsoleCommands()
     log("Console commands initialized...")
-    launch {
+    launch { runBlocking {
         val scanner = Scanner(System.`in`)
         while (runConsoleLoop) {
-            for (line in scanner) {
+            while (scanner.hasNextLine()) {
+                val line = scanner.nextLine()
                 var last = ""
                 val args = line.split(' ').mapNotNull {
-                    if (last != "") {
-                        last += " $it"
-                        return@mapNotNull null
-                    }
                     if (it.startsWith('"')) {
+                        if (it.endsWith('"')) return@mapNotNull it.drop(1).dropLast(1)
                         last = it.drop(1)
                         return@mapNotNull null
                     }
@@ -389,6 +423,10 @@ fun main() = runBlocking { try {
                         val ret = "$last ${it.dropLast(1)}"
                         last = ""
                         return@mapNotNull ret
+                    }
+                    if (last != "") {
+                        last += " $it"
+                        return@mapNotNull null
                     }
                     it
                 }
@@ -401,14 +439,15 @@ fun main() = runBlocking { try {
             }
             delay(config.consolePollingDelay)
         }
-    }
+        log("Console loop failed!")
+    }}
     log("Console loop running!")
 } catch (e: Exception) {
     e.printStackTrace()
     e.printStackTrace(logStream)
 }}
 
-fun log(msg: Any) {
+fun log(msg: Any?) {
     val time = Time.from(Instant.now()).toString().dropLast(9).drop(11)
     println("[$time]: $msg")
     logStream.println("[$time]: $msg")
@@ -417,11 +456,15 @@ fun log(msg: Any) {
 fun clearBlock(block: Block) {
     scheduleImmediately {
         log("clear block")
-        for (x in 0..300) {
-            for (z in 0..300) {
+        for (x in 0..config.mapSize) {
+            for (z in 0..config.mapSize) {
                 instance.loadChunk(Vec(x.toDouble(), z.toDouble())).thenRun {
-                    if (instance.getBlock(x, 39, z) == block) {
-                        instance.setBlock(x, 39, z, Block.GRASS_BLOCK)
+                    if (instance.getBlock(x, 38, z) == block) {
+                        if (instance.getBlock(x, 39, z) == Block.WATER) {
+                            ClaimWaterItem.destroyPlayerRaft(Vec(x.toDouble(), 39.0, z.toDouble()))
+                        } else {
+                            instance.setBlock(x, 39, z, Block.GRASS_BLOCK)
+                        }
                         instance.setBlock(x, 40, z, Block.AIR)
                     }
                 }
@@ -430,14 +473,15 @@ fun clearBlock(block: Block) {
     }
 }
 
-fun Entity.getTrueTarget(maxDistance: Int, onRayStep: (pos: Point) -> Unit = {}): Point? {
+fun Entity.getTrueTarget(maxDistance: Int, onRayStep: ((pos: Point, block: Block) -> Unit)? = null): Point? {
     val playerEyePos = position.add(0.0, eyeHeight, 0.0)
     val playerDirection = playerEyePos.direction().mul(0.5, 0.5, 0.5)
     var point = playerEyePos.asVec()
     for (i in 0..maxDistance * 2) {
         point = point.add(playerDirection)
         val block = instance.getBlock(point)
-        onRayStep(point)
+        if (onRayStep != null) onRayStep(point, block)
+        if (block.defaultState() == Block.WATER) return point.roundToBlock()
         if (!block.isAir) {
             val blockShape = block.registry().collisionShape()
             if (blockShape is ShapeImpl) {
@@ -470,32 +514,29 @@ fun idleItem(): ItemStack = item(Material.GRAY_DYE) {
 fun String.toUUID(): UUID? = UUID.fromString(this)
 
 fun anyAdjacentBlocksMatch(point: Point, block: Block): Boolean {
-    for (x in (point.blockX() - 1)..(point.blockX() + 1)) {
-        for (z in (point.blockZ() - 1)..(point.blockZ() + 1)) {
-            if (x == point.blockX() && z == point.blockZ()) continue
-            if (instance.getBlock(
-                    Vec(
-                        x.toDouble(),
-                        point.blockY().toDouble(),
-                        z.toDouble()
-                    )
-                ) == block
-            ) {
-                return true
-            }
-        }
+    var ret = false
+    repeatAdjacent(point) {
+        if (instance.getBlock(it) == block.defaultState()) ret = true
     }
-    return false
+    return ret
+}
+/**
+ * Calls [fn] with each adjacent location relative to [point] starting from the north-west going clockwise
+ */
+inline fun repeatAdjacent(point: Point, fn: (point: Point) -> Unit) {
+    fn(point.add(-1.0, 0.0, -1.0))
+    fn(point.add(0.0, 0.0, -1.0))
+    fn(point.add(1.0, 0.0, -1.0))
+    fn(point.add(1.0, 0.0, 0.0))
+    fn(point.add(1.0, 0.0, 1.0))
+    fn(point.add(0.0, 0.0, 1.0))
+    fn(point.add(-1.0, 0.0, 1.0))
+    fn(point.add(-1.0, 0.0, 0.0))
 }
 
-fun repeatAdjacent(point: Point, fn: (point: Point) -> Unit) {
-    for (x in (point.blockX() - 1)..(point.blockX() + 1)) {
-        for (z in (point.blockZ() - 1)..(point.blockZ() + 1)) {
-            if (x == point.blockX() && z == point.blockZ()) continue
-            fn(Vec(x.toDouble(), point.y(), z.toDouble()))
-        }
-    }
-}
+var Entity.hasGravity: Boolean
+    get() = !this.hasNoGravity()
+    set(value) = this.setNoGravity(!value)
 
 fun initItems() {
     BarracksItem
@@ -510,6 +551,7 @@ fun initItems() {
     WallItem
     UpgradeWallItem
     BreakBuildingItem
+    ClaimWaterItem
 }
 
 fun initConsoleCommands() {

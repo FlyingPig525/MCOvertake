@@ -47,8 +47,8 @@ object WallItem : Actionable {
         data.organicMatter -= 15
         data.wallCooldown = Cooldown(Duration.ofMillis(500))
 
-        updateIronBar(target.add(0.0, 1.0, 0.0))
-        repeatAdjacent(target.add(0.0, 1.0, 0.0)) {
+        updateIronBar(target.withY(40.0))
+        repeatAdjacent(target.withY(40.0)) {
             if (instance.getBlock(it).defaultState() == Block.IRON_BARS) {
                 updateIronBar(it)
             }

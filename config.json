@@ -1,11 +1,12 @@
 {
     "serverAddress": "0.0.0.0",
     "serverPort": 25565,
+    "packServerPort": 25566,
     "whitelisted": [],
     "notWhitelistedMessage": "<red><bold>Player not whitelisted\n</bold><grey>----------------------------------------------\n<gold><bold>Please contact the server owner if you believe this is a mistake",
     "printSaveMessages": false,
     "consolePollingDelay": 2500,
-    "doNoiseTest": false,
-    "noiseScale": 0.05,
-    "noiseThreshold": 0.15
+    "noiseScale": 0.03,
+    "noiseThreshold": 0.35,
+    "mapSize": 1000
 }

@@ -21,10 +21,10 @@ import net.minestom.server.tag.Tag
 @Serializable
 class MatterContainer : Building {
     override var count: Int = 0
-    override val resourceUse: Int get() = getResourceUse(count)
+    override val resourceUse: Int get() = count * 2
 
     override fun place(playerTarget: Point, instance: Instance) {
-        instance.setBlock(playerTarget.add(0.0, 1.0, 0.0), block, false)
+        instance.setBlock(playerTarget.withY(40.0), block, false)
         count++
     }
 
@@ -57,7 +57,7 @@ class MatterContainer : Building {
             return getItem(playerData.containerCost, playerData.matterContainers.count)
         }
 
-        override fun getResourceUse(count: Int): Int = count * 2
+        override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 2
 
         init {
             Building.BuildingCompanion.registry += this

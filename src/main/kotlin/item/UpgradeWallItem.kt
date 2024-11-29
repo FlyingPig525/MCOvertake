@@ -36,7 +36,7 @@ object UpgradeWallItem : Actionable {
 
     override fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean {
         val data = players[event.player.uuid.toString()] ?: return true
-        val target = event.player.getTrueTarget(20) ?: return true
+        val target = event.player.getTrueTarget(20)?.withY(40.0) ?: return true
         val block = instance.getBlock(target).defaultState()
         val level = block.wallLevel ?: return true
         val cost = getWallUpgradeCost(block) ?: return true

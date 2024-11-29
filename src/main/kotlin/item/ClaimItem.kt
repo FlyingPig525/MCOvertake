@@ -54,9 +54,9 @@ object ClaimItem : Actionable {
 
     override fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean {
         val data = players[event.player.uuid.toString()] ?: return true
-        if (data.power - data.claimCost < 0) return true
         if (!data.claimCooldown.isReady(Instant.now().toEpochMilli())) return true
-        val target = event.player.getTrueTarget(20) ?: return true
+        if (data.power - data.claimCost < 0) return true
+        val target = event.player.getTrueTarget(20)?.withY(38.0) ?: return true
         if (instance.getBlock(target) == Block.GRASS_BLOCK) {
             claimWithParticle(event.player, target, Block.GRASS_BLOCK, data.block)
             data.blocks++

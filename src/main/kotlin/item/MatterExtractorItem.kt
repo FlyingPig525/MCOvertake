@@ -30,7 +30,7 @@ object MatterExtractorItem : Actionable {
         val target = event.player.getTrueTarget(20) ?: return true
         val playerData = players[event.player.uuid.toString()] ?: return true
         if (!checkBlockAvailable(playerData, target)) return true
-        if (MatterExtractor.getResourceUse(playerData.matterExtractors.count + 1) > playerData.maxDisposableResources) return true
+        if (MatterExtractor.getResourceUse(playerData.disposableResourcesUsed) > playerData.maxDisposableResources) return true
         if (playerData.organicMatter - playerData.extractorCost < 0) return true
         playerData.organicMatter -= playerData.extractorCost
         playerData.matterExtractors.place(target, instance)

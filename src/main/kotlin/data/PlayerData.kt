@@ -152,9 +152,8 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
             return values.find { it.block == block }
         }
         fun Map<String, PlayerData>.getDataByPoint(point: Point): PlayerData? {
-            val block = instance.getBlock(point)
-            val under = instance.getBlock(point.sub(0.0, 1.0, 0.0))
-            return values.find { it.block == block || it.block == under }
+            val block = instance.getBlock(point.withY(38.0))
+            return values.find { it.block == block}
         }
         fun Map<String, PlayerData>.toBlockSortedList(): List<PlayerData> {
             return values.sortedByDescending { it.blocks }

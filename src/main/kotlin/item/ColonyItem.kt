@@ -42,7 +42,7 @@ object ColonyItem : Actionable {
         val data = players[event.player.uuid.toString()] ?: return true
         if (data.power - data.colonyCost < 0) return true
         if (!data.colonyCooldown.isReady(Instant.now().toEpochMilli())) return true
-        val target = event.player.getTrueTarget(20) ?: return true
+        val target = event.player.getTrueTarget(20)?.withY(38.0) ?: return true
         if (instance.getBlock(target) == Block.GRASS_BLOCK) {
             claimWithParticle(event.player, target, Block.GRASS_BLOCK, data.block)
             data.blocks++
