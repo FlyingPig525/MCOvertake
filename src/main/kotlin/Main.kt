@@ -41,6 +41,7 @@ import net.minestom.server.entity.Entity
 import net.minestom.server.entity.GameMode
 import net.minestom.server.event.player.*
 import net.minestom.server.extras.MojangAuth
+import net.minestom.server.instance.Instance
 import net.minestom.server.instance.InstanceContainer
 import net.minestom.server.instance.LightingChunk
 import net.minestom.server.instance.anvil.AnvilLoader
@@ -200,8 +201,6 @@ fun main() = runBlocking { try {
         }
     }
     log("Player spawning setup...")
-
-
 
     var scoreboardTitleProgress = -1.0
     // Scoreboard tick

@@ -2,9 +2,6 @@ package io.github.flyingpig525.console
 
 import io.github.flyingpig525.logStream
 import java.io.File
-import kotlin.io.path.Path
-import kotlin.io.path.createDirectories
-import kotlin.io.path.exists
 
 object LogCommand : Command {
     init {

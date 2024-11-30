@@ -2,7 +2,6 @@ package io.github.flyingpig525.building
 
 import io.github.flyingpig525.MATTER_SYMBOL
 import io.github.flyingpig525.POWER_SYMBOL
-import io.github.flyingpig525.building.MatterExtractor.Companion
 import io.github.flyingpig525.data.PlayerData
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item

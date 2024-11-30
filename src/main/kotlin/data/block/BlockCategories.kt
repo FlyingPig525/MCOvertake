@@ -3,7 +3,6 @@ package io.github.flyingpig525.data.block
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.extension.adventure.asMini
-import net.minestom.server.instance.block.predicate.BlockTypeFilter.Blocks
 import net.minestom.server.item.Material
 import net.minestom.server.item.Material.*
 
