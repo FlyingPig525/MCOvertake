@@ -35,7 +35,7 @@ object SelectBuildingItem : Actionable {
 
 
     override fun getItem(uuid: UUID): ItemStack {
-        return item(Material.BRICK) {
+        return item(itemMaterial) {
             itemName = "<gold>$BUILDING_SYMBOL <bold>Blueprint Constructor</bold> $BUILDING_SYMBOL".asMini()
             set(Tag.String("identifier"), identifier)
         }
@@ -70,26 +70,22 @@ object SelectBuildingItem : Actionable {
         val inventoryEventNode = EventNode.type("select-building-inv", EventFilter.INVENTORY) { _, inv -> inventory == inv }
             .listen<InventoryClickEvent> { e ->
                 val data = players[e.player.uuid.toString()] ?: return@listen
-                var close = true
-                when(e.clickedItem) {
-                    TrainingCamp.getItem(playerData) -> {
-                        data.trainingCamps.select(e.player, playerData.trainingCampCost)
-                    }
-                    MatterExtractor.getItem(playerData) -> {
-                        data.matterExtractors.select(e.player, playerData.extractorCost)
-                    }
-                    MatterContainer.getItem(playerData) -> {
-                        data.matterContainers.select(e.player, playerData.containerCost)
-                    }
-                    Barrack.getItem(playerData) -> {
-                        data.barracks.select(e.player, playerData.barracksCost)
-                    }
-                    clearItem -> {
-                        setItemSlot(e.player)
-                    }
-                    else -> { close = false }
+                var close = false
+                if (e.clickedItem == clearItem) {
+                    close = true
+                } else if (e.clickedItem.hasTag(Tag.String("identifier"))) {
+                    val identifier = e.clickedItem.getTag(Tag.String("identifier"))
+                    val ref = data.getBuildingReferenceByIdentifier(identifier)?.get() ?: return@listen
+                    ref.select(e.player, data)
+                    close = true
                 }
-                if (close) e.player.closeInventory()
+
+                if (close) {
+                    e.player.closeInventory()
+                } else {
+                    e.player.inventory.cursorItem = ItemStack.AIR
+                    e.inventory!![e.slot] = e.clickedItem
+                }
             }
 
         GlobalEventHandler.addChild(inventoryEventNode)
@@ -103,21 +99,8 @@ object SelectBuildingItem : Actionable {
 
     fun updatePlayerItem(player: Player) {
         val data = players[player.uuid.toString()] ?: return
-        when(player.inventory[4].material()) {
-            TrainingCamp.getItem(data).material() -> {
-                data.trainingCamps.select(player, data.trainingCampCost)
-            }
-            MatterExtractor.getItem(data).material() -> {
-                data.matterExtractors.select(player, data.extractorCost)
-            }
-            MatterContainer.getItem(data).material() -> {
-                data.matterContainers.select(player, data.containerCost)
-            }
-            Barrack.getItem(data).material() -> {
-                data.barracks.select(player, data.barracksCost)
-            }
-
-            else -> {}
-        }
+        val identifier = player.inventory[4].getTag(Tag.String("identifier"))
+        val ref = data.getBuildingReferenceByIdentifier(identifier)?.get() ?: return
+        ref.select(player, data)
     }
 }

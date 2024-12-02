@@ -20,7 +20,7 @@ object OwnedBlockItem : Actionable {
     override val itemMaterial: Material = Material.LIME_DYE
 
     override fun getItem(uuid: UUID): ItemStack {
-        return item(Material.LIME_DYE) {
+        return item(itemMaterial) {
             itemName = "<green><bold>Your Land".asMini()
             set(Tag.String("identifier"), identifier)
         }

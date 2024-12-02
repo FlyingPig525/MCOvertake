@@ -41,7 +41,7 @@ object SelectBlockItem : Actionable {
 
 
     override fun getItem(uuid: UUID): ItemStack {
-        return item(Material.STRUCTURE_VOID) {
+        return item(itemMaterial) {
             itemName = "<green>$COLONY_SYMBOL <bold>Select Block</bold> $COLONY_SYMBOL".asMini()
             set(Tag.String("identifier"), identifier)
         }

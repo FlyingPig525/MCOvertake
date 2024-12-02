@@ -15,6 +15,7 @@ import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.item.Material
 import net.minestom.server.network.packet.server.play.SetCooldownPacket
+import net.minestom.server.timer.TaskSchedule
 import net.minestom.server.utils.time.Cooldown
 import java.time.Duration
 import java.util.*
@@ -33,6 +34,8 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
     val extractorCost: Int get() = computeGeneratorCost(matterExtractors.count)
     val matterContainers = MatterContainer()
     val containerCost: Int get() = (matterContainers.count * 20) + 20
+    val matterCompressors = MatterCompressionPlant()
+    val matterCompressorCost: Int get() = (matterCompressors.count * 50) + 50
     val maxMatter: Int get() = 100 + matterContainers.count * 25
     val claimCost: Int get() = blocks.floorDiv(500) + 5
     val maxClaimCooldown get() = (((blocks.toLong() / 1000.0) * 50.0) + 1000.0).toLong()
@@ -82,13 +85,19 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
         "<${
             if (disposableResourcesUsed > maxDisposableResources)
                 "light_purple"
-            else "white"
+            else "aqua"
         }>$RESOURCE_SYMBOL Disposable Resources <gray>- <${
             if (disposableResourcesUsed > maxDisposableResources)
                 "light_purple"
-            else "white"
+            else "aqua"
         }>$disposableResourcesUsed/$maxDisposableResources".asMini(),
         (disposableResourcesUsed.toFloat() / maxDisposableResources.toFloat()).coerceIn((0f..1f)),
+        BossBar.Color.BLUE,
+        BossBar.Overlay.PROGRESS
+    )
+    @Transient val mechanicalBossBar = BossBar.bossBar(
+        "<white>$MECHANICAL_SYMBOL Mechanical Parts<gray> - <white>$mechanicalParts".asMini(),
+        1f,
         BossBar.Color.WHITE,
         BossBar.Overlay.PROGRESS
     )
@@ -96,9 +105,8 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
         return 15
     }
 
-    fun tick(instance: Instance) {
-        organicMatter =
-            ((matterExtractors.count * 0.5 + 0.5) + organicMatter)
+    fun playerTick(instance: Instance) {
+        matterExtractors.tick(this)
         val player = instance.getPlayerByUuid(UUID.fromString(uuid))
         if (player != null) {
             if (playerDisplayName == null) playerDisplayName = player.username
@@ -106,7 +114,15 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
         }
     }
 
-    fun updateBossBars() {
+    fun powerTick() {
+        trainingCamps.tick(this)
+    }
+
+    fun mechanicalTick() {
+        matterCompressors.tick(this)
+    }
+
+    fun updateBossBars(player: Player? = null) {
         powerBossBar.name("<red>$POWER_SYMBOL Power <gray>-<red> $power/$maxPower".asMini())
         powerBossBar.progress((power / maxPower).toFloat().coerceIn(0f..1f))
 
@@ -114,9 +130,16 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
         matterBossBar.progress((organicMatter / maxMatter).toFloat().coerceIn(0f..1f))
 
         val overflow = disposableResourcesUsed > maxDisposableResources
-        resourcesBossBar.name("<${if (overflow) "light_purple" else "white"}>$RESOURCE_SYMBOL Disposable Resources <gray>- <${if (overflow) "light_purple" else "white"}>$disposableResourcesUsed/$maxDisposableResources".asMini())
+        resourcesBossBar.name("<${if (overflow) "light_purple" else "aqua"}>$RESOURCE_SYMBOL Disposable Resources <gray>- <${if (overflow) "light_purple" else "aqua"}>$disposableResourcesUsed/$maxDisposableResources".asMini())
         resourcesBossBar.progress((disposableResourcesUsed.toFloat() / maxDisposableResources.toFloat()).coerceIn(0f..1f))
-        resourcesBossBar.color(if (disposableResourcesUsed > maxDisposableResources) BossBar.Color.PURPLE else BossBar.Color.WHITE)
+        resourcesBossBar.color(if (disposableResourcesUsed > maxDisposableResources) BossBar.Color.PURPLE else BossBar.Color.BLUE)
+
+        mechanicalBossBar.name("<white>$MECHANICAL_SYMBOL Mechanical Parts<gray> - <white>$mechanicalParts".asMini())
+        mechanicalBossBar.progress(((tick % 400uL).toFloat() / 400f).coerceIn(0f, 1f))
+        if (player != null) {
+            if (mechanicalParts > 0) player.showBossBar(mechanicalBossBar)
+            else player.hideBossBar(mechanicalBossBar)
+        }
     }
 
     private fun showBossBars(player: Player) {
@@ -124,6 +147,9 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
             showBossBar(powerBossBar)
             showBossBar(matterBossBar)
             showBossBar(resourcesBossBar)
+            if (mechanicalParts > 0) {
+                showBossBar(mechanicalBossBar)
+            }
         }
     }
 
@@ -163,6 +189,7 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
             "power:generator" -> ::trainingCamps
             "matter:container" -> ::matterContainers
             "matter:generator" -> ::matterExtractors
+            "mechanical:generator" -> ::matterCompressors
             else -> null
         }
     }
@@ -172,7 +199,7 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
             return values.find { it.block == block }
         }
         fun Map<String, PlayerData>.getDataByPoint(point: Point): PlayerData? {
-            val block = instance.getBlock(point.withY(38.0))
+            val block = instance.getBlock(point.playerPosition)
             return values.find { it.block == block}
         }
         fun Map<String, PlayerData>.toBlockSortedList(): List<PlayerData> {

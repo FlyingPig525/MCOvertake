@@ -1,9 +1,7 @@
 package io.github.flyingpig525.item
 
-import io.github.flyingpig525.PICKAXE_SYMBOL
+import io.github.flyingpig525.*
 import io.github.flyingpig525.building.Building
-import io.github.flyingpig525.getTrueTarget
-import io.github.flyingpig525.players
 import io.github.flyingpig525.wall.blockIsWall
 import net.bladehunt.kotstom.dsl.item.amount
 import net.bladehunt.kotstom.dsl.item.item
@@ -31,7 +29,7 @@ object BreakBuildingItem : Actionable {
 
 
     override fun getItem(uuid: UUID): ItemStack {
-        return item(Material.IRON_PICKAXE) {
+        return item(itemMaterial) {
             itemName = "<gold>$PICKAXE_SYMBOL <bold>Destroy Building</bold>".asMini()
             amount = 1
             set(Tag.String("identifier"), identifier)
@@ -41,10 +39,10 @@ object BreakBuildingItem : Actionable {
     override fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean {
         val data = players[event.player.uuid.toString()] ?: return true
         val target = event.player.getTrueTarget(20) ?: return true
-        val playerBlockPos = target.withY(38.0)
+        val playerBlockPos = target.playerPosition
         val groundPos = target.withY(39.0)
         if (instance.getBlock(playerBlockPos).defaultState() != data.block) return true
-        val buildingPos = target.withY(40.0)
+        val buildingPos = target.buildingPosition
         val buildingBlock = instance.getBlock(buildingPos)
         if (buildingBlock.defaultState() == Block.LILY_PAD) return true
         val identifier = Building.getBuildingIdentifier(buildingBlock)

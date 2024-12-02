@@ -29,7 +29,7 @@ object ColonyItem : Actionable {
 
     override fun getItem(uuid: UUID): ItemStack {
         val playerData = players[uuid.toString()] ?: return ERROR_ITEM
-        return item(Material.CHEST) {
+        return item(itemMaterial) {
             itemName = "<green>$COLONY_SYMBOL<bold> Instantiate Colony</bold> <dark_gray>-<red> $POWER_SYMBOL ${playerData.colonyCost}".asMini()
             set(Tag.String("identifier"), identifier)
         }
@@ -39,7 +39,7 @@ object ColonyItem : Actionable {
         val data = players[event.player.uuid.toString()] ?: return true
         if (!data.colonyCooldown.isReady(Instant.now().toEpochMilli())) return true
         if (data.power - data.colonyCost < 0) return true
-        val target = event.player.getTrueTarget(20)?.withY(38.0) ?: return true
+        val target = event.player.getTrueTarget(20)?.playerPosition ?: return true
         if (instance.getBlock(target) == Block.GRASS_BLOCK) {
             claimWithParticle(event.player, target, Block.GRASS_BLOCK, data.block)
             data.blocks++

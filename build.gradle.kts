@@ -24,7 +24,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
 
     // Minestom & minestom related
-    implementation("net.minestom:minestom-snapshots:bb7acc2e77")
+    implementation("net.minestom:minestom-snapshots:ba55b05e14")
     implementation("net.bladehunt:kotstom:0.3.0")
     implementation("net.kyori:adventure-text-minimessage:4.17.0")
 

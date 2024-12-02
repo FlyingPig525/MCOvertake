@@ -1,6 +1,7 @@
 package io.github.flyingpig525.building
 
 import io.github.flyingpig525.MATTER_SYMBOL
+import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.PlayerData
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item
@@ -23,7 +24,7 @@ class MatterExtractor : Building {
     override val resourceUse: Int get() = count * 3
 
     override fun place(playerTarget: Point, instance: Instance) {
-        instance.setBlock(playerTarget.withY(40.0), block, false)
+        instance.setBlock(playerTarget.buildingPosition, block, false)
         count++
     }
 
@@ -32,7 +33,11 @@ class MatterExtractor : Building {
     }
 
     override fun select(player: Player, data: PlayerData) {
-        player.inventory[4] = Barrack.getItem(data)
+        player.inventory[4] = getItem(data)
+    }
+
+    override fun tick(data: PlayerData) {
+        data.organicMatter = ((count * 0.5 + 0.5) + data.organicMatter)
     }
 
     companion object : Building.BuildingCompanion {

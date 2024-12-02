@@ -1,7 +1,7 @@
 package io.github.flyingpig525.building
 
 import io.github.flyingpig525.MATTER_SYMBOL
-import io.github.flyingpig525.POWER_SYMBOL
+import io.github.flyingpig525.MECHANICAL_SYMBOL
 import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.PlayerData
 import kotlinx.serialization.Serializable
@@ -20,9 +20,10 @@ import net.minestom.server.item.Material
 import net.minestom.server.tag.Tag
 
 @Serializable
-class TrainingCamp : Building {
+class MatterCompressionPlant : Building {
+
     override var count: Int = 0
-    override val resourceUse: Int get() = count * 3
+    override val resourceUse: Int get() = count * 4
 
     override fun place(playerTarget: Point, instance: Instance) {
         instance.setBlock(playerTarget.buildingPosition, block, false)
@@ -38,30 +39,35 @@ class TrainingCamp : Building {
     }
 
     override fun tick(data: PlayerData) {
-        data.power += count * 0.5 + 0.5
+        if (data.organicMatter - 5 * count >= 0) {
+            data.organicMatter -= 5 * count
+            data.mechanicalParts += count
+        }
     }
 
     companion object : Building.BuildingCompanion {
-        override val block: Block = Block.POLISHED_BLACKSTONE_BUTTON.withProperty("face", "floor")
-        override val identifier: String = "power:generator"
+        override val block: Block = Block.HEAVY_CORE
+        override val identifier: String = "mechanical:generator"
 
         override fun getItem(cost: Int, count: Int): ItemStack {
-            return item(Material.POLISHED_BLACKSTONE_BUTTON) {
-                itemName = "<red>$POWER_SYMBOL Training Camp</red> <gray>-</gray><green> $MATTER_SYMBOL $cost".asMini()
+            return item(Material.HEAVY_CORE) {
+                itemName = "<white>$MECHANICAL_SYMBOL Matter Compression Plant <gray>-</gray><green> $MATTER_SYMBOL $cost".asMini()
                 lore {
-                    +"<gray>Generates 0.5 $power".asMini().noItalic()
-                    resourcesConsumed(3)
+                    +"<gray>Uses 5 $organicMatter to generate 1 $mechanicalPart".asMini().noItalic()
+                    resourcesConsumed(4)
                     amountOwned(count)
                 }
                 set(Tag.String("identifier"), identifier)
+
             }
         }
 
         override fun getItem(playerData: PlayerData): ItemStack {
-            return getItem(playerData.trainingCampCost, playerData.trainingCamps.count)
+            return getItem(playerData.matterCompressorCost, playerData.matterCompressors.count)
         }
 
-        override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 3
+        override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 2
+
 
         init {
             Building.BuildingCompanion.registry += this

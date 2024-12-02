@@ -31,7 +31,7 @@ object WallItem : Actionable {
     override val itemMaterial: Material = Material.IRON_BARS
 
     override fun getItem(uuid: UUID): ItemStack {
-        return item(Material.IRON_BARS) {
+        return item(itemMaterial) {
             itemName = "<white>$WALL_SYMBOL <bold>Build Wall</bold> <dark_gray>-<green> $MATTER_SYMBOL 15".asMini()
             amount = 1
             set(Tag.String("identifier"), identifier)
@@ -48,8 +48,8 @@ object WallItem : Actionable {
         data.organicMatter -= 15
         data.wallCooldown = Cooldown(Duration.ofMillis(500))
 
-        updateIronBar(target.withY(40.0))
-        repeatAdjacent(target.withY(40.0)) {
+        updateIronBar(target.buildingPosition)
+        repeatAdjacent(target.buildingPosition) {
             if (instance.getBlock(it).defaultState() == Block.IRON_BARS) {
                 updateIronBar(it)
             }

@@ -6,7 +6,6 @@ import de.articdive.jnoise.modules.octavation.fractal_functions.FractalFunction
 import de.articdive.jnoise.pipeline.JNoise
 import io.github.flyingpig525.console.Command
 import io.github.flyingpig525.console.ConfigCommand
-import io.github.flyingpig525.console.LogCommand
 import io.github.flyingpig525.console.SaveCommand
 import io.github.flyingpig525.data.Config
 import io.github.flyingpig525.data.PlayerData
@@ -41,7 +40,6 @@ import net.minestom.server.entity.Entity
 import net.minestom.server.entity.GameMode
 import net.minestom.server.event.player.*
 import net.minestom.server.extras.MojangAuth
-import net.minestom.server.instance.Instance
 import net.minestom.server.instance.InstanceContainer
 import net.minestom.server.instance.LightingChunk
 import net.minestom.server.instance.anvil.AnvilLoader
@@ -54,6 +52,7 @@ import net.minestom.server.particle.Particle
 import net.minestom.server.potion.Potion
 import net.minestom.server.potion.PotionEffect
 import net.minestom.server.tag.Tag
+import net.minestom.server.timer.Task
 import net.minestom.server.timer.TaskSchedule
 import net.minestom.server.utils.time.Cooldown
 import team.unnamed.creative.serialize.minecraft.MinecraftResourcePackReader
@@ -69,7 +68,7 @@ import java.util.*
 const val POWER_SYMBOL = "✘"
 const val ATTACK_SYMBOL = "\uD83D\uDDE1"
 const val MATTER_SYMBOL = "\uD83C\uDF0A"
-const val MECHANICAL_PART_SYMBOL = "\uD83E\uDE93"
+const val MECHANICAL_SYMBOL = "☵"
 const val CLAIM_SYMBOL = "◎"
 const val COLONY_SYMBOL = "⚐"
 const val BUILDING_SYMBOL = "⧈"
@@ -78,6 +77,8 @@ const val WALL_SYMBOL = "\uD83E\uDE93"
 const val PICKAXE_SYMBOL = "⛏"
 
 const val DASH_BANNER = "----------------------------------------------"
+
+var tick: ULong = 0uL
 
 var runConsoleLoop = true
 val logStream = PrintStream("log.log")
@@ -89,6 +90,10 @@ lateinit var instance: InstanceContainer private set
 lateinit var players: MutableMap<String, PlayerData>
 
 lateinit var config: Config
+
+lateinit var powerTask: Task
+lateinit var matterTask: Task
+lateinit var mechanicalTask: Task
 
 fun main() = runBlocking { try {
     // Initialize the servers
@@ -203,8 +208,10 @@ fun main() = runBlocking { try {
     log("Player spawning setup...")
 
     var scoreboardTitleProgress = -1.0
-    // Scoreboard tick
+    // Every tick
     SchedulerManager.scheduleTask({
+        tick++
+
         scoreboardTitleProgress += 0.02
         if (scoreboardTitleProgress >= 1.0) {
             scoreboardTitleProgress = -1.0
@@ -228,20 +235,30 @@ fun main() = runBlocking { try {
 
 
     // General player tick/extractor tick
-    SchedulerManager.scheduleTask({
+    matterTask = SchedulerManager.scheduleTask({
         for (uuid in players.keys) {
-            players[uuid]!!.tick(instance)
+            val data = players[uuid]!!
+            data.playerTick(instance)
+            data.matterExtractors.tick(data)
         }
     }, TaskSchedule.tick(30), TaskSchedule.tick(30))
 
     // Camp tick
-    SchedulerManager.scheduleTask({
+    powerTask = SchedulerManager.scheduleTask({
         for (uuid in players.keys) {
             val data = players[uuid]!!
-            data.power += data.trainingCamps.count * 0.5 + 0.5
+            data.powerTick()
             data.updateBossBars()
         }
     }, TaskSchedule.tick(70), TaskSchedule.tick(70))
+
+    // Mechanical part tick
+    mechanicalTask = SchedulerManager.scheduleTask({
+        for (uuid in players.keys) {
+            val data = players[uuid]!!
+            data.mechanicalTick()
+        }
+    }, TaskSchedule.tick(400), TaskSchedule.tick(400))
 
     // Save loop
     SchedulerManager.scheduleTask({
@@ -303,8 +320,8 @@ fun main() = runBlocking { try {
 
         val target = e.player.getTrueTarget(20)
         if (target != null) {
-            val buildingPoint = target.withY(40.0)
-            val playerPoint = target.withY(38.0)
+            val buildingPoint = target.buildingPosition
+            val playerPoint = target.playerPosition
             val targetBlock = instance.getBlock(target)
             val buildingBlock = instance.getBlock(buildingPoint)
             when (val playerBlock = instance.getBlock(playerPoint)) {
@@ -346,7 +363,7 @@ fun main() = runBlocking { try {
                     }
                 }
             }
-            val y40 = target.withY(40.0)
+            val y40 = target.buildingPosition
             val targetParticles = mutableListOf<SendablePacket>()
             for (i in 1..5) {
                 val dustParticle = Particle.DUST.withColor(Color(25, 25, 25)).withScale(0.6f)
@@ -490,6 +507,21 @@ fun Entity.getTrueTarget(maxDistance: Int, onRayStep: ((pos: Point, block: Block
     return null
 }
 
+val Point.buildingPosition: Point get() {
+    // TODO: WHEN ADDING DIFFERENT LEVELS ADD MORE CASES
+    if (y() >= 39) {
+        return withY(40.0)
+    }
+    return withY(40.0)
+}
+
+val Point.playerPosition: Point get() {
+    if (y() >= 39) {
+        return withY(38.0)
+    }
+    return withY(38.0)
+}
+
 fun scheduleImmediately(fn: () -> Unit) =
     SchedulerManager.scheduleTask(fn, TaskSchedule.immediate(), TaskSchedule.stop())
 
@@ -545,10 +577,10 @@ fun initItems() {
     UpgradeWallItem
     BreakBuildingItem
     ClaimWaterItem
+    MatterCompressorItem
 }
 
 fun initConsoleCommands() {
     ConfigCommand
     SaveCommand
-    LogCommand
 }

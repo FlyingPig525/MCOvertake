@@ -2,6 +2,7 @@ package io.github.flyingpig525.building
 
 import io.github.flyingpig525.MATTER_SYMBOL
 import io.github.flyingpig525.POWER_SYMBOL
+import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.PlayerData
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item
@@ -25,7 +26,7 @@ class Barrack : Building {
     override val resourceUse: Int get() = count * 2
 
     override fun place(playerTarget: Point, instance: Instance) {
-        instance.setBlock(playerTarget.withY(40.0), block, false)
+        instance.setBlock(playerTarget.buildingPosition, block, false)
         count++
     }
 

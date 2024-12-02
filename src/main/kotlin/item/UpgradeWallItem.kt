@@ -29,7 +29,7 @@ object UpgradeWallItem : Actionable {
     override fun getItem(uuid: UUID): ItemStack {
         val target = instance.getPlayerByUuid(uuid)!!.getTrueTarget(20) ?: return ERROR_ITEM
         val upgradeCost = getWallUpgradeCost(instance.getBlock(target).defaultState()) ?: return ERROR_ITEM
-        return item(Material.IRON_AXE) {
+        return item(itemMaterial) {
             itemName = "<gold>$WALL_SYMBOL <bold>Upgrade Wall</bold><dark_grey> - <green>$MATTER_SYMBOL $upgradeCost".asMini()
             set(Tag.String("identifier"), identifier)
         }
@@ -37,7 +37,7 @@ object UpgradeWallItem : Actionable {
 
     override fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean {
         val data = players[event.player.uuid.toString()] ?: return true
-        val target = event.player.getTrueTarget(20)?.withY(40.0) ?: return true
+        val target = event.player.getTrueTarget(20)?.buildingPosition ?: return true
         val block = instance.getBlock(target).defaultState()
         val level = block.wallLevel
         val cost = getWallUpgradeCost(block) ?: return true

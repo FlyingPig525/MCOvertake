@@ -1,7 +1,9 @@
 package io.github.flyingpig525.item
 
+import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.PlayerData
 import io.github.flyingpig525.instance
+import io.github.flyingpig525.playerPosition
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.dsl.particle
@@ -41,13 +43,13 @@ interface Actionable {
 }
 
 fun claimWithParticle(player: Player, target: Point, resultBlock: Block) {
-    val block = instance.getBlock(target.withY(38.0))
+    val block = instance.getBlock(target.playerPosition)
     claimWithParticle(player, target, block, resultBlock)
 }
 
 fun claimWithParticle(player: Player, target: Point, targetBlock: Block, resultBlock: Block) {
     instance.setBlock(target.withY(39.0), resultBlock)
-    instance.setBlock(target.withY(38.0), resultBlock)
+    instance.setBlock(target.playerPosition, resultBlock)
     val particle = particle {
         particle = Particle.BLOCK.withBlock(targetBlock)
         count = 30
@@ -58,7 +60,7 @@ fun claimWithParticle(player: Player, target: Point, targetBlock: Block, resultB
 }
 
 fun checkBlockAvailable(data: PlayerData, target: Point): Boolean {
-    val playerBlock = instance.getBlock(target.withY(38.0)).defaultState()
-    val buildingBlock = instance.getBlock(target.withY(40.0)).defaultState()
+    val playerBlock = instance.getBlock(target.playerPosition).defaultState()
+    val buildingBlock = instance.getBlock(target.buildingPosition).defaultState()
     return playerBlock == data.block && (buildingBlock == Block.AIR || buildingBlock == Block.LILY_PAD)
 }

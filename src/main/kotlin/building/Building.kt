@@ -15,6 +15,7 @@ interface Building {
     fun place(playerTarget: Point, instance: Instance)
     fun select(player: Player, cost: Int)
     fun select(player: Player, data: PlayerData)
+    fun tick(data: PlayerData) {}
 
     interface BuildingCompanion {
         val block: Block

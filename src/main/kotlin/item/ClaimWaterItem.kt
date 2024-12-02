@@ -32,7 +32,7 @@ object ClaimWaterItem : Actionable {
     override val itemMaterial: Material = Material.WOODEN_AXE
 
     override fun getItem(uuid: UUID): ItemStack {
-        return item(Material.WOODEN_AXE) {
+        return item(itemMaterial) {
             itemName = "<gold>$WALL_SYMBOL <bold>Build Raft</bold><dark_grey> - <green>$MATTER_SYMBOL 500".asMini()
         }.withTag(Tag.String("identifier"), identifier)
     }
@@ -44,7 +44,7 @@ object ClaimWaterItem : Actionable {
         if (!data.raftCooldown.isReady(Instant.now().toEpochMilli())) return true
         val target = event.player.getTrueTarget(20) ?: return true
         // Claim logic
-        instance.setBlock(target.withY(38.0), data.block)
+        instance.setBlock(target.playerPosition, data.block)
         instance.setBlock(target.withY(40.0), Block.LILY_PAD)
         spawnPlayerRaft(data.block, target.withY(40.0))
         data.blocks++

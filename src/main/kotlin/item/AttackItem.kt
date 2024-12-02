@@ -56,7 +56,7 @@ object AttackItem : Actionable {
 
     private fun getAttackCost(targetData: PlayerData?, playerTarget: Point): Int {
         // TODO: AFTER ADDING WALLS ADD WALL THINGS HERE
-        val wallPosition = playerTarget.withY(40.0)
+        val wallPosition = playerTarget.buildingPosition
         val building = instance.getBlock(wallPosition)
         var additiveModifier = 0
         if (blockIsWall(building)) additiveModifier += getWallAttackCost(building)!!
@@ -78,7 +78,7 @@ object AttackItem : Actionable {
         ClaimWaterItem.destroyPlayerRaft(point.withY(40.0))
         targetData.blocks--
         instance.setBlock(point.withY(38.0), Block.SAND)
-        instance.setBlock(point.withY(40.0), Block.AIR)
+        instance.setBlock(point.buildingPosition, Block.AIR)
         // TODO: PARTICLES
     }
 
@@ -86,8 +86,8 @@ object AttackItem : Actionable {
         val data = players[event.player.uuid.toString()] ?: return true
         if (!data.attackCooldown.isReady(Instant.now().toEpochMilli())) return true
         val target = event.player.getTrueTarget(20) ?: return true
-        val buildingPoint = target.withY(40.0)
-        val playerBlock = instance.getBlock(target.withY(38.0))
+        val buildingPoint = target.buildingPosition
+        val playerBlock = instance.getBlock(target.playerPosition)
         val waterBlock = instance.getBlock(target.withY(39.0))
         val buildingBlock = instance.getBlock(buildingPoint)
         if (playerBlock == Block.GRASS_BLOCK || playerBlock == Block.SAND || playerBlock == data.block) {
@@ -105,7 +105,7 @@ object AttackItem : Actionable {
             Block.LILY_PAD -> {
                 ClaimWaterItem.destroyPlayerRaft(buildingPoint)
                 targetData.blocks--
-                instance.setBlock(target.withY(38.0), Block.SAND)
+                instance.setBlock(target.playerPosition, Block.SAND)
                 instance.setBlock(buildingPoint, Block.AIR)
                 false
             }
