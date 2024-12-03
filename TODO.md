@@ -7,7 +7,7 @@ TODO:
 - [x] world generation
 - [ ] sky islands -- maybe (collect a gaseous resource?)
 - [ ] underground (where you can do oil) (less digging more cave systems? maybe inverted ground noise)
-- [ ] mechanical parts
+- [x] mechanical parts
 - [ ] aoe buildings
 - [ ] co-op
 - [ ] biomes? more details needed -- seems cool but probably no

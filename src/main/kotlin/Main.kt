@@ -16,6 +16,7 @@ import kotlinx.coroutines.*
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import net.bladehunt.kotstom.CommandManager
 import net.bladehunt.kotstom.GlobalEventHandler
 import net.bladehunt.kotstom.InstanceManager
 import net.bladehunt.kotstom.SchedulerManager
@@ -23,6 +24,7 @@ import net.bladehunt.kotstom.dsl.item.amount
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.dsl.kbar
+import net.bladehunt.kotstom.dsl.kommand.kommand
 import net.bladehunt.kotstom.dsl.line
 import net.bladehunt.kotstom.dsl.listen
 import net.bladehunt.kotstom.dsl.particle
@@ -30,7 +32,9 @@ import net.bladehunt.kotstom.extension.adventure.asMini
 import net.bladehunt.kotstom.extension.roundToBlock
 import net.bladehunt.kotstom.extension.set
 import net.kyori.adventure.resource.ResourcePackInfo
+import net.kyori.adventure.text.Component
 import net.minestom.server.MinecraftServer
+import net.minestom.server.adventure.audience.Audiences
 import net.minestom.server.collision.ShapeImpl
 import net.minestom.server.color.Color
 import net.minestom.server.coordinate.Point
@@ -39,6 +43,7 @@ import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.Entity
 import net.minestom.server.entity.GameMode
 import net.minestom.server.event.player.*
+import net.minestom.server.event.server.ServerTickMonitorEvent
 import net.minestom.server.extras.MojangAuth
 import net.minestom.server.instance.InstanceContainer
 import net.minestom.server.instance.LightingChunk
@@ -47,6 +52,7 @@ import net.minestom.server.instance.block.Block
 import net.minestom.server.inventory.PlayerInventory
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
+import net.minestom.server.monitoring.TickMonitor
 import net.minestom.server.network.packet.server.SendablePacket
 import net.minestom.server.particle.Particle
 import net.minestom.server.potion.Potion
@@ -54,7 +60,9 @@ import net.minestom.server.potion.PotionEffect
 import net.minestom.server.tag.Tag
 import net.minestom.server.timer.Task
 import net.minestom.server.timer.TaskSchedule
+import net.minestom.server.utils.MathUtils
 import net.minestom.server.utils.time.Cooldown
+import net.minestom.server.utils.time.TimeUnit
 import team.unnamed.creative.serialize.minecraft.MinecraftResourcePackReader
 import team.unnamed.creative.serialize.minecraft.MinecraftResourcePackWriter
 import team.unnamed.creative.server.ResourcePackServer
@@ -62,8 +70,13 @@ import java.io.File
 import java.io.PrintStream
 import java.net.URI
 import java.sql.Time
+import java.time.Duration
 import java.time.Instant
 import java.util.*
+import java.util.concurrent.atomic.AtomicReference
+
+
+
 
 const val POWER_SYMBOL = "✘"
 const val ATTACK_SYMBOL = "\uD83D\uDDE1"
@@ -79,6 +92,7 @@ const val PICKAXE_SYMBOL = "⛏"
 const val DASH_BANNER = "----------------------------------------------"
 
 var tick: ULong = 0uL
+var tps = 20.0
 
 var runConsoleLoop = true
 val logStream = PrintStream("log.log")
@@ -147,6 +161,12 @@ fun main() = runBlocking { try {
             }
         }
         setChunkSupplier(::LightingChunk)
+        for (x in 1..300) {
+            for (z in 1..300) {
+                val a = ((((noise.evaluateNoise(x.toDouble(), z.toDouble()) + 1) / 2) * 30) + 50).toInt()
+                setBlock(x, a, z, Block.STONE)
+            }
+        }
     }
     log("Created instance...")
     for (x in 0..config.mapSize) {
@@ -232,6 +252,26 @@ fun main() = runBlocking { try {
             scoreboard.addViewer(player)
         }
     }, TaskSchedule.tick(1), TaskSchedule.tick(1))
+    // Stolen monitoring code
+    val tpsMonitor = TpsMonitor()
+    tpsMonitor.start()
+    val tickKommand = kommand {
+        name = "tick"
+        defaultExecutor {
+            val tps = tpsMonitor.getTps()
+            val tps1 = tpsMonitor.getAvgTps1Min()
+            val tps5 = tpsMonitor.getAvgTps5Min()
+            val tps15 = tpsMonitor.getAvgTps15Min()
+            player.sendMessage("<dark_gray>-----<gold><bold>Tick Data</bold><dark_gray>-----".asMini().append(Component.newline())
+                .append("<gold>Tick: <bold>$tick".asMini()).append(Component.newline())
+                .append("<${if (tps <= 15) "red" else "gold"}>TPS: <bold>${tps}".asMini()).append(Component.newline())
+                .append("<${if (tps1 <= 17) "red" else "gold"}>Average TPS 1 Min: <bold>${tps1}".asMini()).append(Component.newline())
+                .append("<${if (tps5 <= 18) "red" else "gold"}>Average TPS 5 Min: <bold>${tps5}".asMini()).append(Component.newline())
+                .append("<${if (tps15 <= 19) "red" else "gold"}>Average TPS 15 Min: <bold>${tps15}".asMini())
+            )
+        }
+    }
+    CommandManager.register(tickKommand)
 
 
     // General player tick/extractor tick
@@ -584,3 +624,4 @@ fun initConsoleCommands() {
     ConfigCommand
     SaveCommand
 }
+
