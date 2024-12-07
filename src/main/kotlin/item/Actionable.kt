@@ -4,9 +4,9 @@ import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.PlayerData
 import io.github.flyingpig525.instance
 import io.github.flyingpig525.playerPosition
+import io.github.flyingpig525.visiblePosition
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
-import net.bladehunt.kotstom.dsl.particle
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.minestom.server.coordinate.Point
 import net.minestom.server.coordinate.Vec
@@ -17,6 +17,7 @@ import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
+import net.minestom.server.network.packet.server.play.ParticlePacket
 import net.minestom.server.particle.Particle
 import java.util.*
 
@@ -43,19 +44,21 @@ interface Actionable {
 }
 
 fun claimWithParticle(player: Player, target: Point, resultBlock: Block) {
-    val block = instance.getBlock(target.playerPosition)
+    val block = instance.getBlock(target.playerPosition).defaultState()
     claimWithParticle(player, target, block, resultBlock)
 }
 
 fun claimWithParticle(player: Player, target: Point, targetBlock: Block, resultBlock: Block) {
-    instance.setBlock(target.withY(39.0), resultBlock)
+    instance.setBlock(target.visiblePosition, resultBlock)
     instance.setBlock(target.playerPosition, resultBlock)
-    val particle = particle {
-        particle = Particle.BLOCK.withBlock(targetBlock)
-        count = 30
-        position = target.add(0.5, 1.0, 0.5)
-        offset = Vec(0.2, 0.0, 0.2)
-    }
+    // TODO: FIX CLAIM PARTICLES (likely minestom problem)
+    val particle = ParticlePacket(
+        Particle.BLOCK.withBlock(targetBlock),
+        target.visiblePosition.add(0.5, 1.0, 0.5),
+        Vec(0.2, 0.0, 0.2),
+        1f,
+        30
+    )
     player.sendPacket(particle)
 }
 

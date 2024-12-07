@@ -51,7 +51,7 @@ object ClaimItem : Actionable {
             data.claimCooldown = Cooldown(Duration.ofMillis(data.maxClaimCooldown))
             event.player.sendPacket(
                 SetCooldownPacket(
-                    getItem(event.player.uuid).material().id(),
+                    itemMaterial.key().value(),
                     data.claimCooldown.ticks
                 ))
         }

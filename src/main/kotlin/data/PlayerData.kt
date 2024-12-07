@@ -15,7 +15,6 @@ import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.item.Material
 import net.minestom.server.network.packet.server.play.SetCooldownPacket
-import net.minestom.server.timer.TaskSchedule
 import net.minestom.server.utils.time.Cooldown
 import java.time.Duration
 import java.util.*
@@ -159,25 +158,25 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
         Actionable.persistentRegistry.forEach {
             it.setItemSlot(player)
         }
-        player.inventory.helmet = item(Material.fromNamespaceId(block.namespace())!!)
+        player.helmet = item(Material.fromNamespaceId(block.namespace())!!)
     }
 
     fun sendCooldowns(player: Player) {
         player.sendPackets(
             SetCooldownPacket(
-                ClaimItem.itemMaterial.id(),
+                ClaimItem.itemMaterial.key().value(),
                 claimCooldown.ticks
             ),
             SetCooldownPacket(
-                ColonyItem.itemMaterial.id(),
+                ColonyItem.itemMaterial.key().value(),
                 colonyCooldown.ticks
             ),
             SetCooldownPacket(
-                AttackItem.itemMaterial.id(),
+                AttackItem.itemMaterial.key().value(),
                 attackCooldown.ticks
             ),
             SetCooldownPacket(
-                ClaimWaterItem.itemMaterial.id(),
+                ClaimWaterItem.itemMaterial.key().value(),
                 raftCooldown.ticks
             )
         )

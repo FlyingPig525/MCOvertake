@@ -14,10 +14,10 @@ object ConfigCommand : Command {
     }
 
     override val arguments: Int = 1
-    override val name: String = "config"
+    override val names: List<String> = listOf("config")
 
     override fun validate(arguments: List<String>): Boolean {
-        return arguments.size == 1 && arguments[0] == name
+        return arguments.size == 1 && arguments[0] in names
     }
 
     override fun execute(arguments: List<String>) {

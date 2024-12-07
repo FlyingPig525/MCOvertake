@@ -51,7 +51,7 @@ object ClaimWaterItem : Actionable {
         data.raftCooldown = Cooldown(Duration.ofSeconds(20))
         event.player.sendPacket(
             SetCooldownPacket(
-                getItem(event.player.uuid).material().id(),
+                itemMaterial.key().value(),
                 data.raftCooldown.ticks
             )
         )

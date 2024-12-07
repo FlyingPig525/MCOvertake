@@ -57,7 +57,7 @@ object WallItem : Actionable {
 
         event.player.sendPacket(
             SetCooldownPacket(
-                getItem(event.player.uuid).material().id(),
+                itemMaterial.key().value(),
                 (data.wallCooldown.duration.toMillis() / 50).toInt()
             )
         )

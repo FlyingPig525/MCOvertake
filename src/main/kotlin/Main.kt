@@ -6,6 +6,7 @@ import de.articdive.jnoise.modules.octavation.fractal_functions.FractalFunction
 import de.articdive.jnoise.pipeline.JNoise
 import io.github.flyingpig525.console.Command
 import io.github.flyingpig525.console.ConfigCommand
+import io.github.flyingpig525.console.OpCommand
 import io.github.flyingpig525.console.SaveCommand
 import io.github.flyingpig525.data.Config
 import io.github.flyingpig525.data.PlayerData
@@ -33,8 +34,8 @@ import net.bladehunt.kotstom.extension.roundToBlock
 import net.bladehunt.kotstom.extension.set
 import net.kyori.adventure.resource.ResourcePackInfo
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
-import net.minestom.server.adventure.audience.Audiences
 import net.minestom.server.collision.ShapeImpl
 import net.minestom.server.color.Color
 import net.minestom.server.coordinate.Point
@@ -43,7 +44,6 @@ import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.Entity
 import net.minestom.server.entity.GameMode
 import net.minestom.server.event.player.*
-import net.minestom.server.event.server.ServerTickMonitorEvent
 import net.minestom.server.extras.MojangAuth
 import net.minestom.server.instance.InstanceContainer
 import net.minestom.server.instance.LightingChunk
@@ -52,7 +52,6 @@ import net.minestom.server.instance.block.Block
 import net.minestom.server.inventory.PlayerInventory
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
-import net.minestom.server.monitoring.TickMonitor
 import net.minestom.server.network.packet.server.SendablePacket
 import net.minestom.server.particle.Particle
 import net.minestom.server.potion.Potion
@@ -60,9 +59,7 @@ import net.minestom.server.potion.PotionEffect
 import net.minestom.server.tag.Tag
 import net.minestom.server.timer.Task
 import net.minestom.server.timer.TaskSchedule
-import net.minestom.server.utils.MathUtils
 import net.minestom.server.utils.time.Cooldown
-import net.minestom.server.utils.time.TimeUnit
 import team.unnamed.creative.serialize.minecraft.MinecraftResourcePackReader
 import team.unnamed.creative.serialize.minecraft.MinecraftResourcePackWriter
 import team.unnamed.creative.server.ResourcePackServer
@@ -70,12 +67,8 @@ import java.io.File
 import java.io.PrintStream
 import java.net.URI
 import java.sql.Time
-import java.time.Duration
 import java.time.Instant
 import java.util.*
-import java.util.concurrent.atomic.AtomicReference
-
-
 
 
 const val POWER_SYMBOL = "✘"
@@ -89,10 +82,11 @@ const val RESOURCE_SYMBOL = "⌘"
 const val WALL_SYMBOL = "\uD83E\uDE93"
 const val PICKAXE_SYMBOL = "⛏"
 
+const val PIXEL_SIZE = 1.0 / 16.0
+
 const val DASH_BANNER = "----------------------------------------------"
 
 var tick: ULong = 0uL
-var tps = 20.0
 
 var runConsoleLoop = true
 val logStream = PrintStream("log.log")
@@ -161,12 +155,7 @@ fun main() = runBlocking { try {
             }
         }
         setChunkSupplier(::LightingChunk)
-        for (x in 1..300) {
-            for (z in 1..300) {
-                val a = ((((noise.evaluateNoise(x.toDouble(), z.toDouble()) + 1) / 2) * 30) + 50).toInt()
-                setBlock(x, a, z, Block.STONE)
-            }
-        }
+
     }
     log("Created instance...")
     for (x in 0..config.mapSize) {
@@ -200,6 +189,9 @@ fun main() = runBlocking { try {
             player.kick(
                 config.notWhitelistedMessage.asMini()
             )
+        }
+        if (player.username in config.opUsernames && player.uuid.toString() in config.opUUID) {
+            player.permissionLevel = 4
         }
         player.respawnPoint = Pos(5.0, 41.0, 5.0)
         player.sendResourcePacks(ResourcePackInfo.resourcePackInfo()
@@ -363,10 +355,11 @@ fun main() = runBlocking { try {
             val buildingPoint = target.buildingPosition
             val playerPoint = target.playerPosition
             val targetBlock = instance.getBlock(target)
-            val buildingBlock = instance.getBlock(buildingPoint)
-            when (val playerBlock = instance.getBlock(playerPoint)) {
+            val buildingBlock = instance.getBlock(buildingPoint).defaultState()
+            val playerBlock = instance.getBlock(playerPoint).defaultState()
+            val canAccess = anyAdjacentBlocksMatch(playerPoint, playerData.block)
+            when (playerBlock) {
                 Block.GRASS_BLOCK -> {
-                    val canAccess = anyAdjacentBlocksMatch(playerPoint, playerData.block)
                     if (canAccess) {
                         ClaimItem.setItemSlot(e.player)
                     } else {
@@ -379,58 +372,70 @@ fun main() = runBlocking { try {
                 }
 
                 Block.SAND -> {
-                    val canAccess = anyAdjacentBlocksMatch(playerPoint, playerData.block)
                     if (canAccess) {
-                            ClaimWaterItem.setItemSlot(e.player)
+                        ClaimWaterItem.setItemSlot(e.player)
                     } else {
                         e.player.inventory.idle()
                     }
                 }
 
+                playerData.block -> {
+                    OwnedBlockItem.setItemSlot(e.player)
+                    if (blockIsWall(targetBlock)) {
+                        UpgradeWallItem.setItemSlot(e.player)
+                    }
+                }
+
                 else -> {
-                    if (playerBlock == playerData.block) {
-                        OwnedBlockItem.setItemSlot(e.player)
-                        if (blockIsWall(targetBlock)) {
-                            UpgradeWallItem.setItemSlot(e.player)
-                        }
-                    } else if (
-                        playerBlock != playerData.block
-                        && anyAdjacentBlocksMatch(playerPoint, playerData.block)
-                    ) {
+                    if (canAccess) {
                         AttackItem.setItemSlot(e.player)
                     } else {
                         e.player.inventory.idle()
                     }
                 }
             }
-            val y40 = target.buildingPosition
+            val y40 = target.buildingPosition.add(0.0, PIXEL_SIZE, 0.0)
+            val oneZero = y40.add(1.0, 0.0, 0.0)
+            val oneOne = y40.add(1.0, 0.0, 1.0)
+            val zeroOne = y40.add(0.0, 0.0, 1.0)
             val targetParticles = mutableListOf<SendablePacket>()
-            for (i in 1..5) {
-                val dustParticle = Particle.DUST.withColor(Color(25, 25, 25)).withScale(0.6f)
-                targetParticles += particle {
-                    particle = dustParticle
-                    position = y40.add(0.2 * i, 0.0, 0.0)
-                    count = 1
-                    offset = Vec(0.0, 0.0, 0.0)
-                }
-                targetParticles += particle {
-                    particle = dustParticle
-                    position = y40.add(0.2 * i, 0.0, 1.0)
-                    count = 1
-                    offset = Vec(0.0, 0.0, 0.0)
-                }
-                targetParticles += particle {
-                    particle = dustParticle
-                    position = y40.add(0.0, 0.0, 0.2 * i)
-                    count = 1
-                    offset = Vec(0.0, 0.0, 0.0)
-                }
-                targetParticles += particle {
-                    particle = dustParticle
-                    position = y40.add(1.0, 0.0, 0.2 * i)
-                    count = 1
-                    offset = Vec(0.0, 0.0, 0.0)
-                }
+            val color = when(playerBlock) {
+                Block.GRASS_BLOCK -> if (canAccess) Color(NamedTextColor.GREEN)
+                    else Color(NamedTextColor.DARK_GREEN)
+
+                Block.SAND -> if (canAccess) Color(NamedTextColor.AQUA)
+                    else Color(NamedTextColor.DARK_AQUA)
+
+                Block.DIAMOND_BLOCK -> Color(NamedTextColor.DARK_GRAY)
+
+                playerData.block -> Color(NamedTextColor.GOLD)
+                else -> if (canAccess) Color(NamedTextColor.RED)
+                    else Color(NamedTextColor.DARK_RED)
+            }
+            val trailParticle = Particle.TRAIL.withColor(color)
+            targetParticles += particle {
+                particle = trailParticle.withTarget(oneZero)
+                position = y40
+                count = 1
+                offset = Vec.ZERO
+            }
+            targetParticles += particle {
+                particle = trailParticle.withTarget(oneOne)
+                position = oneZero
+                count = 1
+                offset = Vec.ZERO
+            }
+            targetParticles += particle {
+                particle = trailParticle.withTarget(zeroOne)
+                position = oneOne
+                count = 1
+                offset = Vec.ZERO
+            }
+            targetParticles += particle {
+                particle = trailParticle.withTarget(y40)
+                position = zeroOne
+                count = 1
+                offset = Vec.ZERO
             }
             e.player.sendPackets(targetParticles)
         } else {
@@ -562,6 +567,13 @@ val Point.playerPosition: Point get() {
     return withY(38.0)
 }
 
+val Point.visiblePosition: Point get() {
+    if (y() >= 39) {
+        return withY(39.0)
+    }
+    return withY(39.0)
+}
+
 fun scheduleImmediately(fn: () -> Unit) =
     SchedulerManager.scheduleTask(fn, TaskSchedule.immediate(), TaskSchedule.stop())
 
@@ -623,5 +635,6 @@ fun initItems() {
 fun initConsoleCommands() {
     ConfigCommand
     SaveCommand
+    OpCommand
 }
 

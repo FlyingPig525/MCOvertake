@@ -47,7 +47,7 @@ object ColonyItem : Actionable {
             data.colonyCooldown = Cooldown(Duration.ofSeconds(15))
             event.player.sendPacket(
                 SetCooldownPacket(
-                    getItem(event.player.uuid).material().id(),
+                    itemMaterial.key().value(),
                     data.colonyCooldown.ticks
                 )
             )

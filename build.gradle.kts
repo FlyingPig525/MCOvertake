@@ -1,5 +1,3 @@
-import java.net.URI
-
 plugins {
     kotlin("jvm") version "2.0.0"
     id("com.gradleup.shadow") version "8.3.0"
@@ -24,7 +22,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
 
     // Minestom & minestom related
-    implementation("net.minestom:minestom-snapshots:ba55b05e14")
+    implementation("net.minestom:minestom-snapshots:d760a60a5c")
     implementation("net.bladehunt:kotstom:0.3.0")
     implementation("net.kyori:adventure-text-minimessage:4.17.0")
 

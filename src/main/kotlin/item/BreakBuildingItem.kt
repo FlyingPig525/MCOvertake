@@ -40,7 +40,7 @@ object BreakBuildingItem : Actionable {
         val data = players[event.player.uuid.toString()] ?: return true
         val target = event.player.getTrueTarget(20) ?: return true
         val playerBlockPos = target.playerPosition
-        val groundPos = target.withY(39.0)
+        val groundPos = target.visiblePosition
         if (instance.getBlock(playerBlockPos).defaultState() != data.block) return true
         val buildingPos = target.buildingPosition
         val buildingBlock = instance.getBlock(buildingPos)

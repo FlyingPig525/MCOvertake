@@ -5,7 +5,7 @@ interface Command {
      * Amount of command arguments, including name.
      */
     val arguments: Int
-    val name: String
+    val names: List<String>
 
     fun validate(arguments: List<String>): Boolean
     fun execute(arguments: List<String>): Unit

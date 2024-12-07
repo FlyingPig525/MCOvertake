@@ -14,10 +14,10 @@ object SaveCommand : Command {
     }
 
     override val arguments: Int = 1
-    override val name: String = "save"
+    override val names: List<String> = listOf("save")
 
     override fun validate(arguments: List<String>): Boolean {
-        return arguments.size in 1..2 && arguments[0] == name
+        return arguments.size in 1..2 && arguments[0] in names
     }
 
     override fun execute(arguments: List<String>) {

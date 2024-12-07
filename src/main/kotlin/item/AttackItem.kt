@@ -88,7 +88,7 @@ object AttackItem : Actionable {
         val target = event.player.getTrueTarget(20) ?: return true
         val buildingPoint = target.buildingPosition
         val playerBlock = instance.getBlock(target.playerPosition)
-        val waterBlock = instance.getBlock(target.withY(39.0))
+        val waterBlock = instance.getBlock(target.visiblePosition)
         val buildingBlock = instance.getBlock(buildingPoint)
         if (playerBlock == Block.GRASS_BLOCK || playerBlock == Block.SAND || playerBlock == data.block) {
             return true
@@ -177,7 +177,7 @@ object AttackItem : Actionable {
             data.blocks++
             targetData.blocks--
             if (Building.blockIsBuilding(buildingBlock)) {
-                claimWithParticle(event.player, target.sub(0.0, 1.0, 0.0), data.block)
+                claimWithParticle(event.player, target, data.block)
                 if (targetPlayer != null) {
                     SelectBuildingItem.updatePlayerItem(targetPlayer)
                 }
@@ -189,7 +189,7 @@ object AttackItem : Actionable {
         data.attackCooldown = getAttackCooldown(targetData, buildingBlock.wallLevel)
         event.player.sendPacket(
             SetCooldownPacket(
-                getItem(event.player.uuid).material().id(),
+                getItem(event.player.uuid).material().key().value(),
                 data.attackCooldown.ticks
             )
         )
