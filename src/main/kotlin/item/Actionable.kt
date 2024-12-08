@@ -1,10 +1,7 @@
 package io.github.flyingpig525.item
 
-import io.github.flyingpig525.buildingPosition
+import io.github.flyingpig525.*
 import io.github.flyingpig525.data.PlayerData
-import io.github.flyingpig525.instance
-import io.github.flyingpig525.playerPosition
-import io.github.flyingpig525.visiblePosition
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.extension.adventure.asMini
@@ -44,11 +41,12 @@ interface Actionable {
 }
 
 fun claimWithParticle(player: Player, target: Point, resultBlock: Block) {
-    val block = instance.getBlock(target.playerPosition).defaultState()
+    val block = instance.getBlock(target.visiblePosition).defaultState()
     claimWithParticle(player, target, block, resultBlock)
 }
 
 fun claimWithParticle(player: Player, target: Point, targetBlock: Block, resultBlock: Block) {
+    log(target)
     instance.setBlock(target.visiblePosition, resultBlock)
     instance.setBlock(target.playerPosition, resultBlock)
     // TODO: FIX CLAIM PARTICLES (likely minestom problem)

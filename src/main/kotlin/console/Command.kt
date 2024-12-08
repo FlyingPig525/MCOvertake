@@ -11,6 +11,6 @@ interface Command {
     fun execute(arguments: List<String>): Unit
 
     companion object {
-        val registry: MutableList<Command> = mutableListOf()
+        val registry: MutableSet<Command> = mutableSetOf()
     }
 }

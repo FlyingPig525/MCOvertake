@@ -139,17 +139,31 @@ fun main() = runBlocking { try {
         .clamp(-1.0, 1.0)
         .build()
     instance = InstanceManager.createInstanceContainer().apply {
-        chunkLoader = AnvilLoader("world/world")
+        // TODO: UNCOMMENT
+//        chunkLoader = AnvilLoader("world/world")
 
         setGenerator { unit ->
             unit.modifier().setAll { x, y, z ->
-                if (x in 0..config.mapSize && y in 38..39 && z in 0..config.mapSize) {
+                if (x in 0..config.mapSize && z in 0..config.mapSize) {
                     val eval = noise.evaluateNoise(x.toDouble(), z.toDouble())
-                    if (eval > config.noiseThreshold) return@setAll Block.GRASS_BLOCK
-                    return@setAll if (y == 39) Block.WATER else Block.SAND
+                    if (y in 38..39) {
+                        if (eval > config.noiseThreshold) return@setAll Block.GRASS_BLOCK
+                    } else if (y in 29..36) {
+                        if (eval <= config.noiseThreshold && y != 30 && y != 36)
+                            return@setAll if (y != 29) Block.AIR else Block.GRASS_BLOCK
+
+                        if (y == 30)
+                            return@setAll Block.BEDROCK
+                        if (y == 29)
+                            return@setAll Block.DIAMOND_BLOCK
+                        return@setAll Block.DEEPSLATE
+                    }
+                    if (y in 38..39) {
+                        return@setAll if (y == 39) Block.WATER else Block.SAND
+                    }
                 }
                 if (x in -1..config.mapSize+1 && z in -1..config.mapSize+1 && y < 40) {
-                    return@setAll Block.DIAMOND_BLOCK
+                    return@setAll if (y in 30..36) Block.DEEPSLATE else Block.DIAMOND_BLOCK
                 }
                 Block.AIR
             }
@@ -203,7 +217,7 @@ fun main() = runBlocking { try {
 
 
     GlobalEventHandler.listen<PlayerSpawnEvent> { e ->
-        e.player.gameMode = GameMode.ADVENTURE
+        e.player.gameMode = GameMode.CREATIVE
         e.player.flyingSpeed = 0.5f
         e.player.isAllowFlying = true
         e.player.addEffect(Potion(PotionEffect.NIGHT_VISION, 1, -1))
@@ -298,8 +312,8 @@ fun main() = runBlocking { try {
         if (!file.exists()) {
             file.createNewFile()
         }
-        file.writeText(Json.encodeToString(players))
-        instance.saveChunksToStorage()
+//        file.writeText(Json.encodeToString(players))
+//        instance.saveChunksToStorage()
         if (config.printSaveMessages) {
             log("Game data saved")
         }
@@ -554,22 +568,31 @@ fun Entity.getTrueTarget(maxDistance: Int, onRayStep: ((pos: Point, block: Block
 
 val Point.buildingPosition: Point get() {
     // TODO: WHEN ADDING DIFFERENT LEVELS ADD MORE CASES
-    if (y() >= 39) {
+    if (y() in 38.0..46.0) {
         return withY(40.0)
+    }
+    if (y() in 29.0..37.0) {
+        return withY(31.0)
     }
     return withY(40.0)
 }
 
 val Point.playerPosition: Point get() {
-    if (y() >= 39) {
+    if (y() in 38.0..46.0) {
         return withY(38.0)
+    }
+    if (y() in 29.0..37.0) {
+        return withY(29.0)
     }
     return withY(38.0)
 }
 
 val Point.visiblePosition: Point get() {
-    if (y() >= 39) {
+    if (y() in 38.0..46.0) {
         return withY(39.0)
+    }
+    if (y() in 29.0..37.0) {
+        return withY(30.0)
     }
     return withY(39.0)
 }
