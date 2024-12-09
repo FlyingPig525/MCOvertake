@@ -29,7 +29,6 @@ import net.bladehunt.kotstom.dsl.kbar
 import net.bladehunt.kotstom.dsl.kommand.kommand
 import net.bladehunt.kotstom.dsl.line
 import net.bladehunt.kotstom.dsl.listen
-import net.bladehunt.kotstom.dsl.particle
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.bladehunt.kotstom.extension.get
 import net.bladehunt.kotstom.extension.roundToBlock
@@ -55,6 +54,7 @@ import net.minestom.server.inventory.PlayerInventory
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import net.minestom.server.network.packet.server.SendablePacket
+import net.minestom.server.network.packet.server.play.ParticlePacket
 import net.minestom.server.particle.Particle
 import net.minestom.server.potion.Potion
 import net.minestom.server.potion.PotionEffect
@@ -437,9 +437,9 @@ fun main() = runBlocking { try {
                 }
             }
             val y40 = target.buildingPosition.add(0.0, PIXEL_SIZE, 0.0)
-            val oneZero = y40.add(1.0, 0.0, 0.0)
-            val oneOne = y40.add(1.0, 0.0, 1.0)
-            val zeroOne = y40.add(0.0, 0.0, 1.0)
+            val oneZero = y40.add(1.0 - PIXEL_SIZE, 0.0, 0.0)
+            val oneOne = y40.add(1.0 - PIXEL_SIZE, 0.0, 1.0 - PIXEL_SIZE)
+            val zeroOne = y40.add(0.0, 0.0, 1.0 - PIXEL_SIZE)
             val targetParticles = mutableListOf<SendablePacket>()
             val color = when(playerBlock) {
                 Block.GRASS_BLOCK -> if (canAccess) Color(NamedTextColor.GREEN)
@@ -454,31 +454,19 @@ fun main() = runBlocking { try {
                 else -> if (canAccess) Color(NamedTextColor.RED)
                     else Color(NamedTextColor.DARK_RED)
             }
-            val trailParticle = Particle.TRAIL.withColor(color)
-            targetParticles += particle {
-                particle = trailParticle.withTarget(oneZero)
-                position = y40
-                count = 1
-                offset = Vec.ZERO
-            }
-            targetParticles += particle {
-                particle = trailParticle.withTarget(oneOne)
-                position = oneZero
-                count = 1
-                offset = Vec.ZERO
-            }
-            targetParticles += particle {
-                particle = trailParticle.withTarget(zeroOne)
-                position = oneOne
-                count = 1
-                offset = Vec.ZERO
-            }
-            targetParticles += particle {
-                particle = trailParticle.withTarget(y40)
-                position = zeroOne
-                count = 1
-                offset = Vec.ZERO
-            }
+            val trailParticle = Particle.TRAIL.withColor(color).withDuration(config.targetParticleDuration)
+            targetParticles += ParticlePacket(
+                trailParticle.withTarget(oneZero), y40, Vec.ZERO, 1f, 1
+            )
+            targetParticles += ParticlePacket(
+                trailParticle.withTarget(oneOne), oneZero, Vec.ZERO, 1f, 1
+            )
+            targetParticles += ParticlePacket(
+                trailParticle.withTarget(zeroOne), oneOne, Vec.ZERO, 1f, 1
+            )
+            targetParticles += ParticlePacket(
+                trailParticle.withTarget(y40), zeroOne, Vec.ZERO, 1f, 1
+            )
             e.player.sendPackets(targetParticles)
         } else {
             e.player.inventory.idle()

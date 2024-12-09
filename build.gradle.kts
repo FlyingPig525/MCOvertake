@@ -22,7 +22,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
 
     // Minestom & minestom related
-    implementation("net.minestom:minestom-snapshots:d760a60a5c")
+    implementation("net.minestom:minestom-snapshots:1_21_4-046d18702d")
     implementation("net.bladehunt:kotstom:0.3.0")
     implementation("net.kyori:adventure-text-minimessage:4.17.0")
 
