@@ -2,10 +2,10 @@ package io.github.flyingpig525.item
 
 import io.github.flyingpig525.building.TrainingCamp
 import io.github.flyingpig525.getTrueTarget
+import io.github.flyingpig525.log
 import io.github.flyingpig525.players
 import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerUseItemEvent
-import net.minestom.server.instance.Instance
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import java.util.*
@@ -14,6 +14,8 @@ object TrainingCampItem : Actionable {
 
     init {
         Actionable.registry += this
+        log("${this::class.simpleName} initialized...")
+
     }
 
     override val identifier: String = "power:generator"
@@ -25,9 +27,10 @@ object TrainingCampItem : Actionable {
         return TrainingCamp.getItem(data)
     }
 
-    override fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean {
+    override fun onInteract(event: PlayerUseItemEvent): Boolean {
+        val instance = event.instance
         if (event.player.isSneaking) {
-            SelectBuildingItem.onInteract(event, instance)
+            SelectBuildingItem.onInteract(event)
             return true
         }
         val target = event.player.getTrueTarget(20) ?: return true

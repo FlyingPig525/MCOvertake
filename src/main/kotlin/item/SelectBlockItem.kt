@@ -6,6 +6,7 @@ import io.github.flyingpig525.clearBlock
 import io.github.flyingpig525.data.PlayerData
 import io.github.flyingpig525.data.PlayerData.Companion.toBlockList
 import io.github.flyingpig525.data.block.*
+import io.github.flyingpig525.log
 import io.github.flyingpig525.players
 import net.bladehunt.kotstom.GlobalEventHandler
 import net.bladehunt.kotstom.dsl.item.item
@@ -19,7 +20,6 @@ import net.minestom.server.event.EventFilter
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.inventory.InventoryClickEvent
 import net.minestom.server.event.player.PlayerUseItemEvent
-import net.minestom.server.instance.Instance
 import net.minestom.server.inventory.Inventory
 import net.minestom.server.inventory.InventoryType
 import net.minestom.server.item.ItemStack
@@ -34,6 +34,8 @@ object SelectBlockItem : Actionable {
     init {
         Actionable.registry += this
         Actionable.persistentRegistry += this
+        log("${this::class.simpleName} initialized...")
+
     }
 
     override val identifier: String = "item:select_block"
@@ -47,7 +49,7 @@ object SelectBlockItem : Actionable {
         }
     }
 
-    override fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean {
+    override fun onInteract(event: PlayerUseItemEvent): Boolean {
         val inventory = Inventory(InventoryType.CHEST_5_ROW, "Select Block")
 
         inventory[3, 1] = NATURAL_CATEGORY

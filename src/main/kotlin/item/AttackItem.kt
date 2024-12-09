@@ -15,7 +15,6 @@ import net.bladehunt.kotstom.extension.set
 import net.minestom.server.coordinate.Point
 import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerUseItemEvent
-import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
@@ -30,6 +29,7 @@ object AttackItem : Actionable {
 
     init {
         Actionable.registry += this
+        log("${this::class.simpleName} initialized...")
     }
 
     override val identifier: String = "block:attack"
@@ -82,7 +82,8 @@ object AttackItem : Actionable {
         // TODO: PARTICLES
     }
 
-    override fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean {
+    override fun onInteract(event: PlayerUseItemEvent): Boolean {
+        val instance = event.instance
         val data = players[event.player.uuid.toString()] ?: return true
         if (!data.attackCooldown.isReady(Instant.now().toEpochMilli())) return true
         val target = event.player.getTrueTarget(20) ?: return true
@@ -157,6 +158,30 @@ object AttackItem : Actionable {
                 }
                 false
             }
+            MatterCompressionPlant.block -> run {
+                targetData.matterCompressors.count--
+                if (waterBlock.defaultState() != Block.WATER) {
+                    data.matterCompressors.count++
+                    return@run true
+                }
+                attackRaft(targetData, target)
+                if (targetPlayer != null) {
+                    SelectBuildingItem.updatePlayerItem(targetPlayer)
+                }
+                false
+            }
+            UndergroundTeleporter.block -> run {
+                targetData.undergroundTeleporters.count--
+                if (waterBlock.defaultState() != Block.WATER) {
+                    data.undergroundTeleporters.count++
+                    return@run true
+                }
+                attackRaft(targetData, target)
+                if (targetPlayer != null) {
+                    SelectBuildingItem.updatePlayerItem(targetPlayer)
+                }
+                false
+            }
             else -> run {
                 // TODO: ADD PARTICLES
                 val wallLevel = buildingBlock.wallLevel
@@ -189,7 +214,7 @@ object AttackItem : Actionable {
         data.attackCooldown = getAttackCooldown(targetData, buildingBlock.wallLevel)
         event.player.sendPacket(
             SetCooldownPacket(
-                getItem(event.player.uuid).material().key().value(),
+                getItem(event.player.uuid).material().cooldownIdentifier,
                 data.attackCooldown.ticks
             )
         )

@@ -10,7 +10,6 @@ import net.bladehunt.kotstom.extension.adventure.asMini
 import net.bladehunt.kotstom.extension.set
 import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerUseItemEvent
-import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
@@ -22,6 +21,8 @@ object BreakBuildingItem : Actionable {
     init {
         Actionable.registry += this
         Actionable.persistentRegistry += this
+        log("${this::class.simpleName} initialized...")
+
     }
 
     override val identifier: String = "building:destroy"
@@ -36,7 +37,8 @@ object BreakBuildingItem : Actionable {
         }
     }
 
-    override fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean {
+    override fun onInteract(event: PlayerUseItemEvent): Boolean {
+        val instance = event.instance
         val data = players[event.player.uuid.toString()] ?: return true
         val target = event.player.getTrueTarget(20) ?: return true
         val playerBlockPos = target.playerPosition

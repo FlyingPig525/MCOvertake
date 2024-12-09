@@ -4,6 +4,7 @@ import de.articdive.jnoise.generators.noise_parameters.simplex_variants.Simplex2
 import de.articdive.jnoise.generators.noisegen.opensimplex.SuperSimplexNoiseGenerator
 import de.articdive.jnoise.modules.octavation.fractal_functions.FractalFunction
 import de.articdive.jnoise.pipeline.JNoise
+import io.github.flyingpig525.building.*
 import io.github.flyingpig525.console.Command
 import io.github.flyingpig525.console.ConfigCommand
 import io.github.flyingpig525.console.OpCommand
@@ -30,6 +31,7 @@ import net.bladehunt.kotstom.dsl.line
 import net.bladehunt.kotstom.dsl.listen
 import net.bladehunt.kotstom.dsl.particle
 import net.bladehunt.kotstom.extension.adventure.asMini
+import net.bladehunt.kotstom.extension.get
 import net.bladehunt.kotstom.extension.roundToBlock
 import net.bladehunt.kotstom.extension.set
 import net.kyori.adventure.resource.ResourcePackInfo
@@ -140,16 +142,28 @@ fun main() = runBlocking { try {
         .build()
     instance = InstanceManager.createInstanceContainer().apply {
         chunkLoader = AnvilLoader("world/world")
-
         setGenerator { unit ->
             unit.modifier().setAll { x, y, z ->
-                if (x in 0..config.mapSize && y in 38..39 && z in 0..config.mapSize) {
+                if (x in 0..config.mapSize && z in 0..config.mapSize) {
                     val eval = noise.evaluateNoise(x.toDouble(), z.toDouble())
-                    if (eval > config.noiseThreshold) return@setAll Block.GRASS_BLOCK
-                    return@setAll if (y == 39) Block.WATER else Block.SAND
+                    if (y in 38..39) {
+                        if (eval > config.noiseThreshold) return@setAll Block.GRASS_BLOCK
+                    } else if (y in 29..36) {
+                        if (eval <= config.noiseThreshold && y != 30 && y != 36)
+                            return@setAll if (y != 29) Block.AIR else Block.GRASS_BLOCK
+
+                        if (y == 30)
+                            return@setAll config.undergroundBlock
+                        if (y == 29)
+                            return@setAll Block.DIAMOND_BLOCK
+                        return@setAll Block.DEEPSLATE
+                    }
+                    if (y in 38..39) {
+                        return@setAll if (y == 39) Block.WATER else Block.SAND
+                    }
                 }
                 if (x in -1..config.mapSize+1 && z in -1..config.mapSize+1 && y < 40) {
-                    return@setAll Block.DIAMOND_BLOCK
+                    return@setAll if (y in 30..36) Block.DEEPSLATE else Block.DIAMOND_BLOCK
                 }
                 Block.AIR
             }
@@ -158,17 +172,31 @@ fun main() = runBlocking { try {
 
     }
     log("Created instance...")
-    for (x in 0..config.mapSize) {
-        for (z in 0..config.mapSize) {
-            instance.loadChunk(Vec(x.toDouble(), 39.0, z.toDouble())).thenRunAsync {
-                val playerBlock = instance.getBlock(x, 38, z)
-                if (instance.getBlock(x, 39, z) == Block.WATER && instance.getBlock(x, 38, z) != Block.SAND) {
-                    ClaimWaterItem.spawnPlayerRaft(playerBlock, Vec(x.toDouble(), 40.0, z.toDouble()))
+    initBuildingCompanions()
+    log("Building companions initialized...")
+    launch {
+        val displayBuildings = Building.BuildingCompanion.registry.filter { it is DisplayEntityBlock }
+        for (x in 0..config.mapSize) {
+            for (z in 0..config.mapSize) {
+                val point = Vec(x.toDouble(), 39.0, z.toDouble())
+                instance.loadChunk(point).thenRunAsync {
+                    val playerBlock = instance.getBlock(x, 38, z)
+                    if (instance.getBlock(x, 39, z) == Block.WATER && instance.getBlock(x, 38, z) != Block.SAND) {
+                        ClaimWaterItem.spawnPlayerRaft(playerBlock, Vec(x.toDouble(), 40.0, z.toDouble()))
+                    }
+                    onAllBuildingPositions(point) {
+                        for (building in displayBuildings) {
+                            if ((building as DisplayEntityBlock).checkShouldSpawn(it, instance)) {
+                                (building as DisplayEntityBlock).spawn(it, instance)
+                                break
+                            }
+                        }
+                    }
                 }
             }
         }
+        log("Spawned display entities...")
     }
-    log("Spawned building rafts...")
     log("World loaded...")
 
 
@@ -181,7 +209,6 @@ fun main() = runBlocking { try {
     log("Filesystem actions complete...")
 
     initItems()
-    log("Items initialized...")
     GlobalEventHandler.listen<AsyncPlayerConfigurationEvent> { event ->
         event.spawningInstance = instance
         val player = event.player
@@ -202,7 +229,7 @@ fun main() = runBlocking { try {
     }
 
 
-    GlobalEventHandler.listen<PlayerSpawnEvent> { e ->
+    instance.eventNode().listen<PlayerSpawnEvent> { e ->
         e.player.gameMode = GameMode.ADVENTURE
         e.player.flyingSpeed = 0.5f
         e.player.isAllowFlying = true
@@ -298,15 +325,15 @@ fun main() = runBlocking { try {
         if (!file.exists()) {
             file.createNewFile()
         }
-        file.writeText(Json.encodeToString(players))
-        instance.saveChunksToStorage()
+//        file.writeText(Json.encodeToString(players))
+//        instance.saveChunksToStorage()
         if (config.printSaveMessages) {
             log("Game data saved")
         }
     }, TaskSchedule.minutes(1), TaskSchedule.minutes(1))
     log("Game loops scheduled...")
 
-    GlobalEventHandler.listen<PlayerMoveEvent> { e ->
+    instance.eventNode().listen<PlayerMoveEvent> { e ->
         with(e) {
             if (newPosition.x !in 0.0..config.mapSize + 1.0 || newPosition.z !in 0.0..config.mapSize + 1.0) {
                 newPosition = Pos(
@@ -320,13 +347,13 @@ fun main() = runBlocking { try {
         }
     }
 
-    GlobalEventHandler.listen<PlayerUseItemEvent> { e ->
+    instance.eventNode().listen<PlayerUseItemEvent> { e ->
         val item = e.player.getItemInHand(e.hand)
         e.isCancelled = true
         for (actionable in Actionable.registry) {
             if (item.getTag(Tag.String("identifier")) == actionable.identifier) {
                 e.isCancelled = try {
-                    actionable.onInteract(e, instance)
+                    actionable.onInteract(e)
                 } catch(e: Exception) {
                     e.printStackTrace()
                     e.printStackTrace(logStream)
@@ -337,18 +364,33 @@ fun main() = runBlocking { try {
         }
     }
 
-    GlobalEventHandler.listen<PlayerBlockInteractEvent> { e ->
+    instance.eventNode().listen<PlayerBlockInteractEvent> { e ->
         val item = e.player.getItemInHand(e.hand)
-        GlobalEventHandler.call(PlayerUseItemEvent(e.player, e.hand, item, 0))
+        val identifier = Building.getBuildingIdentifier(e.block.defaultState())
+        var callItemUse = true
+        if (identifier != null) {
+            val ref = players[e.player.uuid.toString()]?.getBuildingReferenceByIdentifier(identifier)?.get()
+            if (ref is Interactable) {
+                callItemUse = ref.onInteract(e)
+            }
+        }
+        if (callItemUse)
+            instance.eventNode().call(PlayerUseItemEvent(e.player, e.hand, item, 0))
     }
     log("Item use event registered")
 
-    GlobalEventHandler.listen<PlayerSwapItemEvent> {
+    instance.eventNode().listen<PlayerSwapItemEvent> {
         it.isCancelled = true
     }
 
-    GlobalEventHandler.listen<PlayerTickEvent> { e ->
+    instance.eventNode().listen<PlayerTickEvent> { e ->
         val playerData = players[e.player.uuid.toString()] ?: return@listen
+
+        if (e.player.position.isUnderground) {
+            if (e.player.inventory[2].isAir)
+                TeleportBackItem.setItemSlot(e.player)
+        } else if (!e.player.inventory[2].isAir)
+            e.player.inventory[2] = ItemStack.AIR
 
         val target = e.player.getTrueTarget(20)
         if (target != null) {
@@ -444,7 +486,7 @@ fun main() = runBlocking { try {
     }
     log("Player loop started...")
 
-    GlobalEventHandler.listen<PlayerDisconnectEvent> { e ->
+    instance.eventNode().listen<PlayerDisconnectEvent> { e ->
         val file = File("./player-data.json")
         if (!file.exists()) {
             file.createNewFile()
@@ -554,24 +596,42 @@ fun Entity.getTrueTarget(maxDistance: Int, onRayStep: ((pos: Point, block: Block
 
 val Point.buildingPosition: Point get() {
     // TODO: WHEN ADDING DIFFERENT LEVELS ADD MORE CASES
-    if (y() >= 39) {
+    if (y() in 38.0..46.0) {
         return withY(40.0)
+    }
+    if (y() in 29.0..37.0) {
+        return withY(31.0)
     }
     return withY(40.0)
 }
 
 val Point.playerPosition: Point get() {
-    if (y() >= 39) {
+    if (y() in 38.0..46.0) {
         return withY(38.0)
+    }
+    if (y() in 29.0..37.0) {
+        return withY(29.0)
     }
     return withY(38.0)
 }
 
 val Point.visiblePosition: Point get() {
-    if (y() >= 39) {
+    if (y() in 38.0..46.0) {
         return withY(39.0)
     }
+    if (y() in 29.0..37.0) {
+        return withY(30.0)
+    }
     return withY(39.0)
+}
+
+val Point.isUnderground: Boolean get() {
+    return y() <= 37.0
+}
+
+fun onAllBuildingPositions(point: Point, fn: (point: Point) -> Unit) {
+    fn(point.withY(40.0))
+    fn(point.withY(31.0))
 }
 
 fun scheduleImmediately(fn: () -> Unit) =
@@ -615,7 +675,9 @@ var Entity.hasGravity: Boolean
 
 val Cooldown.ticks: Int get() = (duration.toMillis() / 50).toInt()
 
+val Material.cooldownIdentifier: String get() = key().value()
 fun initItems() {
+    AttackItem
     BarracksItem
     ClaimItem
     ColonyItem
@@ -630,6 +692,16 @@ fun initItems() {
     BreakBuildingItem
     ClaimWaterItem
     MatterCompressorItem
+    UndergroundTeleporterItem
+    TeleportBackItem
+}
+
+fun initBuildingCompanions() {
+    Barrack.BarrackCompanion
+    MatterCompressionPlant.MatterCompressionPlantCompanion
+    MatterContainer.MatterContainerCompanion
+    MatterExtractor.MatterExtractorCompanion
+    UndergroundTeleporter.UndergroundTeleporterCompanion
 }
 
 fun initConsoleCommands() {

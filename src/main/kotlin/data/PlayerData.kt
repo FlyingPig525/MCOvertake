@@ -39,6 +39,9 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
     val claimCost: Int get() = blocks.floorDiv(500) + 5
     val maxClaimCooldown get() = (((blocks.toLong() / 1000.0) * 50.0) + 1000.0).toLong()
     val colonyCost: Int get() = claimCost * 10
+    val raftCost: Int get() = (blocks.floorDiv(10000) * 500) + 500
+    val undergroundTeleporters = UndergroundTeleporter()
+    val teleporterCost: Int get() = undergroundTeleporters.count * 1000
     @Transient var claimCooldown = Cooldown(Duration.ofMillis(maxClaimCooldown))
     @Transient var colonyCooldown = Cooldown(Duration.ofSeconds(if (blocks > 0) 15 else 0))
     @Transient var attackCooldown = Cooldown(Duration.ofSeconds(10))
@@ -77,7 +80,9 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
         val matterContainer = matterContainers.resourceUse
         val matterExtractor = matterExtractors.resourceUse
         val trainingCamp = trainingCamps.resourceUse
-        return barrack + matterExtractor + matterContainer + trainingCamp
+        val matterCompressor = matterCompressors.resourceUse
+        val teleporter = undergroundTeleporters.resourceUse
+        return barrack + matterExtractor + matterContainer + trainingCamp + matterCompressor + teleporter
     }
     val maxDisposableResources: Int get() = (blocks / 5) + 30
     @Transient val resourcesBossBar: BossBar = BossBar.bossBar(
@@ -103,6 +108,7 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
     val baseAttackCost: Int get() {
         return 15
     }
+    @Transient val lastTeleporterPos: MutableSet<Point> = mutableSetOf()
 
     fun playerTick(instance: Instance) {
         matterExtractors.tick(this)
@@ -164,19 +170,19 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
     fun sendCooldowns(player: Player) {
         player.sendPackets(
             SetCooldownPacket(
-                ClaimItem.itemMaterial.key().value(),
+                ClaimItem.itemMaterial.cooldownIdentifier,
                 claimCooldown.ticks
             ),
             SetCooldownPacket(
-                ColonyItem.itemMaterial.key().value(),
+                ColonyItem.itemMaterial.cooldownIdentifier,
                 colonyCooldown.ticks
             ),
             SetCooldownPacket(
-                AttackItem.itemMaterial.key().value(),
+                AttackItem.itemMaterial.cooldownIdentifier,
                 attackCooldown.ticks
             ),
             SetCooldownPacket(
-                ClaimWaterItem.itemMaterial.key().value(),
+                ClaimWaterItem.itemMaterial.cooldownIdentifier,
                 raftCooldown.ticks
             )
         )
@@ -189,6 +195,7 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
             "matter:container" -> ::matterContainers
             "matter:generator" -> ::matterExtractors
             "mechanical:generator" -> ::matterCompressors
+            "underground:teleport" -> ::undergroundTeleporters
             else -> null
         }
     }

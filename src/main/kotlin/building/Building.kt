@@ -26,7 +26,7 @@ interface Building {
         fun getResourceUse(currentDisposableResources: Int): Int
 
         companion object {
-            val registry: MutableList<BuildingCompanion> = mutableListOf()
+            val registry: MutableSet<BuildingCompanion> = mutableSetOf()
         }
     }
 

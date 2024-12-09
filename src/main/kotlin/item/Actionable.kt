@@ -13,7 +13,6 @@ import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerBlockBreakEvent
 import net.minestom.server.event.player.PlayerUseItemEvent
-import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
@@ -31,8 +30,8 @@ interface Actionable {
 
     fun getItem(uuid: UUID): ItemStack
 
-    fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean { return true }
-    fun onBreakBlock(event: PlayerBlockBreakEvent, instance: Instance): Boolean { return true }
+    fun onInteract(event: PlayerUseItemEvent): Boolean { return true }
+    fun onBreakBlock(event: PlayerBlockBreakEvent): Boolean { return true }
 
 
     fun setItemSlot(player: Player)
@@ -44,7 +43,7 @@ interface Actionable {
 }
 
 fun claimWithParticle(player: Player, target: Point, resultBlock: Block) {
-    val block = instance.getBlock(target.playerPosition).defaultState()
+    val block = instance.getBlock(target.visiblePosition).defaultState()
     claimWithParticle(player, target, block, resultBlock)
 }
 

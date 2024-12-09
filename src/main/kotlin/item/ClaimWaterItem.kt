@@ -12,7 +12,6 @@ import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.Player
 import net.minestom.server.entity.metadata.display.BlockDisplayMeta
 import net.minestom.server.event.player.PlayerUseItemEvent
-import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
@@ -26,23 +25,28 @@ import java.util.*
 object ClaimWaterItem : Actionable {
     init {
         Actionable.registry += this
+        log("${this::class.simpleName} initialized...")
+
     }
 
     override val identifier: String = "block:claim_water"
     override val itemMaterial: Material = Material.WOODEN_AXE
 
     override fun getItem(uuid: UUID): ItemStack {
+        val data = players[uuid.toString()] ?: return ERROR_ITEM
         return item(itemMaterial) {
-            itemName = "<gold>$WALL_SYMBOL <bold>Build Raft</bold><dark_grey> - <green>$MATTER_SYMBOL 500".asMini()
+            itemName = "<gold>$WALL_SYMBOL <bold>Build Raft</bold><dark_grey> - <green>$MATTER_SYMBOL ${data.raftCost}".asMini()
         }.withTag(Tag.String("identifier"), identifier)
     }
 
-    override fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean {
+    override fun onInteract(event: PlayerUseItemEvent): Boolean {
         // TODO: ADD COST AND STUFF
         // Ensure can claim
         val data = players[event.player.uuid.toString()] ?: return true
         if (!data.raftCooldown.isReady(Instant.now().toEpochMilli())) return true
         val target = event.player.getTrueTarget(20) ?: return true
+        if (target.isUnderground) return true
+        if (data.organicMatter - data.raftCost < 0) return true
         // Claim logic
         instance.setBlock(target.playerPosition, data.block)
         instance.setBlock(target.withY(40.0), Block.LILY_PAD)
@@ -51,7 +55,7 @@ object ClaimWaterItem : Actionable {
         data.raftCooldown = Cooldown(Duration.ofSeconds(20))
         event.player.sendPacket(
             SetCooldownPacket(
-                itemMaterial.key().value(),
+                itemMaterial.cooldownIdentifier,
                 data.raftCooldown.ticks
             )
         )

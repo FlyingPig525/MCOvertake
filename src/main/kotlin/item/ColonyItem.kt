@@ -7,7 +7,6 @@ import net.bladehunt.kotstom.extension.adventure.asMini
 import net.bladehunt.kotstom.extension.set
 import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerUseItemEvent
-import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
@@ -22,6 +21,8 @@ object ColonyItem : Actionable {
 
     init {
         Actionable.registry += this
+        log("${this::class.simpleName} initialized...")
+
     }
     override val identifier: String = "block:colony"
     override val itemMaterial: Material = Material.CHEST
@@ -35,7 +36,7 @@ object ColonyItem : Actionable {
         }
     }
 
-    override fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean {
+    override fun onInteract(event: PlayerUseItemEvent): Boolean {
         val data = players[event.player.uuid.toString()] ?: return true
         if (!data.colonyCooldown.isReady(Instant.now().toEpochMilli())) return true
         if (data.power - data.colonyCost < 0) return true
@@ -47,7 +48,7 @@ object ColonyItem : Actionable {
             data.colonyCooldown = Cooldown(Duration.ofSeconds(15))
             event.player.sendPacket(
                 SetCooldownPacket(
-                    itemMaterial.key().value(),
+                    itemMaterial.cooldownIdentifier,
                     data.colonyCooldown.ticks
                 )
             )

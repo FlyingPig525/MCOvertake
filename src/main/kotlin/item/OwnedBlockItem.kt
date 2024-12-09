@@ -1,5 +1,6 @@
 package io.github.flyingpig525.item
 
+import io.github.flyingpig525.log
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.extension.adventure.asMini
@@ -14,6 +15,8 @@ object OwnedBlockItem : Actionable {
 
     init {
         Actionable.registry += this
+        log("${this::class.simpleName} initialized...")
+
     }
 
     override val identifier: String = "block:owned"

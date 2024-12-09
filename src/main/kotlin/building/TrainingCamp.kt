@@ -4,6 +4,7 @@ import io.github.flyingpig525.MATTER_SYMBOL
 import io.github.flyingpig525.POWER_SYMBOL
 import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.PlayerData
+import io.github.flyingpig525.log
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -41,7 +42,7 @@ class TrainingCamp : Building {
         data.power += count * 0.5 + 0.5
     }
 
-    companion object : Building.BuildingCompanion {
+    companion object TrainingCampCompanion : Building.BuildingCompanion {
         override val block: Block = Block.POLISHED_BLACKSTONE_BUTTON.withProperty("face", "floor")
         override val identifier: String = "power:generator"
 
@@ -65,6 +66,7 @@ class TrainingCamp : Building {
 
         init {
             Building.BuildingCompanion.registry += this
+            log("${this::class.simpleName} initialized...")
         }
     }
 }
