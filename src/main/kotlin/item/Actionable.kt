@@ -1,7 +1,10 @@
 package io.github.flyingpig525.item
 
-import io.github.flyingpig525.*
+import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.PlayerData
+import io.github.flyingpig525.instance
+import io.github.flyingpig525.playerPosition
+import io.github.flyingpig525.visiblePosition
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.extension.adventure.asMini
@@ -10,7 +13,6 @@ import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerBlockBreakEvent
 import net.minestom.server.event.player.PlayerUseItemEvent
-import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
@@ -28,8 +30,8 @@ interface Actionable {
 
     fun getItem(uuid: UUID): ItemStack
 
-    fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean { return true }
-    fun onBreakBlock(event: PlayerBlockBreakEvent, instance: Instance): Boolean { return true }
+    fun onInteract(event: PlayerUseItemEvent): Boolean { return true }
+    fun onBreakBlock(event: PlayerBlockBreakEvent): Boolean { return true }
 
 
     fun setItemSlot(player: Player)
@@ -46,7 +48,6 @@ fun claimWithParticle(player: Player, target: Point, resultBlock: Block) {
 }
 
 fun claimWithParticle(player: Player, target: Point, targetBlock: Block, resultBlock: Block) {
-    log(target)
     instance.setBlock(target.visiblePosition, resultBlock)
     instance.setBlock(target.playerPosition, resultBlock)
     // TODO: FIX CLAIM PARTICLES (likely minestom problem)

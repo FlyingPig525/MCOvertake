@@ -9,7 +9,6 @@ import net.bladehunt.kotstom.extension.set
 import net.minestom.server.coordinate.Point
 import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerUseItemEvent
-import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
@@ -20,6 +19,8 @@ object UpgradeWallItem : Actionable {
 
     init {
         Actionable.registry += this
+        log("${this::class.simpleName} initialized...")
+
     }
 
     override val identifier: String = "building:upgrade_wall"
@@ -35,7 +36,8 @@ object UpgradeWallItem : Actionable {
         }
     }
 
-    override fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean {
+    override fun onInteract(event: PlayerUseItemEvent): Boolean {
+        val instance = event.instance
         val data = players[event.player.uuid.toString()] ?: return true
         val target = event.player.getTrueTarget(20)?.buildingPosition ?: return true
         val block = instance.getBlock(target).defaultState()

@@ -3,6 +3,7 @@ package io.github.flyingpig525.building
 import io.github.flyingpig525.MATTER_SYMBOL
 import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.PlayerData
+import io.github.flyingpig525.log
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -40,7 +41,7 @@ class MatterExtractor : Building {
         data.organicMatter = ((count * 0.5 + 0.5) + data.organicMatter)
     }
 
-    companion object : Building.BuildingCompanion {
+    companion object MatterExtractorCompanion : Building.BuildingCompanion {
         override val block: Block = Block.BREWING_STAND
         override val identifier: String = "matter:generator"
 
@@ -64,6 +65,7 @@ class MatterExtractor : Building {
 
         init {
             Building.BuildingCompanion.registry += this
+            log("${this::class.simpleName} initialized...")
         }
     }
 }

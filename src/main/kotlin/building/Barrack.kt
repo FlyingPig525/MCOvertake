@@ -4,6 +4,7 @@ import io.github.flyingpig525.MATTER_SYMBOL
 import io.github.flyingpig525.POWER_SYMBOL
 import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.PlayerData
+import io.github.flyingpig525.log
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -38,7 +39,7 @@ class Barrack : Building {
         player.inventory[4] = getItem(data)
     }
 
-    companion object : Building.BuildingCompanion {
+    companion object BarrackCompanion : Building.BuildingCompanion {
         override val block: Block = Block.SOUL_LANTERN
         override val identifier: String = "power:container"
 
@@ -64,6 +65,7 @@ class Barrack : Building {
 
         init {
             Building.BuildingCompanion.registry += this
+            log("${this::class.simpleName} initialized...")
         }
     }
 }

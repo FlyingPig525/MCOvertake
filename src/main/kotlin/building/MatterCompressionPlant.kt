@@ -4,6 +4,7 @@ import io.github.flyingpig525.MATTER_SYMBOL
 import io.github.flyingpig525.MECHANICAL_SYMBOL
 import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.PlayerData
+import io.github.flyingpig525.log
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -45,7 +46,7 @@ class MatterCompressionPlant : Building {
         }
     }
 
-    companion object : Building.BuildingCompanion {
+    companion object MatterCompressionPlantCompanion : Building.BuildingCompanion {
         override val block: Block = Block.HEAVY_CORE
         override val identifier: String = "mechanical:generator"
 
@@ -71,6 +72,7 @@ class MatterCompressionPlant : Building {
 
         init {
             Building.BuildingCompanion.registry += this
+            log("${this::class.simpleName} initialized...")
         }
     }
 }

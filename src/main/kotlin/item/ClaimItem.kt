@@ -8,7 +8,6 @@ import net.bladehunt.kotstom.extension.adventure.asMini
 import net.bladehunt.kotstom.extension.set
 import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerUseItemEvent
-import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
@@ -23,6 +22,8 @@ object ClaimItem : Actionable {
 
     init {
         Actionable.registry += this
+        log("${this::class.simpleName} initialized...")
+
     }
 
     override val identifier: String = "block:claim"
@@ -39,7 +40,7 @@ object ClaimItem : Actionable {
 
     }
 
-    override fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean {
+    override fun onInteract(event: PlayerUseItemEvent): Boolean {
         val data = players[event.player.uuid.toString()] ?: return true
         if (!data.claimCooldown.isReady(Instant.now().toEpochMilli())) return true
         if (data.power - data.claimCost < 0) return true
@@ -51,7 +52,7 @@ object ClaimItem : Actionable {
             data.claimCooldown = Cooldown(Duration.ofMillis(data.maxClaimCooldown))
             event.player.sendPacket(
                 SetCooldownPacket(
-                    itemMaterial.key().value(),
+                    itemMaterial.cooldownIdentifier,
                     data.claimCooldown.ticks
                 ))
         }

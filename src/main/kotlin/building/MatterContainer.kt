@@ -3,6 +3,7 @@ package io.github.flyingpig525.building
 import io.github.flyingpig525.MATTER_SYMBOL
 import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.PlayerData
+import io.github.flyingpig525.log
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -36,7 +37,7 @@ class MatterContainer : Building {
         player.inventory[4] = getItem(data)
     }
 
-    companion object : Building.BuildingCompanion {
+    companion object MatterContainerCompanion : Building.BuildingCompanion {
         override val block: Block = Block.LANTERN
         override val identifier: String = "matter:container"
 
@@ -61,6 +62,7 @@ class MatterContainer : Building {
 
         init {
             Building.BuildingCompanion.registry += this
+            log("${this::class.simpleName} initialized...")
         }
     }
 }

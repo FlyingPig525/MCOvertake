@@ -1,7 +1,8 @@
 package io.github.flyingpig525.item
 
 import io.github.flyingpig525.BUILDING_SYMBOL
-import io.github.flyingpig525.building.*
+import io.github.flyingpig525.building.Building
+import io.github.flyingpig525.log
 import io.github.flyingpig525.players
 import net.bladehunt.kotstom.GlobalEventHandler
 import net.bladehunt.kotstom.dsl.item.item
@@ -15,7 +16,6 @@ import net.minestom.server.event.EventFilter
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.inventory.InventoryClickEvent
 import net.minestom.server.event.player.PlayerUseItemEvent
-import net.minestom.server.instance.Instance
 import net.minestom.server.inventory.Inventory
 import net.minestom.server.inventory.InventoryType
 import net.minestom.server.item.ItemStack
@@ -28,6 +28,8 @@ object SelectBuildingItem : Actionable {
     init {
         Actionable.registry += this
         Actionable.persistentRegistry += this
+        log("${this::class.simpleName} initialized...")
+
     }
 
     override val identifier: String = "item:select_building"
@@ -41,7 +43,7 @@ object SelectBuildingItem : Actionable {
         }
     }
 
-    override fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean {
+    override fun onInteract(event: PlayerUseItemEvent): Boolean {
         val inventory = Inventory(InventoryType.CHEST_5_ROW, "Select Blueprint")
         val playerData = players[event.player.uuid.toString()]!!
         val clearItem = item(Material.BARRIER) { itemName = "<red><bold>Clear Selected Item".asMini() }
@@ -84,7 +86,7 @@ object SelectBuildingItem : Actionable {
                     e.player.closeInventory()
                 } else {
                     e.player.inventory.cursorItem = ItemStack.AIR
-                    e.inventory!![e.slot] = e.clickedItem
+                    e.inventory[e.slot] = e.clickedItem
                 }
             }
 

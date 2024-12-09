@@ -9,7 +9,6 @@ import net.bladehunt.kotstom.extension.set
 import net.minestom.server.coordinate.Point
 import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerUseItemEvent
-import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
@@ -25,6 +24,8 @@ object WallItem : Actionable {
     init {
         Actionable.registry += this
         Actionable.persistentRegistry += this
+        log("${this::class.simpleName} initialized...")
+
     }
 
     override val identifier: String = "building:wall"
@@ -38,7 +39,8 @@ object WallItem : Actionable {
         }
     }
 
-    override fun onInteract(event: PlayerUseItemEvent, instance: Instance): Boolean {
+    override fun onInteract(event: PlayerUseItemEvent): Boolean {
+        val instance = event.instance
         val data = players[event.player.uuid.toString()] ?: return true
         if (data.organicMatter - 15 < 0) return true
         if (!data.wallCooldown.isReady(Instant.now().toEpochMilli())) return true
@@ -57,7 +59,7 @@ object WallItem : Actionable {
 
         event.player.sendPacket(
             SetCooldownPacket(
-                itemMaterial.key().value(),
+                itemMaterial.cooldownIdentifier,
                 (data.wallCooldown.duration.toMillis() / 50).toInt()
             )
         )
