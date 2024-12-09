@@ -35,5 +35,7 @@ data class Config(
     // Length and width of map (will always be a square)
     val mapSize: Int = 1000,
     // Block identifier for underground claimable tile, can be any block, but it is recommended to keep it a block players cant be
-    @Serializable(with = BlockSerializer::class) val undergroundBlock: Block = Block.BEDROCK
+    @Serializable(with = BlockSerializer::class) val undergroundBlock: Block = Block.BEDROCK,
+    // Duration the target particles last in ticks
+    val targetParticleDuration: Int = 15
 )
