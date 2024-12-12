@@ -1,5 +1,7 @@
 package io.github.flyingpig525.item
 
+import cz.lukynka.prettylog.LogType
+import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -46,7 +48,7 @@ object ClaimWaterItem : Actionable {
         if (!data.raftCooldown.isReady(Instant.now().toEpochMilli())) return true
         val target = event.player.getTrueTarget(20) ?: return true
         if (target.isUnderground) return true
-        if (data.organicMatter - data.raftCost < 0) return true
+        if (data.organicMatter < data.raftCost) return true
         // Claim logic
         instance.setBlock(target.playerPosition, data.block)
         instance.setBlock(target.withY(40.0), Block.LILY_PAD)

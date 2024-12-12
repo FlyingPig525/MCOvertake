@@ -1,5 +1,7 @@
 package io.github.flyingpig525.item
 
+import cz.lukynka.prettylog.LogType
+import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
 import io.github.flyingpig525.building.UndergroundTeleporter
 import net.minestom.server.entity.Player
@@ -19,7 +21,8 @@ object UndergroundTeleporterItem : Actionable {
     override val itemMaterial: Material = Material.COPPER_GRATE
 
     override fun getItem(uuid: UUID): ItemStack {
-        return UndergroundTeleporter.getItem(1, 1)
+        val data = players[uuid.toString()] ?: return ERROR_ITEM
+        return UndergroundTeleporter.getItem(data.teleporterCost, data.undergroundTeleporters.count)
     }
 
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
@@ -30,9 +33,9 @@ object UndergroundTeleporterItem : Actionable {
         val instance = event.instance
         val target = event.player.getTrueTarget(20) ?: return true
         val data = players[event.player.uuid.toString()] ?: return true
-        if (instance.getBlock(target.visiblePosition).defaultState() != Block.WATER || !target.isUnderground) return true
+        if (!target.isUnderground && instance.getBlock(target.visiblePosition).defaultState() != Block.WATER) return true
         if (checkBlockAvailable(data, target)) return true
-        if (data.organicMatter - data.teleporterCost < 0) return true
+        if (data.organicMatter < data.teleporterCost) return true
         data.organicMatter -= data.teleporterCost
         data.undergroundTeleporters.place(target.buildingPosition, instance)
         return true

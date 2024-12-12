@@ -1,12 +1,13 @@
 package io.github.flyingpig525.item
 
 import com.sun.jdi.InvalidTypeException
+import cz.lukynka.prettylog.LogType
+import cz.lukynka.prettylog.log
 import io.github.flyingpig525.COLONY_SYMBOL
 import io.github.flyingpig525.clearBlock
 import io.github.flyingpig525.data.PlayerData
 import io.github.flyingpig525.data.PlayerData.Companion.toBlockList
 import io.github.flyingpig525.data.block.*
-import io.github.flyingpig525.log
 import io.github.flyingpig525.players
 import net.bladehunt.kotstom.GlobalEventHandler
 import net.bladehunt.kotstom.dsl.item.item
@@ -58,7 +59,7 @@ object SelectBlockItem : Actionable {
 
         event.player.openInventory(inventory)
 
-        val inventoryEventNode = EventNode.type("select-category-inv", EventFilter.INVENTORY, {_, inv -> inventory == inv}).listen<InventoryClickEvent> { e ->
+        val inventoryEventNode = EventNode.type("select-category-inv${event.player.uuid.mostSignificantBits}", EventFilter.INVENTORY, {_, inv -> inventory == inv}).listen<InventoryClickEvent> { e ->
             if (e.clickedItem.material() == Material.AIR) return@listen
             e.player.inventory.cursorItem = ItemStack.AIR
             when(e.clickedItem) {
@@ -67,14 +68,7 @@ object SelectBlockItem : Actionable {
                 NETHER_CATEGORY -> openCategory(NetherCategory.entries, e)
                 else -> {}
             }
-//            players[e.player.uuid.toString()] = PlayerData(e.player.uuid.toString(), e.clickedItem.material().block()!!)
-//            e.player.closeInventory()
-//            for (i in 0..8) {
-//                e.player.inventory[i] = ItemStack.AIR
-//            }
-//            players[e.player.uuid.toString()]!!.updateBossBars()
-//            SelectBuildingItem.setItemSlot(e.player)
-//            setItemSlot(e.player)
+            GlobalEventHandler.removeChildren("select-category-inv${event.player.uuid.mostSignificantBits}")
         }
 
         GlobalEventHandler.addChild(inventoryEventNode)
@@ -99,7 +93,7 @@ object SelectBlockItem : Actionable {
         }
         e.player.openInventory(inventory)
 
-        val inventoryEventNode = EventNode.type("select-block-inv", EventFilter.INVENTORY, {_, inv -> inventory == inv}).listen<InventoryClickEvent> { e ->
+        val inventoryEventNode = EventNode.type("select-block-inv${e.player.uuid.mostSignificantBits}", EventFilter.INVENTORY, {_, inv -> inventory == inv}).listen<InventoryClickEvent> { e ->
             if (e.clickedItem.material() == Material.AIR || e.clickedItem.material().block() in players.toBlockList()) return@listen
             if (players[e.player.uuid.toString()] != null) {
                 val data = players[e.player.uuid.toString()]!!
@@ -114,6 +108,7 @@ object SelectBlockItem : Actionable {
                 e.player.inventory[i] = ItemStack.AIR
             }
             players[e.player.uuid.toString()]!!.setupPlayer(e.player)
+            GlobalEventHandler.removeChildren("select-block-inv${e.player.uuid.mostSignificantBits}")
         }
 
         GlobalEventHandler.addChild(inventoryEventNode)

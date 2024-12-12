@@ -1,6 +1,7 @@
 package io.github.flyingpig525.item
 
-import io.github.flyingpig525.log
+import cz.lukynka.prettylog.LogType
+import cz.lukynka.prettylog.log
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.extension.adventure.asMini

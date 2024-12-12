@@ -1,8 +1,9 @@
 package io.github.flyingpig525.item
 
+import cz.lukynka.prettylog.LogType
+import cz.lukynka.prettylog.log
 import io.github.flyingpig525.building.TrainingCamp
 import io.github.flyingpig525.getTrueTarget
-import io.github.flyingpig525.log
 import io.github.flyingpig525.players
 import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerUseItemEvent
@@ -37,7 +38,7 @@ object TrainingCampItem : Actionable {
         val playerData = players[event.player.uuid.toString()] ?: return true
         if (!checkBlockAvailable(playerData, target)) return true
         if (TrainingCamp.getResourceUse(playerData.disposableResourcesUsed) > playerData.maxDisposableResources) return true
-        if (playerData.organicMatter - playerData.trainingCampCost < 0) return true
+        if (playerData.organicMatter < playerData.trainingCampCost) return true
         playerData.organicMatter -= playerData.trainingCampCost
         playerData.trainingCamps.place(target, instance)
         playerData.trainingCamps.select(event.player, playerData.trainingCampCost)

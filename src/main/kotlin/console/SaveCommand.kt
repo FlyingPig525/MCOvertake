@@ -1,8 +1,8 @@
 package io.github.flyingpig525.console
 
+import cz.lukynka.prettylog.log
 import io.github.flyingpig525.data.PlayerData
 import io.github.flyingpig525.instance
-import io.github.flyingpig525.log
 import io.github.flyingpig525.players
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json

@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "io.github.flyingpig525"
-version = "0.1-SNAPSHOT"
+version = "0.2-SNAPSHOT"
 
 repositories {
     mavenCentral()
@@ -13,6 +13,10 @@ repositories {
         maven("https://repo.unnamed.team/repository/unnamed-public/")
         mavenCentral()
         maven("https://mvn.bladehunt.net/releases")
+        maven {
+            name = "devOS"
+            url = uri("https://mvn.devos.one/releases")
+        }
     }
 }
 
@@ -33,6 +37,9 @@ dependencies {
     implementation("team.unnamed:creative-api:1.7.3")
     implementation("team.unnamed:creative-serializer-minecraft:1.7.3")
     implementation("team.unnamed:creative-server:1.7.3")
+
+    // Logging
+    implementation("cz.lukynka:pretty-log:1.4")
 }
 
 tasks.test {

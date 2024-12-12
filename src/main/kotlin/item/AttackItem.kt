@@ -1,9 +1,12 @@
 package io.github.flyingpig525.item
 
+import cz.lukynka.prettylog.LogType
+import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
 import io.github.flyingpig525.building.*
 import io.github.flyingpig525.data.PlayerData
 import io.github.flyingpig525.data.PlayerData.Companion.getDataByPoint
+import io.github.flyingpig525.data.research.action.ActionData
 import io.github.flyingpig525.wall.blockIsWall
 import io.github.flyingpig525.wall.getWallAttackCost
 import io.github.flyingpig525.wall.lastWall
@@ -39,9 +42,10 @@ object AttackItem : Actionable {
         return item(itemMaterial) {
             val player = instance.getPlayerByUuid(uuid) ?: return ERROR_ITEM
             val target = player.getTrueTarget(20) ?: return ERROR_ITEM
+            val buildingBlock = instance.getBlock(target.buildingPosition)
             val targetData = getAttacking(player)
             val targetName = targetData?.playerDisplayName ?: ""
-            val attackCost = getAttackCost(targetData, target)
+            val attackCost = getAttackCost(targetData, buildingBlock.wallLevel)
 
             itemName = "<red>$ATTACK_SYMBOL <bold>Attack $targetName</bold> <gray>- <red>$POWER_SYMBOL <bold>$attackCost".asMini().asComponent()
             set(Tag.String("identifier"), identifier)
@@ -54,12 +58,9 @@ object AttackItem : Actionable {
         return players.getDataByPoint(target)
     }
 
-    private fun getAttackCost(targetData: PlayerData?, playerTarget: Point): Int {
-        // TODO: AFTER ADDING WALLS ADD WALL THINGS HERE
-        val wallPosition = playerTarget.buildingPosition
-        val building = instance.getBlock(wallPosition)
+    private fun getAttackCost(targetData: PlayerData?, wallLevel: Int): Int {
         var additiveModifier = 0
-        if (blockIsWall(building)) additiveModifier += getWallAttackCost(building)!!
+        additiveModifier += getWallAttackCost(wallLevel)
         return (targetData?.baseAttackCost ?: 15) + additiveModifier
     }
 
@@ -95,7 +96,12 @@ object AttackItem : Actionable {
             return true
         }
         val targetData = getAttacking(event.player) ?: return true
-        val attackCost = getAttackCost(targetData, target)
+        val preAttackData = ActionData.PreAttack(data, instance, event.player).apply {
+            wallLevel = buildingBlock.wallLevel
+            this.targetData = targetData
+        }
+        // TODO: ADD PRE ATTACK DATA RESEARCH MANIPULATION
+        val attackCost = getAttackCost(targetData, buildingBlock.wallLevel)
         if (data.power < attackCost) {
             // TODO: ADD MESSAGE
             return true

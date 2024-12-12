@@ -1,10 +1,11 @@
 package io.github.flyingpig525.building
 
+import cz.lukynka.prettylog.LogType
+import cz.lukynka.prettylog.log
 import io.github.flyingpig525.MATTER_SYMBOL
 import io.github.flyingpig525.MECHANICAL_SYMBOL
 import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.PlayerData
-import io.github.flyingpig525.log
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -54,6 +55,8 @@ class MatterCompressionPlant : Building {
             return item(Material.HEAVY_CORE) {
                 itemName = "<white>$MECHANICAL_SYMBOL Matter Compression Plant <gray>-</gray><green> $MATTER_SYMBOL $cost".asMini()
                 lore {
+                    +"<dark_gray>Separates and compresses metallic materials found in".asMini()
+                    +"<dark_gray>organic matter".asMini()
                     +"<gray>Uses 5 $organicMatter to generate 1 $mechanicalPart".asMini().noItalic()
                     resourcesConsumed(4)
                     amountOwned(count)

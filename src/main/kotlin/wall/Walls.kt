@@ -2,61 +2,100 @@ package io.github.flyingpig525.wall
 
 import net.minestom.server.instance.block.Block
 import net.minestom.server.instance.block.Block.*
+import java.util.HashMap
 
-val WOODEN_FENCE_RANGE = 2..11
-val BRICK_FENCE_RANGE = 12..12
-val WALL_RANGE = 13..31
-val GLASS_PANE_RANGE = 32..41
+// These values will not be manually updated, set in map builder
+var WOODEN_FENCE_RANGE = 2..12
+    private set
+var BRICK_FENCE_RANGE = 13..13
+    private set
+var WALL_RANGE = 14..32
+    private set
+var GLASS_PANE_RANGE = 33..42
+    private set
 
-private val walls = mapOf(
-    IRON_BARS to 1,
-    BIRCH_FENCE to 2,
-    BAMBOO_FENCE to 3,
-    OAK_FENCE to 4,
-    JUNGLE_FENCE to 5,
-    SPRUCE_FENCE to 6,
-    DARK_OAK_FENCE to 7,
-    ACACIA_FENCE to 8,
-    MANGROVE_FENCE to 9,
-    CRIMSON_FENCE to 10,
-    WARPED_FENCE to 11,
-    NETHER_BRICK_FENCE to 12,
-    SANDSTONE_WALL to 13,
-    RED_SANDSTONE_WALL to 14,
-    COBBLESTONE_WALL to 15,
-    ANDESITE_WALL to 16,
-    DIORITE_WALL to 17,
-    GRANITE_WALL to 18,
-    MUD_BRICK_WALL to 19,
-    BRICK_WALL to 20,
-    TUFF_WALL to 21,
-    COBBLED_DEEPSLATE_WALL to 22,
-    BLACKSTONE_WALL to 23,
-    STONE_BRICK_WALL to 24,
-    TUFF_BRICK_WALL to 25,
-    DEEPSLATE_BRICK_WALL to 26,
-    POLISHED_BLACKSTONE_BRICK_WALL to 27,
-    NETHER_BRICK_WALL to 28,
-    RED_NETHER_BRICK_WALL to 29,
-    PRISMARINE_WALL to 30,
-    END_STONE_BRICK_WALL to 31,
-    WHITE_STAINED_GLASS_PANE to 32,
-    LIGHT_GRAY_STAINED_GLASS_PANE to 33,
-    YELLOW_STAINED_GLASS_PANE to 34,
-    LIME_STAINED_GLASS_PANE to 35,
-    GREEN_STAINED_GLASS_PANE to 36,
-    PINK_STAINED_GLASS_PANE to 37,
-    MAGENTA_STAINED_GLASS_PANE to 38,
-    PURPLE_STAINED_GLASS_PANE to 39,
-    RED_STAINED_GLASS_PANE to 40,
-    BLACK_STAINED_GLASS_PANE to 41
+private val wallBlocks = listOf(
+    IRON_BARS,
+    PALE_OAK_FENCE,
+    BIRCH_FENCE,
+    BAMBOO_FENCE,
+    OAK_FENCE,
+    JUNGLE_FENCE,
+    SPRUCE_FENCE,
+    DARK_OAK_FENCE,
+    ACACIA_FENCE,
+    MANGROVE_FENCE,
+    CRIMSON_FENCE,
+    WARPED_FENCE,
+    NETHER_BRICK_FENCE,
+    SANDSTONE_WALL,
+    RED_SANDSTONE_WALL,
+    COBBLESTONE_WALL,
+    ANDESITE_WALL,
+    DIORITE_WALL,
+    GRANITE_WALL,
+    MUD_BRICK_WALL,
+    BRICK_WALL,
+    RESIN_BRICK_WALL,
+    TUFF_WALL,
+    COBBLED_DEEPSLATE_WALL,
+    BLACKSTONE_WALL,
+    STONE_BRICK_WALL,
+    TUFF_BRICK_WALL,
+    DEEPSLATE_BRICK_WALL,
+    POLISHED_BLACKSTONE_BRICK_WALL,
+    NETHER_BRICK_WALL,
+    RED_NETHER_BRICK_WALL,
+    PRISMARINE_WALL,
+    END_STONE_BRICK_WALL,
+    WHITE_STAINED_GLASS_PANE,
+    LIGHT_GRAY_STAINED_GLASS_PANE,
+    YELLOW_STAINED_GLASS_PANE,
+    LIME_STAINED_GLASS_PANE,
+    GREEN_STAINED_GLASS_PANE,
+    PINK_STAINED_GLASS_PANE,
+    MAGENTA_STAINED_GLASS_PANE,
+    PURPLE_STAINED_GLASS_PANE,
+    RED_STAINED_GLASS_PANE,
+    BLACK_STAINED_GLASS_PANE
 )
+
+private val walls = buildMap<Block, Int> {
+    var woodenEnd = 0
+    var brickFence = 0
+    var wallStart = 0
+    var wallEnd = 0
+    var paneStart = 0
+    for ((i, block) in wallBlocks.withIndex()) {
+        put(block, i + 1)
+        when (block) {
+            NETHER_BRICK_FENCE -> {
+                woodenEnd = i
+                brickFence = i + 1
+            }
+            SANDSTONE_WALL -> {
+                wallStart = i + 1
+            }
+            WHITE_STAINED_GLASS_PANE -> {
+                wallEnd = i
+                paneStart = i + 1
+            }
+            else -> {}
+        }
+    }
+    WOODEN_FENCE_RANGE = 1..woodenEnd
+    BRICK_FENCE_RANGE = brickFence..brickFence
+    WALL_RANGE = wallStart..wallEnd
+    GLASS_PANE_RANGE = paneStart..wallBlocks.size
+}
 
 
 fun getWallAttackCost(block: Block): Int? {
     val level = walls[block.defaultState()] ?: return null
     return level * 2
 }
+
+fun getWallAttackCost(level: Int): Int = level * 2
 
 fun getWallUpgradeCost(wall: Block): Int? {
     if (blockIsWall(wall.defaultState())) {

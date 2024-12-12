@@ -2,6 +2,7 @@ package io.github.flyingpig525.data
 
 import io.github.flyingpig525.*
 import io.github.flyingpig525.building.*
+import io.github.flyingpig525.data.research.ResearchContainer
 import io.github.flyingpig525.item.*
 import io.github.flyingpig525.serialization.BlockSerializer
 import kotlinx.serialization.Serializable
@@ -22,7 +23,7 @@ import kotlin.reflect.KProperty0
 
 @Serializable
 class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val block: Block) {
-    var playerDisplayName = instance.getPlayerByUuid(uuid.toUUID())?.username
+    var playerDisplayName = try {instance.getPlayerByUuid(uuid.toUUID())?.username} catch(_: Exception) {null}
     var blocks: Int = 0
     val trainingCamps = TrainingCamp()
     val trainingCampCost: Int get() = computeGeneratorCost(trainingCamps.count)
@@ -199,8 +200,10 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
             else -> null
         }
     }
+    val research = ResearchContainer()
 
     companion object {
+        val NONE = PlayerData("", Block.AIR)
         fun Map<String, PlayerData>.getDataByBlock(block: Block): PlayerData? {
             return values.find { it.block == block }
         }

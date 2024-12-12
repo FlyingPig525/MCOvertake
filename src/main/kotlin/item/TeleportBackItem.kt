@@ -1,7 +1,8 @@
 package io.github.flyingpig525.item
 
+import cz.lukynka.prettylog.LogType
+import cz.lukynka.prettylog.log
 import io.github.flyingpig525.data.block.Head.Companion.withHead
-import io.github.flyingpig525.log
 import io.github.flyingpig525.players
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName

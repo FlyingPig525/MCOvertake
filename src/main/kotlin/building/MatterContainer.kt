@@ -1,9 +1,10 @@
 package io.github.flyingpig525.building
 
+import cz.lukynka.prettylog.LogType
+import cz.lukynka.prettylog.log
 import io.github.flyingpig525.MATTER_SYMBOL
 import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.PlayerData
-import io.github.flyingpig525.log
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -45,6 +46,7 @@ class MatterContainer : Building {
             return item(Material.LANTERN) {
                 itemName = "<green>$MATTER_SYMBOL Organic Matter Container <gray>-<green> $MATTER_SYMBOL $cost".asMini()
                 lore {
+                    +"<dark_gray>Stores 25 cubic feet of organic matter".asMini()
                     +"<gray>Increases Max $organicMatter Storage".asMini().noItalic()
                     resourcesConsumed(2)
                     amountOwned(count)

@@ -1,9 +1,10 @@
 package io.github.flyingpig525.building
 
+import cz.lukynka.prettylog.LogType
+import cz.lukynka.prettylog.log
 import io.github.flyingpig525.MATTER_SYMBOL
 import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.PlayerData
-import io.github.flyingpig525.log
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -49,6 +50,7 @@ class MatterExtractor : Building {
             return item(Material.BREWING_STAND) {
                 itemName = "<green>$MATTER_SYMBOL Organic Matter Extractor <gray>-<green> $MATTER_SYMBOL $cost".asMini()
                 lore {
+                    +"<dark_gray>Digs deep into the ground to extract organic materials".asMini()
                     +"<gray>Generates 0.5 $organicMatter".asMini().noItalic()
                     resourcesConsumed(3)
                     amountOwned(count)

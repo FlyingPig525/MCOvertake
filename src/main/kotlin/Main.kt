@@ -1,5 +1,6 @@
 package io.github.flyingpig525
 
+import cz.lukynka.prettylog.*
 import de.articdive.jnoise.generators.noise_parameters.simplex_variants.Simplex2DVariant
 import de.articdive.jnoise.generators.noisegen.opensimplex.SuperSimplexNoiseGenerator
 import de.articdive.jnoise.modules.octavation.fractal_functions.FractalFunction
@@ -13,6 +14,7 @@ import io.github.flyingpig525.data.Config
 import io.github.flyingpig525.data.PlayerData
 import io.github.flyingpig525.data.PlayerData.Companion.toBlockSortedList
 import io.github.flyingpig525.item.*
+import io.github.flyingpig525.log.MCOvertakeLogType
 import io.github.flyingpig525.wall.blockIsWall
 import kotlinx.coroutines.*
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -44,7 +46,9 @@ import net.minestom.server.coordinate.Pos
 import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.Entity
 import net.minestom.server.entity.GameMode
+import net.minestom.server.event.inventory.InventoryClickEvent
 import net.minestom.server.event.player.*
+import net.minestom.server.event.server.ServerListPingEvent
 import net.minestom.server.extras.MojangAuth
 import net.minestom.server.instance.InstanceContainer
 import net.minestom.server.instance.LightingChunk
@@ -68,8 +72,6 @@ import team.unnamed.creative.server.ResourcePackServer
 import java.io.File
 import java.io.PrintStream
 import java.net.URI
-import java.sql.Time
-import java.time.Instant
 import java.util.*
 
 
@@ -83,6 +85,9 @@ const val BUILDING_SYMBOL = "⧈"
 const val RESOURCE_SYMBOL = "⌘"
 const val WALL_SYMBOL = "\uD83E\uDE93"
 const val PICKAXE_SYMBOL = "⛏"
+const val GLOBAL_RESEARCH_SYMBOL = "\uD83E\uDDEA"
+
+const val SERVER_VERSION = "v0.2"
 
 const val PIXEL_SIZE = 1.0 / 16.0
 
@@ -91,7 +96,6 @@ const val DASH_BANNER = "----------------------------------------------"
 var tick: ULong = 0uL
 
 var runConsoleLoop = true
-val logStream = PrintStream("log.log")
 @OptIn(ExperimentalSerializationApi::class)
 val json = Json { prettyPrint = true; encodeDefaults = true; allowComments = true;}
 
@@ -106,13 +110,17 @@ lateinit var matterTask: Task
 lateinit var mechanicalTask: Task
 
 fun main() = runBlocking { try {
+    LoggerSettings.saveToFile = true
+    LoggerSettings.saveDirectoryPath = "./logs/"
+    LoggerSettings.logFileNameFormat = "yyyy-MM-dd-Hms"
+    LoggerSettings.loggerStyle = LoggerStyle.PREFIX
+    LoggerFileWriter.load()
     // Initialize the servers
     val minecraftServer = MinecraftServer.init()
     MojangAuth.init()
     MinecraftServer.setBrandName("MCOvertake")
     MinecraftServer.getExceptionManager().setExceptionHandler {
-        it.printStackTrace()
-        it.printStackTrace(logStream)
+        log(it as Exception)
     }
 
     val configFile = File("config.json")
@@ -124,7 +132,7 @@ fun main() = runBlocking { try {
     }
     config = json.decodeFromString<Config>(configFile.readText())
     configFile.writeText(json.encodeToString(config))
-    log("Config imported...")
+    log("Config imported...", MCOvertakeLogType.FILESYSTEM)
 
     val resourcePack = MinecraftResourcePackReader.minecraft().readFromZipFile(File("res/pack.zip"))
     val builtResourcePack = MinecraftResourcePackWriter.minecraft().build(resourcePack)
@@ -132,7 +140,7 @@ fun main() = runBlocking { try {
         .address(config.serverAddress, config.packServerPort)
         .pack(builtResourcePack)
         .build()
-    log("Resource pack loaded...")
+    log("Resource pack loaded...", MCOvertakeLogType.FILESYSTEM)
 
     val noise = JNoise.newBuilder()
         .superSimplex(SuperSimplexNoiseGenerator.newBuilder().setSeed(config.noiseSeed).setVariant2D(Simplex2DVariant.CLASSIC))
@@ -171,7 +179,7 @@ fun main() = runBlocking { try {
         setChunkSupplier(::LightingChunk)
 
     }
-    log("Created instance...")
+    log("Created instance...", MCOvertakeLogType.FILESYSTEM)
     initBuildingCompanions()
     log("Building companions initialized...")
     launch {
@@ -197,7 +205,7 @@ fun main() = runBlocking { try {
         }
         log("Spawned display entities...")
     }
-    log("World loaded...")
+    log("World loaded...", MCOvertakeLogType.FILESYSTEM)
 
 
     players = Json.decodeFromString<MutableMap<String, PlayerData>>(
@@ -205,10 +213,17 @@ fun main() = runBlocking { try {
             File("./player-data.json").readText()
         else "{}"
     )
-    log("Player data imported...")
-    log("Filesystem actions complete...")
+    log("Player data imported...", MCOvertakeLogType.FILESYSTEM)
+    log("Filesystem actions complete...", MCOvertakeLogType.FILESYSTEM)
 
     initItems()
+
+    GlobalEventHandler.listen<ServerListPingEvent> {
+        it.responseData.apply {
+            description = "<gradient:green:gold><bold>MCOvertake - $SERVER_VERSION".asMini()
+        }
+    }
+
     GlobalEventHandler.listen<AsyncPlayerConfigurationEvent> { event ->
         event.spawningInstance = instance
         val player = event.player
@@ -255,7 +270,7 @@ fun main() = runBlocking { try {
         if (scoreboardTitleProgress >= 1.0) {
             scoreboardTitleProgress = -1.0
         }
-        val scoreboard = kbar("<gradient:green:gold:$scoreboardTitleProgress><bold>MCOvertake - v0.1".asMini()) {
+        val scoreboard = kbar("<gradient:green:gold:$scoreboardTitleProgress><bold>MCOvertake - $SERVER_VERSION".asMini()) {
             for ((i, player) in players.toBlockSortedList().withIndex()) {
                 if (player.playerDisplayName == null) player.playerDisplayName =
                     instance.getPlayerByUuid(player.uuid.toUUID())?.username ?: continue
@@ -355,8 +370,7 @@ fun main() = runBlocking { try {
                 e.isCancelled = try {
                     actionable.onInteract(e)
                 } catch(e: Exception) {
-                    e.printStackTrace()
-                    e.printStackTrace(logStream)
+                    log(e)
                     true
                 }
                 break
@@ -515,26 +529,19 @@ fun main() = runBlocking { try {
                 }
                 for (entry in Command.registry) {
                     if (entry.validate(args)) {
-                        logStream.println(line)
+                        LoggerFileWriter.writeToFile(line, LogType.USER_ACTION)
                         entry.execute(args)
                     }
                 }
             }
             delay(config.consolePollingDelay)
         }
-        log("Console loop failed!")
+        log("Console loop failed!", LogType.ERROR)
     }}
     log("Console loop running!")
 } catch (e: Exception) {
-    e.printStackTrace()
-    e.printStackTrace(logStream)
+    log(e)
 }}
-
-fun log(msg: Any?) {
-    val time = Time.from(Instant.now()).toString().dropLast(9).drop(11)
-    println("[$time]: $msg")
-    logStream.println("[$time]: $msg")
-}
 
 fun clearBlock(block: Block) {
     scheduleImmediately {
@@ -664,6 +671,11 @@ var Entity.hasGravity: Boolean
 val Cooldown.ticks: Int get() = (duration.toMillis() / 50).toInt()
 
 val Material.cooldownIdentifier: String get() = key().value()
+
+fun InventoryClickEvent.cancel() {
+    inventory[slot] = clickedItem
+    player.inventory.cursorItem = cursorItem
+}
 fun initItems() {
     AttackItem
     BarracksItem
@@ -682,6 +694,7 @@ fun initItems() {
     MatterCompressorItem
     UndergroundTeleporterItem
     TeleportBackItem
+    ResearchUpgradeItem
 }
 
 fun initBuildingCompanions() {

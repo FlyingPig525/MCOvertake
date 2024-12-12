@@ -1,5 +1,7 @@
 package io.github.flyingpig525.building
 
+import cz.lukynka.prettylog.LogType
+import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
 import io.github.flyingpig525.data.PlayerData
 import io.github.flyingpig525.dsl.blockDisplay
@@ -8,6 +10,7 @@ import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.dsl.item.lore
 import net.bladehunt.kotstom.extension.adventure.asMini
+import net.bladehunt.kotstom.extension.adventure.noItalic
 import net.bladehunt.kotstom.extension.asPos
 import net.bladehunt.kotstom.extension.set
 import net.minestom.server.coordinate.Point
@@ -61,7 +64,7 @@ class UndergroundTeleporter : Building, Interactable {
             return item(Material.COPPER_GRATE) {
                 itemName = "<dark_purple>Underground Gateway <gray>-<green> $MATTER_SYMBOL $cost".asMini()
                 lore {
-                    +"<gray>Allows teleportation to the next underground layer"
+                    +"<gray>Allows teleportation to the next underground layer".asMini().noItalic()
                     resourcesConsumed(20)
                     amountOwned(count)
                 }

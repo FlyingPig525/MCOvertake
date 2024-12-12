@@ -1,8 +1,9 @@
 package io.github.flyingpig525.item
 
+import cz.lukynka.prettylog.LogType
+import cz.lukynka.prettylog.log
 import io.github.flyingpig525.BUILDING_SYMBOL
 import io.github.flyingpig525.building.Building
-import io.github.flyingpig525.log
 import io.github.flyingpig525.players
 import net.bladehunt.kotstom.GlobalEventHandler
 import net.bladehunt.kotstom.dsl.item.item

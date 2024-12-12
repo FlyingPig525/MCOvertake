@@ -1,6 +1,10 @@
 package io.github.flyingpig525.item
 
+import cz.lukynka.prettylog.LogType
+import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
+import io.github.flyingpig525.data.research.ResearchUpgrade.Companion.onClaimLand
+import io.github.flyingpig525.data.research.action.ActionData
 import net.bladehunt.kotstom.dsl.item.amount
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -43,13 +47,15 @@ object ClaimItem : Actionable {
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
         val data = players[event.player.uuid.toString()] ?: return true
         if (!data.claimCooldown.isReady(Instant.now().toEpochMilli())) return true
-        if (data.power - data.claimCost < 0) return true
+        var claimData = ActionData.ClaimLand(data, event.instance, event.player)
+        claimData = data.research.onClaimLand(claimData)
+        if (data.power - claimData.claimCost < 0) return true
         val target = event.player.getTrueTarget(20)?.playerPosition ?: return true
         if (instance.getBlock(target) == Block.GRASS_BLOCK) {
             claimWithParticle(event.player, target, Block.GRASS_BLOCK, data.block)
             data.blocks++
-            data.power -= data.claimCost
-            data.claimCooldown = Cooldown(Duration.ofMillis(data.maxClaimCooldown))
+            data.power -= claimData.claimCost
+            data.claimCooldown = Cooldown(Duration.ofMillis(claimData.claimCooldown))
             event.player.sendPacket(
                 SetCooldownPacket(
                     itemMaterial.cooldownIdentifier,

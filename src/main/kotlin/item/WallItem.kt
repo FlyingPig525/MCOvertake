@@ -1,5 +1,7 @@
 package io.github.flyingpig525.item
 
+import cz.lukynka.prettylog.LogType
+import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
 import net.bladehunt.kotstom.dsl.item.amount
 import net.bladehunt.kotstom.dsl.item.item
@@ -15,6 +17,7 @@ import net.minestom.server.item.Material
 import net.minestom.server.network.packet.server.play.SetCooldownPacket
 import net.minestom.server.tag.Tag
 import net.minestom.server.utils.time.Cooldown
+import java.lang.Exception
 import java.time.Duration
 import java.time.Instant
 import java.util.*
@@ -42,7 +45,7 @@ object WallItem : Actionable {
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
         val instance = event.instance
         val data = players[event.player.uuid.toString()] ?: return true
-        if (data.organicMatter - 15 < 0) return true
+        if (data.organicMatter < 15) return true
         if (!data.wallCooldown.isReady(Instant.now().toEpochMilli())) return true
         val target = event.player.getTrueTarget(20) ?: return true
         if (!checkBlockAvailable(data, target)) return true

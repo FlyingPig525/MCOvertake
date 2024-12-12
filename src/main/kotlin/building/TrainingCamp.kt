@@ -1,10 +1,11 @@
 package io.github.flyingpig525.building
 
+import cz.lukynka.prettylog.LogType
+import cz.lukynka.prettylog.log
 import io.github.flyingpig525.MATTER_SYMBOL
 import io.github.flyingpig525.POWER_SYMBOL
 import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.PlayerData
-import io.github.flyingpig525.log
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -50,6 +51,8 @@ class TrainingCamp : Building {
             return item(Material.POLISHED_BLACKSTONE_BUTTON) {
                 itemName = "<red>$POWER_SYMBOL Training Camp</red> <gray>-</gray><green> $MATTER_SYMBOL $cost".asMini()
                 lore {
+                    +"<dark_gray>Provides space for troops and other assets to".asMini()
+                    +"<dark_gray>refine their specific skills".asMini()
                     +"<gray>Generates 0.5 $power".asMini().noItalic()
                     resourcesConsumed(3)
                     amountOwned(count)

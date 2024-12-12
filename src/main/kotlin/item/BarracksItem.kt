@@ -1,8 +1,9 @@
 package io.github.flyingpig525.item
 
+import cz.lukynka.prettylog.LogType
+import cz.lukynka.prettylog.log
 import io.github.flyingpig525.building.Barrack
 import io.github.flyingpig525.getTrueTarget
-import io.github.flyingpig525.log
 import io.github.flyingpig525.players
 import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerUseItemEvent
@@ -37,7 +38,7 @@ object BarracksItem : Actionable {
         val playerData = players[event.player.uuid.toString()] ?: return true
         if (!checkBlockAvailable(playerData, target)) return true
         if (Barrack.getResourceUse(playerData.disposableResourcesUsed) > playerData.maxDisposableResources) return true
-        if (playerData.organicMatter - playerData.barracksCost < 0) return true
+        if (playerData.organicMatter < playerData.barracksCost) return true
         playerData.organicMatter -= playerData.barracksCost
         playerData.barracks.place(target, instance)
         playerData.barracks.select(event.player, playerData.barracksCost)

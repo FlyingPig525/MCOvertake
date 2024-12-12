@@ -4,6 +4,9 @@ TODO:
 - - auto repair (after 2x cooldown) (maybe some kind of drone)
 - [ ] research -- different system than conquest did
 - - more tiles adjacent to enemy tile, the lower the cooldown for attacking
+- - multiple currencies
+- - exchange currencies for others
+- - 
 - [x] world generation
 - [ ] sky islands -- maybe (collect a gaseous resource?)
 - [ ] underground (where you can do oil) (less digging more cave systems? maybe inverted ground noise)
