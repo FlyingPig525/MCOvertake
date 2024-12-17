@@ -3,6 +3,7 @@ package io.github.flyingpig525.item
 import cz.lukynka.prettylog.LogType
 import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
+import io.github.flyingpig525.data.research.action.ActionData
 import net.bladehunt.kotstom.dsl.item.amount
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -49,9 +50,12 @@ object WallItem : Actionable {
         if (!data.wallCooldown.isReady(Instant.now().toEpochMilli())) return true
         val target = event.player.getTrueTarget(20) ?: return true
         if (!checkBlockAvailable(data, target)) return true
-
-        data.organicMatter -= 15
-        data.wallCooldown = Cooldown(Duration.ofMillis(500))
+        val actionData = ActionData.BuildWall(data, instance, event.player).apply {
+            cost = 15
+            cooldown = Cooldown(Duration.ofMillis(500))
+        }.also { data.research.onBuildWall(it) }
+        data.organicMatter -= actionData.cost
+        data.wallCooldown = actionData.cooldown
 
         updateIronBar(target.buildingPosition)
         repeatAdjacent(target.buildingPosition) {
@@ -63,7 +67,7 @@ object WallItem : Actionable {
         event.player.sendPacket(
             SetCooldownPacket(
                 itemMaterial.cooldownIdentifier,
-                (data.wallCooldown.duration.toMillis() / 50).toInt()
+                data.wallCooldown.ticks
             )
         )
         return true

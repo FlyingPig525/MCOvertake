@@ -1,5 +1,6 @@
-package io.github.flyingpig525.data.research
+package io.github.flyingpig525.data.research.currency
 
+import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade
 import net.minestom.server.item.Material
 
 interface ResearchCurrency {
@@ -9,7 +10,7 @@ interface ResearchCurrency {
     val upgrades: List<ResearchUpgrade>
     val colorItem: Material
     var internalLevel: Int
-    var count: Int
+    var count: Long
 
     fun upgradeByName(name: String) = upgrades.find { it.name == name }
 

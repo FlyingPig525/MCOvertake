@@ -41,3 +41,4 @@ player-data.json
 /.idea/
 config.json
 log.log
+logs/

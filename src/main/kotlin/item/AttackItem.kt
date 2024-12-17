@@ -95,18 +95,24 @@ object AttackItem : Actionable {
         if (playerBlock == Block.GRASS_BLOCK || playerBlock == Block.SAND || playerBlock == data.block) {
             return true
         }
-        val targetData = getAttacking(event.player) ?: return true
-        val preAttackData = ActionData.PreAttack(data, instance, event.player).apply {
+        val _targetData = getAttacking(event.player) ?: return true
+        var preAttackData = ActionData.PreAttack(data, instance, event.player).apply {
             wallLevel = buildingBlock.wallLevel
-            this.targetData = targetData
-        }
+            this.targetData = _targetData
+        }.let { data.research.onPreAttack(it) }
         // TODO: ADD PRE ATTACK DATA RESEARCH MANIPULATION
-        val attackCost = getAttackCost(targetData, buildingBlock.wallLevel)
-        if (data.power < attackCost) {
+        val attackCost = getAttackCost(preAttackData.targetData, preAttackData.wallLevel)
+        val postAttack = ActionData.PostAttack(data, instance, event.player).apply {
+            attackCooldown = getAttackCooldown(preAttackData.targetData, preAttackData.wallLevel)
+            this.attackCost = attackCost
+            this.targetData = preAttackData.targetData
+        }.also { data.research.onPostAttack(it) }
+        if (data.power < postAttack.attackCost) {
             // TODO: ADD MESSAGE
             return true
         }
-        val targetPlayer = instance.getPlayerByUuid(targetData.uuid.toUUID())
+        val targetPlayer = instance.getPlayerByUuid(postAttack.targetData.uuid.toUUID())
+        val targetData = postAttack.targetData
         val taken = when(buildingBlock) {
             Block.AIR -> { true }
             Block.LILY_PAD -> {
@@ -205,26 +211,30 @@ object AttackItem : Actionable {
             }
         }
         if (taken) {
-            data.blocks++
-            targetData.blocks--
+            postAttack.playerData.blocks++
+            postAttack.targetData.blocks--
             if (Building.blockIsBuilding(buildingBlock)) {
-                claimWithParticle(event.player, target, data.block)
+                claimWithParticle(event.player, target, postAttack.playerData.block)
                 if (targetPlayer != null) {
                     SelectBuildingItem.updatePlayerItem(targetPlayer)
                 }
                 SelectBuildingItem.updatePlayerItem(event.player)
             } else {
-                claimWithParticle(event.player, target, data.block)
+                claimWithParticle(event.player, target, postAttack.playerData.block)
             }
         }
-        data.attackCooldown = getAttackCooldown(targetData, buildingBlock.wallLevel)
+        data.attackCooldown = postAttack.attackCooldown
         event.player.sendPacket(
             SetCooldownPacket(
                 getItem(event.player.uuid).material().cooldownIdentifier,
                 data.attackCooldown.ticks
             )
         )
-        data.power -= attackCost
+        data.power -= postAttack.attackCost
+        val onAttacked = ActionData.Attacked(postAttack.targetData, instance, targetPlayer).apply {
+            this.attackerData = data
+            this.attackerPlayer = event.player
+        }.also { targetData.research.onAttacked(it) }
         data.updateBossBars()
         targetData.updateBossBars()
 

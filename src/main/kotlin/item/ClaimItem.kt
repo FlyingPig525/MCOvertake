@@ -3,7 +3,6 @@ package io.github.flyingpig525.item
 import cz.lukynka.prettylog.LogType
 import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
-import io.github.flyingpig525.data.research.ResearchUpgrade.Companion.onClaimLand
 import io.github.flyingpig525.data.research.action.ActionData
 import net.bladehunt.kotstom.dsl.item.amount
 import net.bladehunt.kotstom.dsl.item.item

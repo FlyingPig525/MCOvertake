@@ -105,6 +105,8 @@ fun getWallUpgradeCost(wall: Block): Int? {
     return null
 }
 
+fun getWallUpgradeCost(level: Int): Int = level * 5 + 10
+
 
 val Block.wallLevel: Int
     get() {

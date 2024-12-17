@@ -46,6 +46,7 @@ import net.minestom.server.coordinate.Pos
 import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.Entity
 import net.minestom.server.entity.GameMode
+import net.minestom.server.entity.Player
 import net.minestom.server.event.inventory.InventoryClickEvent
 import net.minestom.server.event.player.*
 import net.minestom.server.event.server.ServerListPingEvent
@@ -672,10 +673,13 @@ val Cooldown.ticks: Int get() = (duration.toMillis() / 50).toInt()
 
 val Material.cooldownIdentifier: String get() = key().value()
 
+val Player.data: PlayerData? get() = players[uuid.toString()]
+
 fun InventoryClickEvent.cancel() {
     inventory[slot] = clickedItem
     player.inventory.cursorItem = cursorItem
 }
+
 fun initItems() {
     AttackItem
     BarracksItem

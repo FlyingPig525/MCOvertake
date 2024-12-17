@@ -3,6 +3,7 @@ package io.github.flyingpig525.item
 import cz.lukynka.prettylog.LogType
 import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
+import io.github.flyingpig525.data.research.action.ActionData
 import io.github.flyingpig525.wall.*
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -45,8 +46,11 @@ object UpgradeWallItem : Actionable {
         val block = instance.getBlock(target).defaultState()
         val level = block.wallLevel
         val cost = getWallUpgradeCost(block) ?: return true
-        if (data.organicMatter < cost) return true
-        data.organicMatter -= cost
+        val actionData = ActionData.UpgradeWall(data, instance, event.player).apply {
+            this.cost = cost
+        }.also { data.research.onUpgradeWall(it) }
+        if (data.organicMatter < actionData.cost) return true
+        data.organicMatter -= actionData.cost
         instance.setBlock(target, nextWall(level))
         updateWall(target)
         repeatAdjacent(target, ::updateWall)

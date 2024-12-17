@@ -3,6 +3,7 @@ package io.github.flyingpig525.item
 import cz.lukynka.prettylog.LogType
 import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
+import io.github.flyingpig525.data.research.action.ActionData
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.extension.adventure.asMini
@@ -48,17 +49,21 @@ object ClaimWaterItem : Actionable {
         if (!data.raftCooldown.isReady(Instant.now().toEpochMilli())) return true
         val target = event.player.getTrueTarget(20) ?: return true
         if (target.isUnderground) return true
-        if (data.organicMatter < data.raftCost) return true
+        val actionData = ActionData.PlaceRaft(data, event.instance, event.player).apply {
+            cooldown = Cooldown(Duration.ofSeconds(20))
+            cost = data.raftCost
+        }.also { data.research.onPlaceRaft(it) }
+        if (data.organicMatter < actionData.cost) return true
         // Claim logic
         instance.setBlock(target.playerPosition, data.block)
         instance.setBlock(target.withY(40.0), Block.LILY_PAD)
         spawnPlayerRaft(data.block, target.withY(40.0))
         data.blocks++
-        data.raftCooldown = Cooldown(Duration.ofSeconds(20))
+        data.raftCooldown = actionData.cooldown
         event.player.sendPacket(
             SetCooldownPacket(
                 itemMaterial.cooldownIdentifier,
-                data.raftCooldown.ticks
+                actionData.cooldown.ticks
             )
         )
         return true

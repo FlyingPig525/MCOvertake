@@ -3,6 +3,7 @@ package io.github.flyingpig525.item
 import cz.lukynka.prettylog.LogType
 import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
+import io.github.flyingpig525.data.research.action.ActionData
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.extension.adventure.asMini
@@ -41,13 +42,17 @@ object ColonyItem : Actionable {
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
         val data = players[event.player.uuid.toString()] ?: return true
         if (!data.colonyCooldown.isReady(Instant.now().toEpochMilli())) return true
-        if (data.power - data.colonyCost < 0) return true
+        val actionData = ActionData.PlaceColony(data, event.instance, event.player).apply {
+            cost = data.colonyCost
+            cooldown = Cooldown(Duration.ofSeconds(15))
+        }.also { data.research.onPlaceColony(it) }
+        if (data.power - actionData.cost < 0) return true
         val target = event.player.getTrueTarget(20)?.playerPosition ?: return true
         if (instance.getBlock(target) == Block.GRASS_BLOCK) {
             claimWithParticle(event.player, target, Block.GRASS_BLOCK, data.block)
             data.blocks++
             data.power -= data.colonyCost
-            data.colonyCooldown = Cooldown(Duration.ofSeconds(15))
+            data.colonyCooldown = actionData.cooldown
             event.player.sendPacket(
                 SetCooldownPacket(
                     itemMaterial.cooldownIdentifier,

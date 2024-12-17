@@ -4,7 +4,9 @@ import cz.lukynka.prettylog.LogType
 import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
 import io.github.flyingpig525.building.Building
+import io.github.flyingpig525.data.research.action.ActionData
 import io.github.flyingpig525.wall.blockIsWall
+import io.github.flyingpig525.wall.wallLevel
 import net.bladehunt.kotstom.dsl.item.amount
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -56,6 +58,10 @@ object BreakBuildingItem : Actionable {
             val ref = data.getBuildingReferenceByIdentifier(identifier) ?: return true
             ref.get().count--
             ref.get().select(event.player, data)
+            ActionData.DestroyBuilding(data, instance, event.player).apply {
+                building = ref
+                wallLevel = buildingBlock.wallLevel
+            }.also { data.research.onDestroyBuilding(it) }
         }
         if (instance.getBlock(groundPos) == Block.WATER) {
             instance.setBlock(buildingPos, Block.LILY_PAD)
