@@ -2,6 +2,9 @@ package io.github.flyingpig525.item
 
 import cz.lukynka.prettylog.LogType
 import cz.lukynka.prettylog.log
+import io.github.flyingpig525.GameInstance
+import io.github.flyingpig525.GameInstance.Companion.fromInstance
+import io.github.flyingpig525.instances
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.extension.adventure.asMini
@@ -23,7 +26,7 @@ object OwnedBlockItem : Actionable {
     override val identifier: String = "block:owned"
     override val itemMaterial: Material = Material.LIME_DYE
 
-    override fun getItem(uuid: UUID): ItemStack {
+    override fun getItem(uuid: UUID, instance: GameInstance): ItemStack {
         return item(itemMaterial) {
             itemName = "<green><bold>Your Land".asMini()
             set(Tag.String("identifier"), identifier)
@@ -31,6 +34,7 @@ object OwnedBlockItem : Actionable {
     }
 
     override fun setItemSlot(player: Player) {
-        player.inventory[0] = getItem(player.uuid)
+        val gameInstance = instances.fromInstance(player.instance) ?: return
+        player.inventory[0] = getItem(player.uuid, gameInstance)
     }
 }

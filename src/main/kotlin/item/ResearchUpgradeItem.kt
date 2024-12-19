@@ -2,6 +2,7 @@ package io.github.flyingpig525.item
 
 import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
+import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.data.research.currency.ResearchCurrency
 import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade
 import net.bladehunt.kotstom.dsl.item.item
@@ -38,7 +39,7 @@ object ResearchUpgradeItem : Actionable {
     override val itemMaterial: Material = Material.POTION
 
 
-    override fun getItem(uuid: UUID): ItemStack {
+    override fun getItem(uuid: UUID, instance: GameInstance): ItemStack {
         return item(itemMaterial) {
             itemName = "<aqua>$GLOBAL_RESEARCH_SYMBOL <bold>Research Upgrades</bold>".asMini()
             set(Tag.String("identifier"), identifier)
@@ -46,7 +47,8 @@ object ResearchUpgradeItem : Actionable {
     }
 
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
-        val data = players[event.player.uuid.toString()] ?: return true
+        val gameInstance = instances.fromInstance(event.instance) ?: return true
+        val data = gameInstance.playerData[event.player.uuid.toString()] ?: return true
         val inventory = Inventory(InventoryType.CHEST_1_ROW, "Research Type")
 
         for ((i, currency) in data.research.withIndex()) {
@@ -112,6 +114,7 @@ object ResearchUpgradeItem : Actionable {
     }
 
     override fun setItemSlot(player: Player) {
-        player.inventory[6] = getItem(player.uuid)
+        val gameInstance = instances.fromInstance(player.instance) ?: return
+        player.inventory[6] = getItem(player.uuid, gameInstance)
     }
 }

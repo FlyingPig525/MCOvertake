@@ -1,10 +1,11 @@
 package io.github.flyingpig525.item
 
-import cz.lukynka.prettylog.LogType
 import cz.lukynka.prettylog.log
 import io.github.flyingpig525.BUILDING_SYMBOL
+import io.github.flyingpig525.GameInstance
+import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.building.Building
-import io.github.flyingpig525.players
+import io.github.flyingpig525.instances
 import net.bladehunt.kotstom.GlobalEventHandler
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -37,7 +38,7 @@ object SelectBuildingItem : Actionable {
     override val itemMaterial: Material = Material.BRICK
 
 
-    override fun getItem(uuid: UUID): ItemStack {
+    override fun getItem(uuid: UUID, instance: GameInstance): ItemStack {
         return item(itemMaterial) {
             itemName = "<gold>$BUILDING_SYMBOL <bold>Blueprint Constructor</bold> $BUILDING_SYMBOL".asMini()
             set(Tag.String("identifier"), identifier)
@@ -45,8 +46,9 @@ object SelectBuildingItem : Actionable {
     }
 
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
+        val gameInstance = instances.fromInstance(event.instance) ?: return true
         val inventory = Inventory(InventoryType.CHEST_5_ROW, "Select Blueprint")
-        val playerData = players[event.player.uuid.toString()]!!
+        val playerData = gameInstance.playerData[event.player.uuid.toString()]!!
         val clearItem = item(Material.BARRIER) { itemName = "<red><bold>Clear Selected Item".asMini() }
 
         val blackItem = item(Material.BLACK_STAINED_GLASS_PANE) { itemName = "".asMini()}
@@ -72,7 +74,8 @@ object SelectBuildingItem : Actionable {
 
         val inventoryEventNode = EventNode.type("select-building-inv", EventFilter.INVENTORY) { _, inv -> inventory == inv }
             .listen<InventoryClickEvent> { e ->
-                val data = players[e.player.uuid.toString()] ?: return@listen
+                val gameInstance = instances.fromInstance(e.instance) ?: return@listen
+                val data = gameInstance.playerData[e.player.uuid.toString()] ?: return@listen
                 var close = false
                 if (e.clickedItem == clearItem) {
                     close = true
@@ -97,11 +100,13 @@ object SelectBuildingItem : Actionable {
     }
 
     override fun setItemSlot(player: Player) {
-        player.inventory[4] = getItem(player.uuid)
+        val gameInstance = instances.fromInstance(player.instance) ?: return
+        player.inventory[4] = getItem(player.uuid, gameInstance)
     }
 
     fun updatePlayerItem(player: Player) {
-        val data = players[player.uuid.toString()] ?: return
+        val gameInstance = instances.fromInstance(player.instance) ?: return
+        val data = gameInstance.playerData[player.uuid.toString()] ?: return
         val identifier = player.inventory[4].getTag(Tag.String("identifier"))
         val ref = data.getBuildingReferenceByIdentifier(identifier)?.get() ?: return
         ref.select(player, data)

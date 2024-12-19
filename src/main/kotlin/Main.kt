@@ -5,6 +5,7 @@ import de.articdive.jnoise.generators.noise_parameters.simplex_variants.Simplex2
 import de.articdive.jnoise.generators.noisegen.opensimplex.SuperSimplexNoiseGenerator
 import de.articdive.jnoise.modules.octavation.fractal_functions.FractalFunction
 import de.articdive.jnoise.pipeline.JNoise
+import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.building.*
 import io.github.flyingpig525.console.Command
 import io.github.flyingpig525.console.ConfigCommand
@@ -12,7 +13,6 @@ import io.github.flyingpig525.console.OpCommand
 import io.github.flyingpig525.console.SaveCommand
 import io.github.flyingpig525.data.Config
 import io.github.flyingpig525.data.PlayerData
-import io.github.flyingpig525.data.PlayerData.Companion.toBlockSortedList
 import io.github.flyingpig525.item.*
 import io.github.flyingpig525.log.MCOvertakeLogType
 import io.github.flyingpig525.wall.blockIsWall
@@ -20,22 +20,17 @@ import kotlinx.coroutines.*
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import net.bladehunt.kotstom.CommandManager
-import net.bladehunt.kotstom.GlobalEventHandler
-import net.bladehunt.kotstom.InstanceManager
-import net.bladehunt.kotstom.SchedulerManager
+import net.bladehunt.kotstom.*
 import net.bladehunt.kotstom.dsl.item.amount
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.dsl.kbar
 import net.bladehunt.kotstom.dsl.kommand.kommand
-import net.bladehunt.kotstom.dsl.line
 import net.bladehunt.kotstom.dsl.listen
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.bladehunt.kotstom.extension.get
 import net.bladehunt.kotstom.extension.roundToBlock
 import net.bladehunt.kotstom.extension.set
-import net.hollowcube.polar.PolarLoader
 import net.kyori.adventure.resource.ResourcePackInfo
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -46,24 +41,26 @@ import net.minestom.server.coordinate.Point
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.Entity
-import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
+import net.minestom.server.event.EventFilter
+import net.minestom.server.event.EventNode
 import net.minestom.server.event.inventory.InventoryClickEvent
+import net.minestom.server.event.item.ItemDropEvent
 import net.minestom.server.event.player.*
 import net.minestom.server.event.server.ServerListPingEvent
 import net.minestom.server.extras.MojangAuth
-import net.minestom.server.instance.InstanceContainer
+import net.minestom.server.instance.Instance
 import net.minestom.server.instance.LightingChunk
-import net.minestom.server.instance.anvil.AnvilLoader
 import net.minestom.server.instance.block.Block
+import net.minestom.server.inventory.Inventory
+import net.minestom.server.inventory.InventoryType
 import net.minestom.server.inventory.PlayerInventory
+import net.minestom.server.item.ItemComponent
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import net.minestom.server.network.packet.server.SendablePacket
 import net.minestom.server.network.packet.server.play.ParticlePacket
 import net.minestom.server.particle.Particle
-import net.minestom.server.potion.Potion
-import net.minestom.server.potion.PotionEffect
 import net.minestom.server.tag.Tag
 import net.minestom.server.timer.Task
 import net.minestom.server.timer.TaskSchedule
@@ -72,7 +69,6 @@ import team.unnamed.creative.serialize.minecraft.MinecraftResourcePackReader
 import team.unnamed.creative.serialize.minecraft.MinecraftResourcePackWriter
 import team.unnamed.creative.server.ResourcePackServer
 import java.io.File
-import java.io.PrintStream
 import java.net.URI
 import java.nio.file.Path
 import java.util.*
@@ -90,7 +86,7 @@ const val WALL_SYMBOL = "\uD83E\uDE93"
 const val PICKAXE_SYMBOL = "⛏"
 const val GLOBAL_RESEARCH_SYMBOL = "\uD83E\uDDEA"
 
-const val SERVER_VERSION = "v0.2"
+const val SERVER_VERSION = "v0.3"
 
 const val PIXEL_SIZE = 1.0 / 16.0
 
@@ -102,15 +98,11 @@ var runConsoleLoop = true
 @OptIn(ExperimentalSerializationApi::class)
 val json = Json { prettyPrint = true; encodeDefaults = true; allowComments = true;}
 
-lateinit var instance: InstanceContainer private set
-
-lateinit var players: MutableMap<String, PlayerData>
+var scoreboardTitleProgress = -1.0
 
 lateinit var config: Config
 
-lateinit var powerTask: Task
-lateinit var matterTask: Task
-lateinit var mechanicalTask: Task
+var instances: MutableMap<String, GameInstance> = mutableMapOf()
 
 fun main() = runBlocking { try {
     LoggerSettings.saveToFile = true
@@ -145,81 +137,23 @@ fun main() = runBlocking { try {
         .build()
     log("Resource pack loaded...", MCOvertakeLogType.FILESYSTEM)
 
-    val noise = JNoise.newBuilder()
-        .superSimplex(SuperSimplexNoiseGenerator.newBuilder().setSeed(config.noiseSeed).setVariant2D(Simplex2DVariant.CLASSIC))
-        .octavate(2, 0.1, 1.0, FractalFunction.TURBULENCE, true)
-        .scale(config.noiseScale)
-        .clamp(-1.0, 1.0)
-        .build()
-    instance = InstanceManager.createInstanceContainer().apply {
-        chunkLoader = PolarLoader(Path.of("world.polar"))
+    val lobbyInstance = InstanceManager.createInstanceContainer().apply {
         setGenerator { unit ->
-            unit.modifier().setAll { x, y, z ->
-                if (x in 0..config.mapSize && z in 0..config.mapSize) {
-                    val eval = noise.evaluateNoise(x.toDouble(), z.toDouble())
-                    if (y in 38..39) {
-                        if (eval > config.noiseThreshold) return@setAll Block.GRASS_BLOCK
-                    } else if (y in 29..36) {
-                        if (eval <= config.noiseThreshold && y != 30 && y != 36)
-                            return@setAll if (y != 29) Block.AIR else Block.GRASS_BLOCK
-
-                        if (y == 30)
-                            return@setAll config.undergroundBlock
-                        if (y == 29)
-                            return@setAll Block.DIAMOND_BLOCK
-                        return@setAll Block.DEEPSLATE
-                    }
-                    if (y in 38..39) {
-                        return@setAll if (y == 39) Block.WATER else Block.SAND
-                    }
-                }
-                if (x in -1..config.mapSize+1 && z in -1..config.mapSize+1 && y < 40) {
-                    return@setAll if (y in 30..36) Block.DEEPSLATE else Block.DIAMOND_BLOCK
-                }
-                Block.AIR
-            }
+            unit.modifier().fillHeight(9, 10, Block.GRASS_BLOCK)
         }
         setChunkSupplier(::LightingChunk)
-
     }
-    log("Created instance...", MCOvertakeLogType.FILESYSTEM)
+    log("Created lobby instance...", MCOvertakeLogType.FILESYSTEM)
+    for (name in config.instanceNames) {
+        instances[name] = GameInstance(Path.of("instances", name), name)
+        instances[name]?.setupInstance()
+    }
+    log("Created GameInstances")
     initBuildingCompanions()
     log("Building companions initialized...")
-    launch {
-        val displayBuildings = Building.BuildingCompanion.registry.filter { it is DisplayEntityBlock }
-        for (x in 0..config.mapSize) {
-            for (z in 0..config.mapSize) {
-                val point = Vec(x.toDouble(), 39.0, z.toDouble())
-                instance.loadChunk(point).thenRunAsync {
-                    val playerBlock = instance.getBlock(x, 38, z)
-                    if (instance.getBlock(x, 39, z) == Block.WATER && instance.getBlock(x, 38, z) != Block.SAND) {
-                        ClaimWaterItem.spawnPlayerRaft(playerBlock, Vec(x.toDouble(), 40.0, z.toDouble()))
-                    }
-                    onAllBuildingPositions(point) {
-                        for (building in displayBuildings) {
-                            if ((building as DisplayEntityBlock).checkShouldSpawn(it, instance)) {
-                                (building as DisplayEntityBlock).spawn(it, instance)
-                                break
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        log("Spawned display entities...")
-    }
-    log("World loaded...", MCOvertakeLogType.FILESYSTEM)
-
-
-    players = Json.decodeFromString<MutableMap<String, PlayerData>>(
-        if (File("./player-data.json").exists())
-            File("./player-data.json").readText()
-        else "{}"
-    )
-    log("Player data imported...", MCOvertakeLogType.FILESYSTEM)
-    log("Filesystem actions complete...", MCOvertakeLogType.FILESYSTEM)
 
     initItems()
+
 
     GlobalEventHandler.listen<ServerListPingEvent> {
         it.responseData.apply {
@@ -228,7 +162,7 @@ fun main() = runBlocking { try {
     }
 
     GlobalEventHandler.listen<AsyncPlayerConfigurationEvent> { event ->
-        event.spawningInstance = instance
+        event.spawningInstance = lobbyInstance
         val player = event.player
         if (config.whitelisted.isNotEmpty() && player.username !in config.whitelisted) {
             player.kick(
@@ -238,7 +172,7 @@ fun main() = runBlocking { try {
         if (player.username in config.opUsernames && player.uuid.toString() in config.opUUID) {
             player.permissionLevel = 4
         }
-        player.respawnPoint = Pos(5.0, 41.0, 5.0)
+        player.respawnPoint = Pos(5.0, 11.0, 5.0)
         player.sendResourcePacks(ResourcePackInfo.resourcePackInfo()
             .hash(builtResourcePack.hash())
             .uri(URI("http://${config.serverAddress}:${config.packServerPort}/${builtResourcePack.hash()}.zip"))
@@ -246,26 +180,57 @@ fun main() = runBlocking { try {
         )
     }
 
-
-    instance.eventNode().listen<PlayerSpawnEvent> { e ->
-        e.player.gameMode = GameMode.ADVENTURE
-        e.player.flyingSpeed = 0.5f
+    lobbyInstance.eventNode().listen<PlayerSpawnEvent> { e ->
+        e.player.teleport(Pos(5.0, 11.0, 5.0))
         e.player.isAllowFlying = true
-        e.player.addEffect(Potion(PotionEffect.NIGHT_VISION, 1, -1))
-        val data = players[e.player.uuid.toString()]
-        if (data == null) {
-            SelectBlockItem.setAllSlots(e.player)
-        } else {
-            data.setupPlayer(e.player)
-            if (e.isFirstSpawn) {
-                data.sendCooldowns(e.player)
-            }
+        e.player.inventory[0] = item(Material.COMPASS) {
+            itemName = "<gradient:green:gold:$scoreboardTitleProgress><bold>MCOvertake Game Instances".asMini()
         }
     }
-    log("Player spawning setup...")
+    lobbyInstance.eventNode().listen<PlayerSwapItemEvent> { it.isCancelled = true }
+    lobbyInstance.eventNode().listen<InventoryClickEvent> { it.cancel() }
+    lobbyInstance.eventNode().listen<ItemDropEvent> { it.isCancelled = true }
+    lobbyInstance.eventNode().listen<PlayerTickEvent> { e ->
+        e.player.inventory[0] =
+            e.player.inventory[0].with(
+                ItemComponent.ITEM_NAME,
+                "<gradient:green:gold:$scoreboardTitleProgress><bold>MCOvertake Game Instances".asMini()
+            )
+    }
+    lobbyInstance.eventNode().listen<PlayerUseItemEvent> { e ->
+        if (e.itemStack.material() == Material.COMPASS) {
+            val inventory = Inventory(InventoryType.CHEST_5_ROW, "Game Instances")
+            instances.onEachIndexed { index, (name, _) ->
+                inventory[index] = item(Material.WHITE_WOOL) {
+                    itemName = name.asMini()
+                    set(Tag.String("selector"), name)
+                }
+            }
+            e.player.openInventory(inventory)
+            val node = EventNode.event(
+                "instance-picker${e.player.uuid.mostSignificantBits}",
+                EventFilter.INSTANCE)
+            { it.instance == lobbyInstance }
+            node.listen<InventoryClickEvent> {
+                it.cancel()
+                if (it.inventory != inventory) {
+                    lobbyInstance.eventNode().removeChildren("instance-picker${e.player.uuid.mostSignificantBits}")
+                }
+                if (it.clickedItem.hasTag(Tag.String("selector"))) {
+                    val instance = instances[it.clickedItem.getTag(Tag.String("selector")) ?: "auhdiauowhd2y0189dh7278dhw89dh7 2"]
+                    if (instance != null) {
+                        lobbyInstance.eventNode().removeChildren("instance-picker${e.player.uuid.mostSignificantBits}")
+                        it.player.inventory.clear()
+                        it.player.closeInventory()
+                        BossBarManager.removeAllBossBars(it.player)
+                        it.player.instance = instance.instance
+                    }
+                }
+            }
+            lobbyInstance.eventNode().addChild(node)
+        }
+    }
 
-    var scoreboardTitleProgress = -1.0
-    // Every tick
     SchedulerManager.scheduleTask({
         tick++
 
@@ -273,26 +238,22 @@ fun main() = runBlocking { try {
         if (scoreboardTitleProgress >= 1.0) {
             scoreboardTitleProgress = -1.0
         }
-        val scoreboard = kbar("<gradient:green:gold:$scoreboardTitleProgress><bold>MCOvertake - $SERVER_VERSION".asMini()) {
-            for ((i, player) in players.toBlockSortedList().withIndex()) {
-                if (player.playerDisplayName == null) player.playerDisplayName =
-                    instance.getPlayerByUuid(player.uuid.toUUID())?.username ?: continue
-                if (player.blocks == 0) continue
-                line("<dark_green><bold>${player.playerDisplayName}".asMini()) {
-                    isVisible = true
-                    line = player.blocks
-                    id = player.playerDisplayName + "$i"
-                }
-            }
-        }
-        for (player in instance.players) {
-            scoreboard.addViewer(player)
+        kbar("<gradient:green:gold:$scoreboardTitleProgress><bold>MCOvertake - $SERVER_VERSION".asMini()) {
+            lobbyInstance.players.onEach { addViewer(it) }
         }
     }, TaskSchedule.tick(1), TaskSchedule.tick(1))
+
+    instances.values.onEach { it.setupSpawning() }
+    log("Player spawning setup...")
+
+    instances.values.onEach { it.setupScoreboard() }
+    log("Scoreboards setup")
+    instances.values.onEach { it.registerInteractionEvents() }
+
     // Stolen monitoring code
     val tpsMonitor = TpsMonitor()
     tpsMonitor.start()
-    val tickKommand = kommand {
+    val tickCommand = kommand {
         name = "tick"
         defaultExecutor {
             val tps = tpsMonitor.getTps()
@@ -308,197 +269,32 @@ fun main() = runBlocking { try {
             )
         }
     }
-    CommandManager.register(tickKommand)
-
-
-    // General player tick/extractor tick
-    matterTask = SchedulerManager.scheduleTask({
-        for (uuid in players.keys) {
-            val data = players[uuid]!!
-            data.playerTick(instance)
-            data.matterExtractors.tick(data)
+    CommandManager.register(tickCommand)
+    val lobbyCommand = kommand {
+        name = "lobby"
+        defaultExecutor {
+            player.closeInventory()
+            player.inventory.clear()
+            player.instance = lobbyInstance
+            BossBarManager.removeAllBossBars(player)
         }
-    }, TaskSchedule.tick(30), TaskSchedule.tick(30))
-
-    // Camp tick
-    powerTask = SchedulerManager.scheduleTask({
-        for (uuid in players.keys) {
-            val data = players[uuid]!!
-            data.powerTick()
-            data.updateBossBars()
-        }
-    }, TaskSchedule.tick(70), TaskSchedule.tick(70))
-
-    // Mechanical part tick
-    mechanicalTask = SchedulerManager.scheduleTask({
-        for (uuid in players.keys) {
-            val data = players[uuid]!!
-            data.mechanicalTick()
-        }
-    }, TaskSchedule.tick(400), TaskSchedule.tick(400))
+    }
+    CommandManager.register(lobbyCommand)
 
     // Save loop
     SchedulerManager.scheduleTask({
-        val file = File("./player-data.json")
-        if (!file.exists()) {
-            file.createNewFile()
-        }
-//        file.writeText(Json.encodeToString(players))
-//        instance.saveChunksToStorage()
+        instances.values.onEach { it.save() }
         if (config.printSaveMessages) {
             log("Game data saved")
         }
     }, TaskSchedule.minutes(1), TaskSchedule.minutes(1))
+
+    instances.values.onEach { it.registerTasks() }
     log("Game loops scheduled...")
 
-    instance.eventNode().listen<PlayerMoveEvent> { e ->
-        with(e) {
-            if (newPosition.x !in 0.0..config.mapSize + 1.0 || newPosition.z !in 0.0..config.mapSize + 1.0) {
-                newPosition = Pos(
-                    newPosition.x.coerceIn(0.0..config.mapSize + 1.0),
-                    newPosition.y,
-                    newPosition.z.coerceIn(0.0..config.mapSize + 1.0),
-                    newPosition.yaw,
-                    newPosition.pitch
-                )
-            }
-        }
-    }
-
-    instance.eventNode().listen<PlayerUseItemEvent> { e ->
-        val item = e.player.getItemInHand(e.hand)
-        e.isCancelled = true
-        for (actionable in Actionable.registry) {
-            if (item.getTag(Tag.String("identifier")) == actionable.identifier) {
-                e.isCancelled = try {
-                    actionable.onInteract(e)
-                } catch(e: Exception) {
-                    log(e)
-                    true
-                }
-                break
-            }
-        }
-    }
-
-    instance.eventNode().listen<PlayerBlockInteractEvent> { e ->
-        val item = e.player.getItemInHand(e.hand)
-        val identifier = Building.getBuildingIdentifier(e.block.defaultState())
-        var callItemUse = true
-        if (identifier != null) {
-            val ref = players[e.player.uuid.toString()]?.getBuildingReferenceByIdentifier(identifier)?.get()
-            if (ref is Interactable) {
-                callItemUse = ref.onInteract(e)
-            }
-        }
-        if (callItemUse)
-            instance.eventNode().call(PlayerUseItemEvent(e.player, e.hand, item, 0))
-    }
-    log("Item use event registered")
-
-    instance.eventNode().listen<PlayerSwapItemEvent> {
-        it.isCancelled = true
-    }
-
-    instance.eventNode().listen<PlayerTickEvent> { e ->
-        val playerData = players[e.player.uuid.toString()] ?: return@listen
-
-        if (e.player.position.isUnderground) {
-            if (e.player.inventory[2].isAir)
-                TeleportBackItem.setItemSlot(e.player)
-        } else if (!e.player.inventory[2].isAir)
-            e.player.inventory[2] = ItemStack.AIR
-
-        val target = e.player.getTrueTarget(20)
-        if (target != null) {
-            val buildingPoint = target.buildingPosition
-            val playerPoint = target.playerPosition
-            val targetBlock = instance.getBlock(target)
-            val buildingBlock = instance.getBlock(buildingPoint).defaultState()
-            val playerBlock = instance.getBlock(playerPoint).defaultState()
-            val canAccess = anyAdjacentBlocksMatch(playerPoint, playerData.block)
-            when (playerBlock) {
-                Block.GRASS_BLOCK -> {
-                    if (canAccess) {
-                        ClaimItem.setItemSlot(e.player)
-                    } else {
-                        ColonyItem.setItemSlot(e.player)
-                    }
-                }
-
-                Block.DIAMOND_BLOCK -> {
-                    e.player.inventory.idle()
-                }
-
-                Block.SAND -> {
-                    if (canAccess) {
-                        ClaimWaterItem.setItemSlot(e.player)
-                    } else {
-                        e.player.inventory.idle()
-                    }
-                }
-
-                playerData.block -> {
-                    OwnedBlockItem.setItemSlot(e.player)
-                    if (blockIsWall(targetBlock)) {
-                        UpgradeWallItem.setItemSlot(e.player)
-                    }
-                }
-
-                else -> {
-                    if (canAccess) {
-                        AttackItem.setItemSlot(e.player)
-                    } else {
-                        e.player.inventory.idle()
-                    }
-                }
-            }
-            val y40 = target.buildingPosition.add(0.0, PIXEL_SIZE, 0.0)
-            val oneZero = y40.add(1.0 - PIXEL_SIZE, 0.0, 0.0)
-            val oneOne = y40.add(1.0 - PIXEL_SIZE, 0.0, 1.0 - PIXEL_SIZE)
-            val zeroOne = y40.add(0.0, 0.0, 1.0 - PIXEL_SIZE)
-            val targetParticles = mutableListOf<SendablePacket>()
-            val color = when(playerBlock) {
-                Block.GRASS_BLOCK -> if (canAccess) Color(NamedTextColor.GREEN)
-                    else Color(NamedTextColor.DARK_GREEN)
-
-                Block.SAND -> if (canAccess) Color(NamedTextColor.AQUA)
-                    else Color(NamedTextColor.DARK_AQUA)
-
-                Block.DIAMOND_BLOCK -> Color(NamedTextColor.DARK_GRAY)
-
-                playerData.block -> Color(NamedTextColor.GOLD)
-                else -> if (canAccess) Color(NamedTextColor.RED)
-                    else Color(NamedTextColor.DARK_RED)
-            }
-            val trailParticle = Particle.TRAIL.withColor(color).withDuration(config.targetParticleDuration)
-            targetParticles += ParticlePacket(
-                trailParticle.withTarget(oneZero), y40, Vec.ZERO, 1f, 1
-            )
-            targetParticles += ParticlePacket(
-                trailParticle.withTarget(oneOne), oneZero, Vec.ZERO, 1f, 1
-            )
-            targetParticles += ParticlePacket(
-                trailParticle.withTarget(zeroOne), oneOne, Vec.ZERO, 1f, 1
-            )
-            targetParticles += ParticlePacket(
-                trailParticle.withTarget(y40), zeroOne, Vec.ZERO, 1f, 1
-            )
-            e.player.sendPackets(targetParticles)
-        } else {
-            e.player.inventory.idle()
-        }
-    }
+    instances.values.onEach { it.registerTickEvent() }
     log("Player loop started...")
 
-    instance.eventNode().listen<PlayerDisconnectEvent> { e ->
-        val file = File("./player-data.json")
-        if (!file.exists()) {
-            file.createNewFile()
-        }
-        file.writeText(Json.encodeToString(players))
-        instance.saveChunksToStorage()
-    }
 
     minecraftServer.start(config.serverAddress, config.serverPort)
     log("GameServer online!")
@@ -546,25 +342,6 @@ fun main() = runBlocking { try {
     log(e)
 }}
 
-fun clearBlock(block: Block) {
-    scheduleImmediately {
-        log("clear block")
-        for (x in 0..config.mapSize) {
-            for (z in 0..config.mapSize) {
-                instance.loadChunk(Vec(x.toDouble(), z.toDouble())).thenRun {
-                    if (instance.getBlock(x, 38, z) == block) {
-                        if (instance.getBlock(x, 39, z) == Block.WATER) {
-                            ClaimWaterItem.destroyPlayerRaft(Vec(x.toDouble(), 39.0, z.toDouble()))
-                        } else {
-                            instance.setBlock(x, 39, z, Block.GRASS_BLOCK)
-                        }
-                        instance.setBlock(x, 40, z, Block.AIR)
-                    }
-                }
-            }
-        }
-    }
-}
 
 fun Entity.getTrueTarget(maxDistance: Int, onRayStep: ((pos: Point, block: Block) -> Unit)? = null): Point? {
     val playerEyePos = position.add(0.0, eyeHeight, 0.0)
@@ -646,25 +423,26 @@ fun idleItem(): ItemStack = item(Material.GRAY_DYE) {
 
 fun String.toUUID(): UUID? = UUID.fromString(this)
 
-fun anyAdjacentBlocksMatch(point: Point, block: Block): Boolean {
+fun Point.anyAdjacentBlocksMatch(block: Block, instance: Instance): Boolean {
     var ret = false
-    repeatAdjacent(point) {
+    repeatAdjacent {
         if (instance.getBlock(it) == block.defaultState()) ret = true
     }
     return ret
 }
+
 /**
  * Calls [fn] with each adjacent location relative to [point] starting from the north-west going clockwise
  */
-inline fun repeatAdjacent(point: Point, fn: (point: Point) -> Unit) {
-    fn(point.add(-1.0, 0.0, -1.0))
-    fn(point.add(0.0, 0.0, -1.0))
-    fn(point.add(1.0, 0.0, -1.0))
-    fn(point.add(1.0, 0.0, 0.0))
-    fn(point.add(1.0, 0.0, 1.0))
-    fn(point.add(0.0, 0.0, 1.0))
-    fn(point.add(-1.0, 0.0, 1.0))
-    fn(point.add(-1.0, 0.0, 0.0))
+inline fun Point.repeatAdjacent(fn: (point: Point) -> Unit) {
+    fn(add(-1.0, 0.0, -1.0))
+    fn(add(0.0, 0.0, -1.0))
+    fn(add(1.0, 0.0, -1.0))
+    fn(add(1.0, 0.0, 0.0))
+    fn(add(1.0, 0.0, 1.0))
+    fn(add(0.0, 0.0, 1.0))
+    fn(add(-1.0, 0.0, 1.0))
+    fn(add(-1.0, 0.0, 0.0))
 }
 
 var Entity.hasGravity: Boolean
@@ -675,7 +453,7 @@ val Cooldown.ticks: Int get() = (duration.toMillis() / 50).toInt()
 
 val Material.cooldownIdentifier: String get() = key().value()
 
-val Player.data: PlayerData? get() = players[uuid.toString()]
+val Player.data: PlayerData? get() = instances.fromInstance(instance)?.playerData?.get(uuid.toString())
 
 fun InventoryClickEvent.cancel() {
     inventory[slot] = clickedItem

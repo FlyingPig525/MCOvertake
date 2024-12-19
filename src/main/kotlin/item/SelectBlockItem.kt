@@ -3,12 +3,11 @@ package io.github.flyingpig525.item
 import com.sun.jdi.InvalidTypeException
 import cz.lukynka.prettylog.LogType
 import cz.lukynka.prettylog.log
-import io.github.flyingpig525.COLONY_SYMBOL
-import io.github.flyingpig525.clearBlock
+import io.github.flyingpig525.*
+import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.data.PlayerData
 import io.github.flyingpig525.data.PlayerData.Companion.toBlockList
 import io.github.flyingpig525.data.block.*
-import io.github.flyingpig525.players
 import net.bladehunt.kotstom.GlobalEventHandler
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -43,7 +42,7 @@ object SelectBlockItem : Actionable {
     override val itemMaterial: Material = Material.STRUCTURE_VOID
 
 
-    override fun getItem(uuid: UUID): ItemStack {
+    override fun getItem(uuid: UUID, instance: GameInstance): ItemStack {
         return item(itemMaterial) {
             itemName = "<green>$COLONY_SYMBOL <bold>Select Block</bold> $COLONY_SYMBOL".asMini()
             set(Tag.String("identifier"), identifier)
@@ -61,11 +60,12 @@ object SelectBlockItem : Actionable {
 
         val inventoryEventNode = EventNode.type("select-category-inv${event.player.uuid.mostSignificantBits}", EventFilter.INVENTORY, {_, inv -> inventory == inv}).listen<InventoryClickEvent> { e ->
             if (e.clickedItem.material() == Material.AIR) return@listen
+            val gameInstance = instances.fromInstance(e.instance) ?: return@listen
             e.player.inventory.cursorItem = ItemStack.AIR
             when(e.clickedItem) {
-                NATURAL_CATEGORY -> openCategory(NaturalCategory.entries, e)
-                UNDERGROUND_CATEGORY -> openCategory(UndergroundCategory.entries, e)
-                NETHER_CATEGORY -> openCategory(NetherCategory.entries, e)
+                NATURAL_CATEGORY -> openCategory(NaturalCategory.entries, e, gameInstance)
+                UNDERGROUND_CATEGORY -> openCategory(UndergroundCategory.entries, e, gameInstance)
+                NETHER_CATEGORY -> openCategory(NetherCategory.entries, e, gameInstance)
                 else -> {}
             }
             GlobalEventHandler.removeChildren("select-category-inv${event.player.uuid.mostSignificantBits}")
@@ -76,7 +76,7 @@ object SelectBlockItem : Actionable {
         return true
     }
 
-    private fun openCategory(entries: EnumEntries<*>, e: InventoryClickEvent) {
+    private fun openCategory(entries: EnumEntries<*>, e: InventoryClickEvent, instance: GameInstance) {
         val inventory = Inventory(InventoryType.CHEST_6_ROW, "Select Block")
 
 
@@ -93,21 +93,27 @@ object SelectBlockItem : Actionable {
         }
         e.player.openInventory(inventory)
 
-        val inventoryEventNode = EventNode.type("select-block-inv${e.player.uuid.mostSignificantBits}", EventFilter.INVENTORY, {_, inv -> inventory == inv}).listen<InventoryClickEvent> { e ->
-            if (e.clickedItem.material() == Material.AIR || e.clickedItem.material().block() in players.toBlockList()) return@listen
-            if (players[e.player.uuid.toString()] != null) {
-                val data = players[e.player.uuid.toString()]!!
-                clearBlock(data.block)
+        val inventoryEventNode = EventNode.type(
+            "select-block-inv${e.player.uuid.mostSignificantBits}",
+            EventFilter.INVENTORY,
+            {_, inv -> inventory == inv}
+        )
+            .listen<InventoryClickEvent> { e ->
+            if (e.clickedItem.material() == Material.AIR || e.clickedItem.material().block() in instance.playerData.toBlockList()) return@listen
+            if (instance.playerData[e.player.uuid.toString()] != null) {
+                val data = instance.playerData[e.player.uuid.toString()]!!
+                instance.clearBlock(data.block)
                 e.player.hideBossBar(data.matterBossBar)
                 e.player.hideBossBar(data.powerBossBar)
                 e.player.hideBossBar(data.resourcesBossBar)
             }
-            players[e.player.uuid.toString()] = PlayerData(e.player.uuid.toString(), e.clickedItem.material().block()!!)
+            instance.playerData[e.player.uuid.toString()] =
+                PlayerData(e.player.uuid.toString(), e.clickedItem.material().block()!!, e.player.username)
             e.player.closeInventory()
             for (i in 0..8) {
                 e.player.inventory[i] = ItemStack.AIR
             }
-            players[e.player.uuid.toString()]!!.setupPlayer(e.player)
+            instance.playerData[e.player.uuid.toString()]!!.setupPlayer(e.player)
             GlobalEventHandler.removeChildren("select-block-inv${e.player.uuid.mostSignificantBits}")
         }
 
@@ -115,12 +121,14 @@ object SelectBlockItem : Actionable {
     }
 
     override fun setItemSlot(player: Player) {
-        player.inventory[8] = getItem(player.uuid)
+        val gameInstance = instances.fromInstance(player.instance) ?: return
+        player.inventory[8] = getItem(player.uuid, gameInstance)
     }
 
     fun setAllSlots(player: Player) {
+        val gameInstance = instances.fromInstance(player.instance) ?: return
         for (i in 0..8) {
-            player.inventory[i] = getItem(player.uuid)
+            player.inventory[i] = getItem(player.uuid, gameInstance)
         }
     }
 }

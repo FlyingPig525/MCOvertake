@@ -3,6 +3,7 @@ package io.github.flyingpig525.item
 import cz.lukynka.prettylog.LogType
 import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
+import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.data.research.action.ActionData
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -31,8 +32,8 @@ object ColonyItem : Actionable {
     override val itemMaterial: Material = Material.CHEST
 
 
-    override fun getItem(uuid: UUID): ItemStack {
-        val playerData = players[uuid.toString()] ?: return ERROR_ITEM
+    override fun getItem(uuid: UUID, instance: GameInstance): ItemStack {
+        val playerData = instance.playerData[uuid.toString()] ?: return ERROR_ITEM
         return item(itemMaterial) {
             itemName = "<green>$COLONY_SYMBOL<bold> Instantiate Colony</bold> <dark_gray>-<red> $POWER_SYMBOL ${playerData.colonyCost}".asMini()
             set(Tag.String("identifier"), identifier)
@@ -40,7 +41,8 @@ object ColonyItem : Actionable {
     }
 
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
-        val data = players[event.player.uuid.toString()] ?: return true
+        val gameInstance = instances.fromInstance(event.instance) ?: return true
+        val data = gameInstance.playerData[event.player.uuid.toString()] ?: return true
         if (!data.colonyCooldown.isReady(Instant.now().toEpochMilli())) return true
         val actionData = ActionData.PlaceColony(data, event.instance, event.player).apply {
             cost = data.colonyCost
@@ -48,8 +50,8 @@ object ColonyItem : Actionable {
         }.also { data.research.onPlaceColony(it) }
         if (data.power - actionData.cost < 0) return true
         val target = event.player.getTrueTarget(20)?.playerPosition ?: return true
-        if (instance.getBlock(target) == Block.GRASS_BLOCK) {
-            claimWithParticle(event.player, target, Block.GRASS_BLOCK, data.block)
+        if (event.instance.getBlock(target) == Block.GRASS_BLOCK) {
+            claimWithParticle(event.player, target, Block.GRASS_BLOCK, data.block, gameInstance.instance)
             data.blocks++
             data.power -= data.colonyCost
             data.colonyCooldown = actionData.cooldown
@@ -65,6 +67,6 @@ object ColonyItem : Actionable {
     }
 
     override fun setItemSlot(player: Player) {
-        player.inventory[0] = getItem(player.uuid)
+        player.inventory[0] = getItem(player.uuid, instances.fromInstance(player.instance) ?: return)
     }
 }
