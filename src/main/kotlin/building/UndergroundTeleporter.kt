@@ -3,6 +3,7 @@ package io.github.flyingpig525.building
 import cz.lukynka.prettylog.LogType
 import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
+import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.data.PlayerData
 import io.github.flyingpig525.dsl.blockDisplay
 import kotlinx.serialization.Serializable
@@ -44,7 +45,8 @@ class UndergroundTeleporter : Building, Interactable {
     }
 
     override fun onInteract(e: PlayerBlockInteractEvent): Boolean {
-        val data = players[e.player.uuid.toString()] ?: return true
+        val gameInstance = instances.fromInstance(e.instance) ?: return true
+        val data = gameInstance.playerData[e.player.uuid.toString()] ?: return true
         val pos = e.blockPosition.add(0.5, 0.0, 0.5)
         if (e.instance.getBlock(pos.playerPosition) != data.block) return true
         e.player.teleport(pos.sub(0.0, 9.0, 0.0).asPos())

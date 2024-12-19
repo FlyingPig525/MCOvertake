@@ -3,6 +3,7 @@ package io.github.flyingpig525.item
 import cz.lukynka.prettylog.LogType
 import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
+import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.building.Building
 import io.github.flyingpig525.data.research.action.ActionData
 import io.github.flyingpig525.wall.blockIsWall
@@ -33,7 +34,7 @@ object BreakBuildingItem : Actionable {
     override val itemMaterial: Material = Material.IRON_PICKAXE
 
 
-    override fun getItem(uuid: UUID): ItemStack {
+    override fun getItem(uuid: UUID, instance: GameInstance): ItemStack {
         return item(itemMaterial) {
             itemName = "<gold>$PICKAXE_SYMBOL <bold>Destroy Building</bold>".asMini()
             amount = 1
@@ -43,7 +44,8 @@ object BreakBuildingItem : Actionable {
 
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
         val instance = event.instance
-        val data = players[event.player.uuid.toString()] ?: return true
+        val gameInstance = instances.fromInstance(instance) ?: return true
+        val data = gameInstance.playerData[event.player.uuid.toString()] ?: return true
         val target = event.player.getTrueTarget(20) ?: return true
         val playerBlockPos = target.playerPosition
         val groundPos = target.visiblePosition
@@ -72,6 +74,6 @@ object BreakBuildingItem : Actionable {
     }
 
     override fun setItemSlot(player: Player) {
-        player.inventory[5] = getItem(player.uuid)
+        player.inventory[5] = getItem(player.uuid, instances.fromInstance(player.instance) ?: return)
     }
 }

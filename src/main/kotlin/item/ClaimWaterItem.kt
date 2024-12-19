@@ -3,6 +3,7 @@ package io.github.flyingpig525.item
 import cz.lukynka.prettylog.LogType
 import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
+import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.data.research.action.ActionData
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -15,6 +16,7 @@ import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.Player
 import net.minestom.server.entity.metadata.display.BlockDisplayMeta
 import net.minestom.server.event.player.PlayerUseItemEvent
+import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
@@ -35,17 +37,16 @@ object ClaimWaterItem : Actionable {
     override val identifier: String = "block:claim_water"
     override val itemMaterial: Material = Material.WOODEN_AXE
 
-    override fun getItem(uuid: UUID): ItemStack {
-        val data = players[uuid.toString()] ?: return ERROR_ITEM
+    override fun getItem(uuid: UUID, instance: GameInstance): ItemStack {
+        val data = instance.playerData[uuid.toString()] ?: return ERROR_ITEM
         return item(itemMaterial) {
             itemName = "<gold>$WALL_SYMBOL <bold>Build Raft</bold><dark_grey> - <green>$MATTER_SYMBOL ${data.raftCost}".asMini()
         }.withTag(Tag.String("identifier"), identifier)
     }
 
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
-        // TODO: ADD COST AND STUFF
-        // Ensure can claim
-        val data = players[event.player.uuid.toString()] ?: return true
+        val gameInstance = instances.fromInstance(event.instance) ?: return true
+        val data = gameInstance.playerData[event.player.uuid.toString()] ?: return true
         if (!data.raftCooldown.isReady(Instant.now().toEpochMilli())) return true
         val target = event.player.getTrueTarget(20) ?: return true
         if (target.isUnderground) return true
@@ -55,9 +56,9 @@ object ClaimWaterItem : Actionable {
         }.also { data.research.onPlaceRaft(it) }
         if (data.organicMatter < actionData.cost) return true
         // Claim logic
-        instance.setBlock(target.playerPosition, data.block)
-        instance.setBlock(target.withY(40.0), Block.LILY_PAD)
-        spawnPlayerRaft(data.block, target.withY(40.0))
+        event.instance.setBlock(target.playerPosition, data.block)
+        event.instance.setBlock(target.withY(40.0), Block.LILY_PAD)
+        spawnPlayerRaft(data.block, target.withY(40.0), event.instance)
         data.blocks++
         data.raftCooldown = actionData.cooldown
         event.player.sendPacket(
@@ -69,7 +70,7 @@ object ClaimWaterItem : Actionable {
         return true
     }
 
-    fun spawnPlayerRaft(playerBlock: Block, point: Point) {
+    fun spawnPlayerRaft(playerBlock: Block, point: Point, instance: Instance) {
         Entity(EntityType.BLOCK_DISPLAY).also {
             it.hasGravity = false
             with((it.entityMeta as BlockDisplayMeta)) {
@@ -90,10 +91,10 @@ object ClaimWaterItem : Actionable {
         }
     }
 
-    fun destroyPlayerRaft(point: Point) =
+    fun destroyPlayerRaft(point: Point, instance: Instance) =
         instance.getNearbyEntities(point, 0.2).forEach { it.remove() }
 
     override fun setItemSlot(player: Player) {
-        player.inventory[0] = getItem(player.uuid)
+        player.inventory[0] = getItem(player.uuid, instances.fromInstance(player.instance) ?: return)
     }
 }

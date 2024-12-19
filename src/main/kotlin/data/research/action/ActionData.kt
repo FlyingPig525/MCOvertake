@@ -58,7 +58,7 @@ sealed class ActionData(val playerData: PlayerData, val instance: Instance, val 
     ) {
         var attackCost: Int = 0
         var attackCooldown: Cooldown = Cooldown(Duration.ZERO)
-        var targetData: PlayerData = PlayerData("", Block.AIR)
+        var targetData: PlayerData = PlayerData.NONE
     }
 
     class PreAttack(playerData: PlayerData, instance: Instance, player: Player) : ActionData(

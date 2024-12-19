@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "io.github.flyingpig525"
-version = "0.2-SNAPSHOT"
+version = "0.3-SNAPSHOT"
 
 repositories {
     mavenCentral()

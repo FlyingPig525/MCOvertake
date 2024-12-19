@@ -5,7 +5,7 @@ import io.github.flyingpig525.serialization.BlockSerializer
 import kotlinx.serialization.Serializable
 import net.minestom.server.instance.block.Block
 
-// These comments will eventually be used for wiki stuff i guess
+// These comments will eventually be used for wiki stuff I guess
 @Serializable
 data class Config(
     // Server address for game server and pack server, set to your servers public ip
@@ -14,7 +14,11 @@ data class Config(
     val serverPort: Int = 25565,
     // Server port for resource pack server, recommended to stay 25566
     val packServerPort: Int = 25566,
+    // List of names to be used for game instances
+    // Each name must be unique, as each instance will have its own directory
+    val instanceNames: Set<String> = setOf("instance1"),
     // List of usernames to be on the whitelist
+    // No whitelist if empty
     val whitelisted: Set<String> = emptySet(),
     // Message to show non-whitelisted players
     val notWhitelistedMessage: String = "<red><bold>Player not whitelisted\n</bold><grey>$DASH_BANNER\n<gold><bold>Please contact the server owner if you believe this is a mistake",
@@ -26,16 +30,6 @@ data class Config(
     val printSaveMessages: Boolean = false,
     // Delay in which the process check the console for commands in milliseconds (set >5000)
     val consolePollingDelay: Long = 5000,
-    // Scale for generation noise
-    val noiseScale: Double = 0.03,
-    // Threshold for noise result to be considered grass, else water
-    val noiseThreshold: Double = 0.35,
-    // Seed for noise, randomly generated when config is created. Change when resetting map
-    val noiseSeed: Long = (Long.MIN_VALUE..Long.MAX_VALUE).random(),
-    // Length and width of map (will always be a square)
-    val mapSize: Int = 1000,
-    // Block identifier for underground claimable tile, can be any block, but it is recommended to keep it a block players cant be
-    @Serializable(with = BlockSerializer::class) val undergroundBlock: Block = Block.BEDROCK,
     // Duration the target particles last in ticks
     val targetParticleDuration: Int = 15
 )

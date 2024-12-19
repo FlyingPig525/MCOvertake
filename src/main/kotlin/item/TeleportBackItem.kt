@@ -2,8 +2,10 @@ package io.github.flyingpig525.item
 
 import cz.lukynka.prettylog.LogType
 import cz.lukynka.prettylog.log
+import io.github.flyingpig525.GameInstance
+import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.data.block.Head.Companion.withHead
-import io.github.flyingpig525.players
+import io.github.flyingpig525.instances
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.extension.adventure.asMini
@@ -26,14 +28,15 @@ object TeleportBackItem : Actionable {
     override val identifier: String = "underground:back"
     override val itemMaterial: Material = Material.PLAYER_HEAD
 
-    override fun getItem(uuid: UUID): ItemStack =
+    override fun getItem(uuid: UUID, instance: GameInstance): ItemStack =
         item(Material.PLAYER_HEAD) {
             itemName = "<white><bold>Go Back".asMini()
             setTag(Tag.String("identifier"), identifier)
         }.withHead("6ccbf9883dd359fdf2385c90a459d737765382ec4117b04895ac4dc4b60fc")
 
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
-        val data = players[event.player.uuid.toString()] ?: return true
+        val gameInstance = instances.fromInstance(event.instance) ?: return true
+        val data = gameInstance.playerData[event.player.uuid.toString()] ?: return true
         event.player.teleport(data.lastTeleporterPos.last().asPos())
         data.lastTeleporterPos.remove(data.lastTeleporterPos.last())
         if (data.lastTeleporterPos.isEmpty()) {
@@ -43,6 +46,7 @@ object TeleportBackItem : Actionable {
     }
 
     override fun setItemSlot(player: Player) {
-        player.inventory[2] = getItem(player.uuid)
+        val gameInstance = instances.fromInstance(player.instance) ?: return
+        player.inventory[2] = getItem(player.uuid, gameInstance)
     }
 }

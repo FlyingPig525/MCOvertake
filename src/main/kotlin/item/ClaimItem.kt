@@ -3,6 +3,7 @@ package io.github.flyingpig525.item
 import cz.lukynka.prettylog.LogType
 import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
+import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.data.research.action.ActionData
 import net.bladehunt.kotstom.dsl.item.amount
 import net.bladehunt.kotstom.dsl.item.item
@@ -33,8 +34,8 @@ object ClaimItem : Actionable {
     override val itemMaterial: Material = Material.WOODEN_HOE
 
 
-    override fun getItem(uuid: UUID): ItemStack {
-        val data = players[uuid.toString()] ?: return ERROR_ITEM
+    override fun getItem(uuid: UUID, instance: GameInstance): ItemStack {
+        val data = instance.playerData[uuid.toString()] ?: return ERROR_ITEM
         return item(itemMaterial) {
             itemName = "<gold>$CLAIM_SYMBOL <bold>Expand</bold> <dark_gray>-<red> $POWER_SYMBOL ${data.claimCost}".asMini()
             amount = 1
@@ -44,14 +45,15 @@ object ClaimItem : Actionable {
     }
 
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
-        val data = players[event.player.uuid.toString()] ?: return true
+        val gameInstance = instances.fromInstance(event.instance) ?: return true
+        val data = gameInstance.playerData[event.player.uuid.toString()] ?: return true
         if (!data.claimCooldown.isReady(Instant.now().toEpochMilli())) return true
         var claimData = ActionData.ClaimLand(data, event.instance, event.player)
         claimData = data.research.onClaimLand(claimData)
         if (data.power - claimData.claimCost < 0) return true
         val target = event.player.getTrueTarget(20)?.playerPosition ?: return true
-        if (instance.getBlock(target) == Block.GRASS_BLOCK) {
-            claimWithParticle(event.player, target, Block.GRASS_BLOCK, data.block)
+        if (event.instance.getBlock(target) == Block.GRASS_BLOCK) {
+            claimWithParticle(event.player, target, Block.GRASS_BLOCK, data.block, gameInstance.instance)
             data.blocks++
             data.power -= claimData.claimCost
             data.claimCooldown = Cooldown(Duration.ofMillis(claimData.claimCooldown))
@@ -65,6 +67,6 @@ object ClaimItem : Actionable {
     }
 
     override fun setItemSlot(player: Player) {
-        player.inventory[0] = getItem(player.uuid)
+        player.inventory[0] = getItem(player.uuid, instances.fromInstance(player.instance) ?: return)
     }
 }

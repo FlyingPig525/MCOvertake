@@ -22,8 +22,7 @@ import java.util.*
 import kotlin.reflect.KProperty0
 
 @Serializable
-class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val block: Block) {
-    var playerDisplayName = try {instance.getPlayerByUuid(uuid.toUUID())?.username} catch(_: Exception) {null}
+class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val block: Block, var playerDisplayName: String) {
     var blocks: Int = 0
     val trainingCamps = TrainingCamp()
     val trainingCampCost: Int get() = computeGeneratorCost(trainingCamps.count)
@@ -115,7 +114,7 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
         matterExtractors.tick(this)
         val player = instance.getPlayerByUuid(UUID.fromString(uuid))
         if (player != null) {
-            if (playerDisplayName == null) playerDisplayName = player.username
+            if (playerDisplayName == "") playerDisplayName = player.username
             updateBossBars()
         }
     }
@@ -203,11 +202,11 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
     val research = ResearchContainer()
 
     companion object {
-        val NONE = PlayerData("", Block.AIR)
+        val NONE = PlayerData("", Block.AIR, "")
         fun Map<String, PlayerData>.getDataByBlock(block: Block): PlayerData? {
             return values.find { it.block == block }
         }
-        fun Map<String, PlayerData>.getDataByPoint(point: Point): PlayerData? {
+        fun Map<String, PlayerData>.getDataByPoint(point: Point, instance: Instance): PlayerData? {
             val block = instance.getBlock(point.playerPosition)
             return values.find { it.block == block}
         }

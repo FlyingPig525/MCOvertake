@@ -3,6 +3,7 @@ package io.github.flyingpig525.item
 import cz.lukynka.prettylog.LogType
 import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
+import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.building.UndergroundTeleporter
 import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerUseItemEvent
@@ -20,8 +21,8 @@ object UndergroundTeleporterItem : Actionable {
     override val identifier: String = "underground:teleport"
     override val itemMaterial: Material = Material.COPPER_GRATE
 
-    override fun getItem(uuid: UUID): ItemStack {
-        val data = players[uuid.toString()] ?: return ERROR_ITEM
+    override fun getItem(uuid: UUID, instance: GameInstance): ItemStack {
+        val data = instance.playerData[uuid.toString()] ?: return ERROR_ITEM
         return UndergroundTeleporter.getItem(data.teleporterCost, data.undergroundTeleporters.count)
     }
 
@@ -30,13 +31,14 @@ object UndergroundTeleporterItem : Actionable {
             SelectBuildingItem.onInteract(event)
             return true
         }
+        val gameInstance = instances.fromInstance(event.instance) ?: return true
         val instance = event.instance
         val target = event.player.getTrueTarget(20) ?: return true
-        val data = players[event.player.uuid.toString()] ?: return true
+        val data = gameInstance.playerData[event.player.uuid.toString()] ?: return true
         log("data")
         if (!target.isUnderground && instance.getBlock(target.visiblePosition).defaultState() != Block.WATER) return true
         log("allowed")
-        if (!checkBlockAvailable(data, target)) return true
+        if (!checkBlockAvailable(data, target, instance)) return true
         log("available")
         if (data.organicMatter < data.teleporterCost) return true
         log("cost")
@@ -46,7 +48,8 @@ object UndergroundTeleporterItem : Actionable {
     }
 
     override fun setItemSlot(player: Player) {
-        val data = players[player.uuid.toString()] ?: return
+        val gameInstance = instances.fromInstance(player.instance) ?: return
+        val data = gameInstance.playerData[player.uuid.toString()] ?: return
         data.undergroundTeleporters.select(player, data)
     }
 }

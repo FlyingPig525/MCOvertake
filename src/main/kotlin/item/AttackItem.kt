@@ -3,6 +3,7 @@ package io.github.flyingpig525.item
 import cz.lukynka.prettylog.LogType
 import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
+import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.building.*
 import io.github.flyingpig525.data.PlayerData
 import io.github.flyingpig525.data.PlayerData.Companion.getDataByPoint
@@ -18,6 +19,7 @@ import net.bladehunt.kotstom.extension.set
 import net.minestom.server.coordinate.Point
 import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerUseItemEvent
+import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
@@ -38,11 +40,11 @@ object AttackItem : Actionable {
     override val identifier: String = "block:attack"
     override val itemMaterial: Material = Material.DIAMOND_SWORD
 
-    override fun getItem(uuid: UUID): ItemStack {
+    override fun getItem(uuid: UUID, instance: GameInstance): ItemStack {
         return item(itemMaterial) {
-            val player = instance.getPlayerByUuid(uuid) ?: return ERROR_ITEM
+            val player = instance.instance.getPlayerByUuid(uuid) ?: return ERROR_ITEM
             val target = player.getTrueTarget(20) ?: return ERROR_ITEM
-            val buildingBlock = instance.getBlock(target.buildingPosition)
+            val buildingBlock = instance.instance.getBlock(target.buildingPosition)
             val targetData = getAttacking(player)
             val targetName = targetData?.playerDisplayName ?: ""
             val attackCost = getAttackCost(targetData, buildingBlock.wallLevel)
@@ -53,9 +55,10 @@ object AttackItem : Actionable {
     }
 
     private fun getAttacking(player: Player): PlayerData? {
+        val players = instances.fromInstance(player.instance).let { it?.playerData } ?: return null
         val target = player.getTrueTarget(20)!!
         // TODO: AFTER ADDING WALLS ADD WALL THINGS HERE
-        return players.getDataByPoint(target)
+        return players.getDataByPoint(target, player.instance)
     }
 
     private fun getAttackCost(targetData: PlayerData?, wallLevel: Int): Int {
@@ -75,8 +78,8 @@ object AttackItem : Actionable {
         return Cooldown(Duration.ofMillis(cooldownTicks*50))
     }
 
-    private fun attackRaft(targetData: PlayerData, point: Point) {
-        ClaimWaterItem.destroyPlayerRaft(point.withY(40.0))
+    private fun attackRaft(targetData: PlayerData, point: Point, instance: Instance) {
+        ClaimWaterItem.destroyPlayerRaft(point.withY(40.0), instance)
         targetData.blocks--
         instance.setBlock(point.withY(38.0), Block.SAND)
         instance.setBlock(point.buildingPosition, Block.AIR)
@@ -85,7 +88,8 @@ object AttackItem : Actionable {
 
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
         val instance = event.instance
-        val data = players[event.player.uuid.toString()] ?: return true
+        val gameInstance = instances.fromInstance(instance) ?: return true
+        val data = gameInstance.playerData[event.player.uuid.toString()] ?: return true
         if (!data.attackCooldown.isReady(Instant.now().toEpochMilli())) return true
         val target = event.player.getTrueTarget(20) ?: return true
         val buildingPoint = target.buildingPosition
@@ -116,7 +120,7 @@ object AttackItem : Actionable {
         val taken = when(buildingBlock) {
             Block.AIR -> { true }
             Block.LILY_PAD -> {
-                ClaimWaterItem.destroyPlayerRaft(buildingPoint)
+                ClaimWaterItem.destroyPlayerRaft(buildingPoint, instance)
                 targetData.blocks--
                 instance.setBlock(target.playerPosition, Block.SAND)
                 instance.setBlock(buildingPoint, Block.AIR)
@@ -128,7 +132,7 @@ object AttackItem : Actionable {
                     data.barracks.count++
                     return@run true
                 }
-                attackRaft(targetData, target)
+                attackRaft(targetData, target, instance)
                 if (targetPlayer != null) {
                     SelectBuildingItem.updatePlayerItem(targetPlayer)
                 }
@@ -140,7 +144,7 @@ object AttackItem : Actionable {
                     data.matterContainers.count++
                     return@run true
                 }
-                attackRaft(targetData, target)
+                attackRaft(targetData, target, instance)
                 if (targetPlayer != null) {
                     SelectBuildingItem.updatePlayerItem(targetPlayer)
                 }
@@ -152,7 +156,7 @@ object AttackItem : Actionable {
                     data.matterExtractors.count++
                     return@run true
                 }
-                attackRaft(targetData, target)
+                attackRaft(targetData, target, instance)
                 if (targetPlayer != null) {
                     SelectBuildingItem.updatePlayerItem(targetPlayer)
                 }
@@ -164,7 +168,7 @@ object AttackItem : Actionable {
                     data.trainingCamps.count++
                     return@run true
                 }
-                attackRaft(targetData, target)
+                attackRaft(targetData, target, instance)
                 if (targetPlayer != null) {
                     SelectBuildingItem.updatePlayerItem(targetPlayer)
                 }
@@ -176,7 +180,7 @@ object AttackItem : Actionable {
                     data.matterCompressors.count++
                     return@run true
                 }
-                attackRaft(targetData, target)
+                attackRaft(targetData, target, instance)
                 if (targetPlayer != null) {
                     SelectBuildingItem.updatePlayerItem(targetPlayer)
                 }
@@ -188,7 +192,7 @@ object AttackItem : Actionable {
                     data.undergroundTeleporters.count++
                     return@run true
                 }
-                attackRaft(targetData, target)
+                attackRaft(targetData, target, instance)
                 if (targetPlayer != null) {
                     SelectBuildingItem.updatePlayerItem(targetPlayer)
                 }
@@ -203,10 +207,10 @@ object AttackItem : Actionable {
                     // PARTICLES
                 } else {
                     instance.setBlock(buildingPoint, lastWall(wallLevel))
-                    UpgradeWallItem.updateWall(buildingPoint)
+                    UpgradeWallItem.updateWall(buildingPoint, instance)
                     // PARTICLES
                 }
-                repeatAdjacent(buildingPoint) { UpgradeWallItem.updateWall(it) }
+                buildingPoint.repeatAdjacent { UpgradeWallItem.updateWall(it, instance) }
                 false
             }
         }
@@ -214,19 +218,19 @@ object AttackItem : Actionable {
             postAttack.playerData.blocks++
             postAttack.targetData.blocks--
             if (Building.blockIsBuilding(buildingBlock)) {
-                claimWithParticle(event.player, target, postAttack.playerData.block)
+                claimWithParticle(event.player, target, postAttack.playerData.block, instance)
                 if (targetPlayer != null) {
                     SelectBuildingItem.updatePlayerItem(targetPlayer)
                 }
                 SelectBuildingItem.updatePlayerItem(event.player)
             } else {
-                claimWithParticle(event.player, target, postAttack.playerData.block)
+                claimWithParticle(event.player, target, postAttack.playerData.block, instance)
             }
         }
         data.attackCooldown = postAttack.attackCooldown
         event.player.sendPacket(
             SetCooldownPacket(
-                getItem(event.player.uuid).material().cooldownIdentifier,
+                getItem(event.player.uuid, gameInstance).material().cooldownIdentifier,
                 data.attackCooldown.ticks
             )
         )
@@ -242,6 +246,6 @@ object AttackItem : Actionable {
     }
 
     override fun setItemSlot(player: Player) {
-        player.inventory[0] = getItem(player.uuid)
+        player.inventory[0] = getItem(player.uuid, instances.fromInstance(player.instance)!!)
     }
 }
