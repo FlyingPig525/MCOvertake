@@ -72,7 +72,7 @@ class UndergroundTeleporter : Building, Interactable {
         }
 
         override fun getItem(playerData: PlayerData): ItemStack {
-            return getItem(1, 1)
+            return getItem(playerData.teleporterCost, playerData.undergroundTeleporters.count)
         }
 
         override fun getResourceUse(currentDisposableResources: Int): Int {

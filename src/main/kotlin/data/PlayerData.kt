@@ -42,7 +42,7 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
     val colonyCost: Int get() = claimCost * 10
     val raftCost: Int get() = (blocks.floorDiv(10000) * 500) + 500
     val undergroundTeleporters = UndergroundTeleporter()
-    val teleporterCost: Int get() = undergroundTeleporters.count * 1000
+    val teleporterCost: Int get() = undergroundTeleporters.count * 1000 + 1000
     @Transient var claimCooldown = Cooldown(Duration.ofMillis(maxClaimCooldown))
     @Transient var colonyCooldown = Cooldown(Duration.ofSeconds(if (blocks > 0) 15 else 0))
     @Transient var attackCooldown = Cooldown(Duration.ofSeconds(10))
