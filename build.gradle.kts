@@ -29,6 +29,7 @@ dependencies {
     implementation("net.minestom:minestom-snapshots:1_21_4-046d18702d")
     implementation("net.bladehunt:kotstom:0.3.0")
     implementation("net.kyori:adventure-text-minimessage:4.17.0")
+    implementation("dev.hollowcube:polar:1.12.1")
 
     // Noise lib
     implementation("de.articdive:jnoise-pipeline:4.1.0")

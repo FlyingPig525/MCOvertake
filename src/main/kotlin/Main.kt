@@ -35,6 +35,7 @@ import net.bladehunt.kotstom.extension.adventure.asMini
 import net.bladehunt.kotstom.extension.get
 import net.bladehunt.kotstom.extension.roundToBlock
 import net.bladehunt.kotstom.extension.set
+import net.hollowcube.polar.PolarLoader
 import net.kyori.adventure.resource.ResourcePackInfo
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -73,6 +74,7 @@ import team.unnamed.creative.server.ResourcePackServer
 import java.io.File
 import java.io.PrintStream
 import java.net.URI
+import java.nio.file.Path
 import java.util.*
 
 
@@ -150,7 +152,7 @@ fun main() = runBlocking { try {
         .clamp(-1.0, 1.0)
         .build()
     instance = InstanceManager.createInstanceContainer().apply {
-        chunkLoader = AnvilLoader("world/world")
+        chunkLoader = PolarLoader(Path.of("world.polar"))
         setGenerator { unit ->
             unit.modifier().setAll { x, y, z ->
                 if (x in 0..config.mapSize && z in 0..config.mapSize) {
