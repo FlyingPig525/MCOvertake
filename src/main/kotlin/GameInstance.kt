@@ -33,6 +33,7 @@ import net.minestom.server.color.Color
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.GameMode
+import net.minestom.server.entity.Player
 import net.minestom.server.event.player.*
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.InstanceContainer
@@ -56,7 +57,7 @@ import kotlin.io.path.exists
 class GameInstance(val path: Path, val name: String) {
     lateinit var instance: InstanceContainer
 
-    val instanceConfig: InstanceConfig = run {
+    private val instanceConfig: InstanceConfig = run {
         val file = path.resolve("instance-config.json").toFile()
         if (file.exists()) {
             return@run json.decodeFromString(file.readText())
@@ -146,9 +147,10 @@ class GameInstance(val path: Path, val name: String) {
                     }
 
                     playerData.block -> {
-                        OwnedBlockItem.setItemSlot(e.player)
-                        if (blockIsWall(targetBlock)) {
+                        if (blockIsWall(buildingBlock)) {
                             UpgradeWallItem.setItemSlot(e.player)
+                        } else {
+                            OwnedBlockItem.setItemSlot(e.player)
                         }
                     }
 
@@ -261,27 +263,41 @@ class GameInstance(val path: Path, val name: String) {
     fun registerTasks() {
         // General player tick/extractor tick
         instance.scheduler().scheduleTask({
-            for (uuid in playerData.keys) {
-                val data = playerData[uuid]!!
-                data.playerTick(instance)
-                data.matterExtractors.tick(data)
+            try {
+                for (uuid in playerData.keys) {
+                    val data = playerData[uuid]!!
+                    data.playerTick(instance)
+                }
+            } catch (e: Exception) {
+                log("A")
+                log(e)
             }
         }, TaskSchedule.tick(30), TaskSchedule.tick(30))
 
         // Camp tick
         instance.scheduler().scheduleTask({
-            for (uuid in playerData.keys) {
-                val data = playerData[uuid]!!
-                data.powerTick()
-                data.updateBossBars()
+            try {
+                for (uuid in playerData.keys) {
+                    val data = playerData[uuid]!!
+                    data.powerTick()
+                    data.updateBossBars()
+                }
+            } catch (e: Exception) {
+                log("AA")
+                log(e)
             }
         }, TaskSchedule.tick(70), TaskSchedule.tick(70))
 
         // Mechanical part tick
         instance.scheduler().scheduleTask({
-            for (uuid in playerData.keys) {
-                val data = playerData[uuid]!!
-                data.mechanicalTick()
+            try {
+                for (uuid in playerData.keys) {
+                    val data = playerData[uuid]!!
+                    data.mechanicalTick()
+                }
+            } catch (e: Exception) {
+                log("AAA")
+                log(e)
             }
         }, TaskSchedule.tick(400), TaskSchedule.tick(400))
 
@@ -326,7 +342,7 @@ class GameInstance(val path: Path, val name: String) {
         }
     }
 
-    suspend fun setupInstance() = coroutineScope {
+    suspend fun setupInstance(player: Player? = null) = coroutineScope {
         val noise = JNoise.newBuilder()
             .superSimplex(
                 SuperSimplexNoiseGenerator.newBuilder().setSeed(instanceConfig.noiseSeed).setVariant2D(
@@ -367,40 +383,49 @@ class GameInstance(val path: Path, val name: String) {
             }
             setChunkSupplier(::LightingChunk)
         }
-        launch {
-            val displayBuildings = Building.BuildingCompanion.registry.filter { it is DisplayEntityBlock }
-            for (x in 0..instanceConfig.mapSize) {
-                for (z in 0..instanceConfig.mapSize) {
-                    val point = Vec(x.toDouble(), 39.0, z.toDouble())
-                    instance.loadChunk(point).thenRunAsync {
-                        val playerBlock = instance.getBlock(x, 38, z)
-                        if (instance.getBlock(x, 39, z) == Block.WATER && instance.getBlock(x, 38, z) != Block.SAND) {
-                            ClaimWaterItem.spawnPlayerRaft(playerBlock, Vec(x.toDouble(), 40.0, z.toDouble()), instance)
-                        }
-                        onAllBuildingPositions(point) {
-                            for (building in displayBuildings) {
-                                if ((building as DisplayEntityBlock).checkShouldSpawn(it, instance)) {
-                                    (building as DisplayEntityBlock).spawn(it, instance)
-                                    break
+        player?.sendMessage("<green>Created instance world".asMini())
+        // Player only exists on first creation through commands
+        if (player == null) {
+            launch {
+                val displayBuildings = Building.BuildingCompanion.registry.filter { it is DisplayEntityBlock }
+                for (x in 0..instanceConfig.mapSize) {
+                    for (z in 0..instanceConfig.mapSize) {
+                        val point = Vec(x.toDouble(), 39.0, z.toDouble())
+                        instance.loadChunk(point).thenRunAsync {
+                            val playerBlock = instance.getBlock(x, 38, z)
+                            if (instance.getBlock(x, 39, z) == Block.WATER && instance.getBlock(x, 38, z) != Block.SAND) {
+                                ClaimWaterItem.spawnPlayerRaft(playerBlock, Vec(x.toDouble(), 40.0, z.toDouble()), instance)
+                            }
+                            onAllBuildingPositions(point) {
+                                for (building in displayBuildings) {
+                                    if ((building as DisplayEntityBlock).checkShouldSpawn(it, instance)) {
+                                        (building as DisplayEntityBlock).spawn(it, instance)
+                                        break
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
 //            log("Spawned display entities...")
+            }
         }
         instance.setTag(Tag.String("name"), name)
         instance.saveInstance()
     }
 
-    fun totalInit() = runBlocking {
-        setupInstance()
+    fun totalInit(player: Player? = null) = runBlocking {
+        setupInstance(player)
         setupSpawning()
+        player?.sendMessage("<green>Instance spawning setup".asMini())
         setupScoreboard()
+        player?.sendMessage("<green>Instance scoreboard logic setup".asMini())
         registerInteractionEvents()
+        player?.sendMessage("<green>Instance events registered".asMini())
         registerTasks()
+        player?.sendMessage("<green>Instance tasks registered".asMini())
         registerTickEvent()
+        player?.sendMessage("<green>Instance player tick handler registered".asMini())
     }
 
     fun clearBlock(block: Block) {
@@ -437,5 +462,7 @@ class GameInstance(val path: Path, val name: String) {
             // Random string so it doesn't return anything on accident
             return this[instance.getTag(Tag.String("name")) ?: "189271890379012837uoahwd-8127"]
         }
+
+        val Instance.gameInstance get() = instances.fromInstance(this)
     }
 }

@@ -1,10 +1,6 @@
 package io.github.flyingpig525
 
 import cz.lukynka.prettylog.*
-import de.articdive.jnoise.generators.noise_parameters.simplex_variants.Simplex2DVariant
-import de.articdive.jnoise.generators.noisegen.opensimplex.SuperSimplexNoiseGenerator
-import de.articdive.jnoise.modules.octavation.fractal_functions.FractalFunction
-import de.articdive.jnoise.pipeline.JNoise
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.building.*
 import io.github.flyingpig525.console.Command
@@ -16,7 +12,6 @@ import io.github.flyingpig525.data.InstanceConfig
 import io.github.flyingpig525.data.PlayerData
 import io.github.flyingpig525.item.*
 import io.github.flyingpig525.log.MCOvertakeLogType
-import io.github.flyingpig525.wall.blockIsWall
 import kotlinx.coroutines.*
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToString
@@ -36,29 +31,30 @@ import net.bladehunt.kotstom.extension.roundToBlock
 import net.bladehunt.kotstom.extension.set
 import net.kyori.adventure.resource.ResourcePackInfo
 import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
 import net.minestom.server.collision.ShapeImpl
-import net.minestom.server.color.Color
 import net.minestom.server.command.builder.CommandExecutor
-import net.minestom.server.command.builder.arguments.Argument
 import net.minestom.server.command.builder.arguments.ArgumentString
 import net.minestom.server.command.builder.suggestion.SuggestionEntry
 import net.minestom.server.coordinate.Point
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.Entity
+import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
 import net.minestom.server.event.EventFilter
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.inventory.InventoryClickEvent
+import net.minestom.server.event.inventory.InventoryPreClickEvent
 import net.minestom.server.event.item.ItemDropEvent
 import net.minestom.server.event.player.*
 import net.minestom.server.event.server.ServerListPingEvent
 import net.minestom.server.extras.MojangAuth
 import net.minestom.server.instance.Instance
+import net.minestom.server.instance.InstanceContainer
 import net.minestom.server.instance.LightingChunk
 import net.minestom.server.instance.block.Block
+import net.minestom.server.inventory.AbstractInventory
 import net.minestom.server.inventory.Inventory
 import net.minestom.server.inventory.InventoryType.*
 import net.minestom.server.inventory.PlayerInventory
@@ -66,11 +62,7 @@ import net.minestom.server.inventory.click.ClickType
 import net.minestom.server.item.ItemComponent
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
-import net.minestom.server.network.packet.server.SendablePacket
-import net.minestom.server.network.packet.server.play.ParticlePacket
-import net.minestom.server.particle.Particle
 import net.minestom.server.tag.Tag
-import net.minestom.server.timer.Task
 import net.minestom.server.timer.TaskSchedule
 import net.minestom.server.utils.time.Cooldown
 import team.unnamed.creative.serialize.minecraft.MinecraftResourcePackReader
@@ -112,6 +104,7 @@ lateinit var config: Config
 lateinit var parentInstanceConfig: InstanceConfig
 
 var instances: MutableMap<String, GameInstance> = mutableMapOf()
+lateinit var lobbyInstance: InstanceContainer
 
 fun main() = runBlocking { try {
     LoggerSettings.saveToFile = true
@@ -151,9 +144,9 @@ fun main() = runBlocking { try {
         .build()
     log("Resource pack loaded...", MCOvertakeLogType.FILESYSTEM)
 
-    val lobbyInstance = InstanceManager.createInstanceContainer().apply {
+    lobbyInstance = InstanceManager.createInstanceContainer().apply {
         setGenerator { unit ->
-            unit.modifier().fillHeight(9, 10, Block.GRASS_BLOCK)
+            unit.fork(Vec(0.0, -1.0, 0.0), Vec(1.0, 1.0, 1.0)).modifier().fillHeight(9, 10, Block.GRASS_BLOCK)
         }
         setChunkSupplier(::LightingChunk)
     }
@@ -186,7 +179,7 @@ fun main() = runBlocking { try {
         if (player.username in config.opUsernames && player.uuid.toString() in config.opUUID) {
             player.permissionLevel = 4
         }
-        player.respawnPoint = Pos(5.0, 11.0, 5.0)
+        player.respawnPoint = Pos(8.0, 11.0, 8.0)
         player.sendResourcePacks(ResourcePackInfo.resourcePackInfo()
             .hash(builtResourcePack.hash())
             .uri(URI("http://${config.serverAddress}:${config.packServerPort}/${builtResourcePack.hash()}.zip"))
@@ -197,12 +190,16 @@ fun main() = runBlocking { try {
     lobbyInstance.eventNode().listen<PlayerSpawnEvent> { e ->
         e.player.teleport(Pos(5.0, 11.0, 5.0))
         e.player.isAllowFlying = true
+        e.player.gameMode = GameMode.ADVENTURE
         e.player.inventory[0] = item(Material.COMPASS) {
             itemName = "<gradient:green:gold:$scoreboardTitleProgress><bold>MCOvertake Game Instances".asMini()
         }
+        e.player.inventory.addInventoryCondition { _, _, _, inventoryConditionResult ->
+            inventoryConditionResult.isCancel = true
+        }
     }
     lobbyInstance.eventNode().listen<PlayerSwapItemEvent> { it.isCancelled = true }
-    lobbyInstance.eventNode().listen<InventoryClickEvent> { it.cancel() }
+//    lobbyInstance.eventNode().listen<InventoryPreClickEvent> { it.isCancelled = true }
     lobbyInstance.eventNode().listen<ItemDropEvent> { it.isCancelled = true }
     lobbyInstance.eventNode().listen<PlayerTickEvent> { e ->
         e.player.inventory[0] =
@@ -233,8 +230,8 @@ fun main() = runBlocking { try {
                 "instance-picker${e.player.uuid.mostSignificantBits}",
                 EventFilter.INSTANCE)
             { it.instance == lobbyInstance }
-            node.listen<InventoryClickEvent> {
-                it.cancel()
+            node.listen<InventoryPreClickEvent> {
+                it.isCancelled = true
                 if (it.inventory != inventory) {
                     lobbyInstance.eventNode().removeChildren("instance-picker${e.player.uuid.mostSignificantBits}")
                 }
@@ -306,15 +303,29 @@ fun main() = runBlocking { try {
             sender.inventory.clear()
             sender.instance = lobbyInstance
             sender.removeBossBars()
-            sender.sendMessage("<gray>Sending you to the lobby...".asMini())
+            sender.sendMessage("<gray>Sending you to the <red>lobby<gray>...".asMini())
         }
     }
     val createInstanceCommand = kommand {
         name = "createInstance"
+        buildSyntax {
+            condition {
+                player.permissionLevel == 4
+            }
+            executor {
+                player.sendMessage("<red><bold>Missing required arguments!".asMini())
+            }
+        }
+
         buildSyntax(ArgumentString("name")) {
-            executorAsync {
+            condition {
+                player.permissionLevel == 4
+            }
+            onlyPlayers()
+            executorAsync(Dispatchers.IO) {
                 val name = context.getRaw("name")
                 try {
+                    player.sendMessage("<green>Attempting to create instance $name".asMini())
                     if (name == "") {
                         player.sendMessage("<red><bold>Invalid instance name!".asMini())
                         return@executorAsync
@@ -323,7 +334,7 @@ fun main() = runBlocking { try {
                         player.sendMessage("<red><bold>Instance \"$name\" already exists!".asMini())
                         return@executorAsync
                     }
-                    instances[name] = GameInstance(Path.of("instances", name), name).apply { totalInit() }
+                    instances[name] = GameInstance(Path.of("instances", name), name).apply { totalInit(player) }
                     config.instanceNames += name
                     configFile.writeText(json.encodeToString(config))
                     player.sendMessage("<green><bold>Created instance \"$name\" successfully!".asMini())
@@ -353,16 +364,25 @@ fun main() = runBlocking { try {
                 }
             }
         }
+
+        defaultExecutor {
+            player.sendMessage("<red><bold>Missing required arguments!".asMini())
+        }
         buildSyntax(argument) {
+            condition {
+                player.permissionLevel >= 4
+            }
             onlyPlayers()
             executorAsync {
                 val name = get(argument)
                 if (name !in instances.keys) {
                     player.sendMessage("<red><bold>Instance \"$name\" does not exist!".asMini())
+                    return@executorAsync
                 }
                 val gameInstance = instances[name]!!
-                if (!gameInstance.instance.players.isEmpty()) {
+                if (gameInstance.instance.players.isNotEmpty()) {
                     player.sendMessage("<red><bold>Cannot delete an instance with players!".asMini())
+                    return@executorAsync
                 }
                 InstanceManager.unregisterInstance(gameInstance.instance)
                 gameInstance.delete()
@@ -376,12 +396,18 @@ fun main() = runBlocking { try {
     }
     val gcCommand = kommand {
         name = "gc"
-        defaultExecutor {
-            var ramUsage = (BenchmarkManager.usedMemory / 1e6).toLong()
-            player.sendMessage("Before: ${ramUsage}mb")
-            System.gc()
-            ramUsage = (BenchmarkManager.usedMemory / 1e6).toLong()
-            player.sendMessage("After: ${ramUsage}mb")
+
+        buildSyntax {
+            condition {
+                player.permissionLevel >= 4
+            }
+            executor {
+                var ramUsage = (BenchmarkManager.usedMemory / 1e6).toLong()
+                player.sendMessage("Before: ${ramUsage}mb")
+                System.gc()
+                ramUsage = (BenchmarkManager.usedMemory / 1e6).toLong()
+                player.sendMessage("After: ${ramUsage}mb")
+            }
         }
     }
     CommandManager.register(createInstanceCommand, lobbyCommand, tickCommand, deleteInstanceCommand, gcCommand)
@@ -440,8 +466,9 @@ fun main() = runBlocking { try {
             }
             delay(config.consolePollingDelay)
         }
-        log("Console loop failed!", LogType.ERROR)
-    }}
+    }}.invokeOnCompletion {
+        log("Console loop failed! || ${it?.cause?.message}", LogType.ERROR)
+    }
     log("Console loop running!")
 } catch (e: Exception) {
     log(e)
@@ -520,6 +547,11 @@ fun scheduleImmediately(fn: () -> Unit) =
 fun PlayerInventory.idle() {
     set(0, idleItem())
 }
+
+fun AbstractInventory.custom() {
+    setTag(Tag.Integer("server-created-inventory"), 1)
+}
+fun AbstractInventory.isCustom() = hasTag(Tag.Integer("server-created-inventory"))
 
 fun idleItem(): ItemStack = item(Material.GRAY_DYE) {
     itemName = "".asMini()

@@ -1,10 +1,10 @@
 package io.github.flyingpig525.console
 
 import cz.lukynka.prettylog.log
-import io.github.flyingpig525.data.PlayerData
+import io.github.flyingpig525.config
 import io.github.flyingpig525.instances
+import io.github.flyingpig525.json
 import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import java.io.File
 
 object SaveCommand : Command {
@@ -16,12 +16,22 @@ object SaveCommand : Command {
     override val names: List<String> = listOf("save")
 
     override fun validate(arguments: List<String>): Boolean {
-        return arguments.size == 1 && arguments[0] in names
+        return (arguments.size == 1 || arguments[1] == "config") && arguments[0] in names
     }
 
     override fun execute(arguments: List<String>) {
-        log("Saving...")
-        instances.values.onEach { it.save() }
-        log("Game data saved")
+        if (arguments.size == 1) {
+            log("Saving...")
+            instances.values.onEach { it.save() }
+            log("Game data saved")
+        } else {
+            log("Saving main config")
+            val configFile = File("config.json")
+            if (!configFile.exists()) {
+                configFile.createNewFile()
+            }
+            configFile.writeText(json.encodeToString(config))
+            log("Saved main config")
+        }
     }
 }

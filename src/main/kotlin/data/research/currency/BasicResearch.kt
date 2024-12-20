@@ -3,6 +3,7 @@ package io.github.flyingpig525.data.research.currency
 import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade
 import io.github.flyingpig525.data.research.upgrade.T2
 import io.github.flyingpig525.data.research.upgrade.TestUpgrade
+import io.github.flyingpig525.data.research.upgrade.TripleMatter
 import kotlinx.serialization.Required
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
@@ -17,5 +18,5 @@ class BasicResearch : ResearchCurrency {
     @Transient override val colorItem: Material = Material.CYAN_WOOL
     @Required override var internalLevel: Int = 1
     @Required override var count: Long = 0
-    @Required override val upgrades: List<ResearchUpgrade> = listOf(TestUpgrade(), T2())
+    @Required override val upgrades: List<ResearchUpgrade> = listOf(TestUpgrade(), T2(), TripleMatter())
 }

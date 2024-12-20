@@ -4,14 +4,12 @@ import io.github.flyingpig525.building.Building
 import io.github.flyingpig525.data.PlayerData
 import net.minestom.server.entity.Player
 import net.minestom.server.instance.Instance
-import net.minestom.server.instance.block.Block
-import net.minestom.server.network.player.PlayerConnection
 import net.minestom.server.utils.time.Cooldown
 import java.time.Duration
 import kotlin.reflect.KProperty0
 
 // TODO: FINISH ADDING EVENTS
-sealed class ActionData(val playerData: PlayerData, val instance: Instance, val player: Player?) {
+sealed class ActionData(val playerData: PlayerData, val instance: Instance?, val player: Player?) {
     class Attacked(playerData: PlayerData, instance: Instance, player: Player?) : ActionData(
         playerData, instance,
         player
@@ -81,5 +79,9 @@ sealed class ActionData(val playerData: PlayerData, val instance: Instance, val 
     ) {
         var wallLevel: Int = 0
         var building: KProperty0<Building>? = null
+    }
+
+    class MatterBuildingTick(playerData: PlayerData) : ActionData(playerData, null, null) {
+        var increase: Double = 0.0
     }
 }

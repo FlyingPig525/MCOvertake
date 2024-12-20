@@ -1,20 +1,18 @@
 package io.github.flyingpig525.data.research
 
-import io.github.flyingpig525.data.research.action.ActionData
 import io.github.flyingpig525.data.research.action.ActionData.*
 import io.github.flyingpig525.data.research.currency.BasicResearch
 import io.github.flyingpig525.data.research.currency.ResearchCurrency
-import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade
 import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade.Companion.onAttacked
 import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade.Companion.onBuildWall
 import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade.Companion.onClaimLand
 import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade.Companion.onDestroyBuilding
+import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade.Companion.onMatterBuildingTick
 import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade.Companion.onPlaceColony
 import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade.Companion.onPlaceRaft
 import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade.Companion.onPostAttack
 import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade.Companion.onPreAttack
 import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade.Companion.onUpgradeWall
-import kotlinx.coroutines.flow.asFlow
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -66,6 +64,10 @@ class ResearchContainer : Iterable<ResearchCurrency> {
     }
     fun onDestroyBuilding(eventData: DestroyBuilding): DestroyBuilding {
         var data = basicResearch.upgrades.onDestroyBuilding(eventData)
+        return data
+    }
+    fun onMatterBuildingTick(eventData: MatterBuildingTick): MatterBuildingTick {
+        var data = basicResearch.upgrades.onMatterBuildingTick(eventData)
         return data
     }
 }

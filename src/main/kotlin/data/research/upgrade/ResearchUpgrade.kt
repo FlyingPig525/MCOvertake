@@ -1,6 +1,5 @@
 package io.github.flyingpig525.data.research.upgrade
 
-import io.github.flyingpig525.data.research.action.*
 import io.github.flyingpig525.data.research.action.ActionData.*
 import io.github.flyingpig525.data.research.currency.ResearchCurrency
 import kotlinx.serialization.Required
@@ -43,8 +42,9 @@ sealed class ResearchUpgrade {
      * Executes when another player attacks
      */
     open fun onAttacked(eventData: Attacked): Attacked? = null
+    open fun onMatterBuildingTick(eventData: MatterBuildingTick): MatterBuildingTick? = null
 
-    open fun item(): ItemStack = ItemStack.AIR
+    abstract fun item(): ItemStack
 
     open fun onPurchase(clickEvent: InventoryClickEvent, currency: ResearchCurrency): PurchaseState {
         if (level == maxLevel) return PurchaseState.MaxLevel(currency, this)
@@ -136,6 +136,13 @@ sealed class ResearchUpgrade {
             var data = eventData
             forEach {
                 data = it.onDestroyBuilding(data) ?: data
+            }
+            return data
+        }
+        fun List<ResearchUpgrade>.onMatterBuildingTick(eventData: MatterBuildingTick): MatterBuildingTick {
+            var data = eventData
+            forEach {
+                data = it.onMatterBuildingTick(data) ?: data
             }
             return data
         }

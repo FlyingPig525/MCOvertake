@@ -23,7 +23,7 @@ class T2 : ResearchUpgrade() {
 
     override fun onPurchase(clickEvent: InventoryClickEvent, currency: ResearchCurrency): PurchaseState {
         if (level >= maxLevel) return PurchaseState.MaxLevel(currency, this)
-        currency.count += 100
+        currency.count += (100 * level) + 100
         level++
         return PurchaseState.Success
     }

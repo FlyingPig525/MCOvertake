@@ -1,15 +1,12 @@
 package io.github.flyingpig525.data.research.upgrade
 
-import cz.lukynka.prettylog.log
 import io.github.flyingpig525.data.research.action.ActionData
-import io.github.flyingpig525.data.research.currency.ResearchCurrency
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.dsl.item.lore
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.bladehunt.kotstom.extension.adventure.noItalic
-import net.minestom.server.event.inventory.InventoryClickEvent
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import net.minestom.server.utils.time.Cooldown
@@ -35,7 +32,7 @@ class TestUpgrade : ResearchUpgrade() {
 
     override fun onClaimLand(eventData: ActionData.ClaimLand): ActionData.ClaimLand? {
         if (level == 0) return null
-        log("Claim Land")
+//        log("Claim Land")
         return eventData.apply {
             claimCooldown = 0
             claimCost = 0
@@ -44,14 +41,14 @@ class TestUpgrade : ResearchUpgrade() {
 
     override fun onAttacked(eventData: ActionData.Attacked): ActionData.Attacked? {
         if (level == 0) return null
-        log("Attacked")
+//        log("Attacked")
         eventData.playerData.power += 12
         return eventData
     }
 
     override fun onBuildWall(eventData: ActionData.BuildWall): ActionData.BuildWall? {
         if (level == 0) return null
-        log("Build Wall")
+//        log("Build Wall")
         eventData.cost = 0
         eventData.cooldown = Cooldown(Duration.ZERO)
         return eventData
@@ -59,14 +56,14 @@ class TestUpgrade : ResearchUpgrade() {
 
     override fun onDestroyBuilding(eventData: ActionData.DestroyBuilding): ActionData.DestroyBuilding? {
         if (level == 0) return null
-        log("Destroy Building")
+//        log("Destroy Building")
         eventData.playerData.organicMatter += eventData.wallLevel * 5
         return eventData
     }
 
     override fun onPlaceColony(eventData: ActionData.PlaceColony): ActionData.PlaceColony? {
         if (level == 0) return null
-        log("Place Colony")
+//        log("Place Colony")
         eventData.cost = 0
         eventData.cooldown = Cooldown(Duration.ZERO)
         return eventData
@@ -74,7 +71,7 @@ class TestUpgrade : ResearchUpgrade() {
 
     override fun onPlaceRaft(eventData: ActionData.PlaceRaft): ActionData.PlaceRaft? {
         if (level == 0) return null
-        log("Place Raft")
+//        log("Place Raft")
         eventData.cost = 0
         eventData.cooldown = Cooldown(Duration.ZERO)
         return eventData
@@ -82,7 +79,7 @@ class TestUpgrade : ResearchUpgrade() {
 
     override fun onPostAttack(eventData: ActionData.PostAttack): ActionData.PostAttack? {
         if (level == 0) return null
-        log("Post Attack")
+//        log("Post Attack")
         eventData.attackCost = 0
         eventData.attackCooldown = Cooldown(Duration.ZERO)
         return eventData
@@ -90,14 +87,14 @@ class TestUpgrade : ResearchUpgrade() {
 
     override fun onPreAttack(eventData: ActionData.PreAttack): ActionData.PreAttack? {
         if (level == 0) return null
-        log("Pre Attack")
+//        log("Pre Attack")
         eventData.wallLevel = 0
         return eventData
     }
 
     override fun onUpgradeWall(eventData: ActionData.UpgradeWall): ActionData.UpgradeWall? {
         if (level == 0) return null
-        log("Upgrade Wall")
+//        log("Upgrade Wall")
         eventData.cost = 0
         eventData.cooldown = Cooldown(Duration.ZERO)
         eventData.playerData.organicMatter += 1000000

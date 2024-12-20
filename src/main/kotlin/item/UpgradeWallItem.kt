@@ -1,9 +1,9 @@
 package io.github.flyingpig525.item
 
-import cz.lukynka.prettylog.LogType
 import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
+import io.github.flyingpig525.GameInstance.Companion.gameInstance
 import io.github.flyingpig525.data.research.action.ActionData
 import io.github.flyingpig525.wall.*
 import net.bladehunt.kotstom.dsl.item.item
@@ -34,19 +34,24 @@ object UpgradeWallItem : Actionable {
 
     override fun getItem(uuid: UUID, instance: GameInstance): ItemStack {
         val target = instance.instance.getPlayerByUuid(uuid)!!.getTrueTarget(20) ?: return ERROR_ITEM
-        val upgradeCost = getWallUpgradeCost(instance.instance.getBlock(target).defaultState()) ?: return ERROR_ITEM
+        val block = instance.instance.getBlock(target.buildingPosition)
+        val upgradeCost = getWallUpgradeCost(block) ?: return ERROR_ITEM
         return item(itemMaterial) {
             itemName = "<gold>$WALL_SYMBOL <bold>Upgrade Wall</bold><dark_grey> - <green>$MATTER_SYMBOL $upgradeCost".asMini()
+            if (!block.canUpgradeWall) {
+                itemName = "<gold>$WALL_SYMBOL <bold>Max Level".asMini()
+            }
             set(Tag.String("identifier"), identifier)
         }
     }
 
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
         val instance = event.instance
-        val gameInstance = instances.fromInstance(event.instance) ?: return true
+        val gameInstance = instance.gameInstance ?: return true
         val data = gameInstance.playerData[event.player.uuid.toString()] ?: return true
         val target = event.player.getTrueTarget(20)?.buildingPosition ?: return true
         val block = instance.getBlock(target).defaultState()
+        if (!block.canUpgradeWall) return true
         val level = block.wallLevel
         val cost = getWallUpgradeCost(block) ?: return true
         val actionData = ActionData.UpgradeWall(data, instance, event.player).apply {

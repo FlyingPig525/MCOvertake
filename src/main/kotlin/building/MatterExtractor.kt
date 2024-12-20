@@ -1,10 +1,10 @@
 package io.github.flyingpig525.building
 
-import cz.lukynka.prettylog.LogType
 import cz.lukynka.prettylog.log
 import io.github.flyingpig525.MATTER_SYMBOL
 import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.PlayerData
+import io.github.flyingpig525.data.research.action.ActionData
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -38,7 +38,12 @@ class MatterExtractor : Building {
     }
 
     override fun tick(data: PlayerData) {
-        data.organicMatter = ((count * 0.5 + 0.5) + data.organicMatter)
+        val increase = count * 0.5 + 0.5
+        var action = ActionData.MatterBuildingTick(data).apply {
+            this.increase = increase
+        }
+        action = data.research.onMatterBuildingTick(action)
+        data.organicMatter += action.increase
     }
 
     companion object MatterExtractorCompanion : Building.BuildingCompanion {

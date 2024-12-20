@@ -2,7 +2,6 @@ package io.github.flyingpig525.wall
 
 import net.minestom.server.instance.block.Block
 import net.minestom.server.instance.block.Block.*
-import java.util.HashMap
 
 // These values will not be manually updated, set in map builder
 var WOODEN_FENCE_RANGE = 2..12
@@ -89,6 +88,7 @@ private val walls = buildMap<Block, Int> {
     GLASS_PANE_RANGE = paneStart..wallBlocks.size
 }
 
+val Block.canUpgradeWall: Boolean get() = wallLevel < wallBlocks.size
 
 fun getWallAttackCost(block: Block): Int? {
     val level = walls[block.defaultState()] ?: return null
