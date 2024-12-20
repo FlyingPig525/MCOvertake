@@ -24,7 +24,6 @@ import net.minestom.server.tag.Tag
 class MatterExtractor : Building {
     override var count: Int = 0
     override val resourceUse: Int get() = count * 3
-
     override fun place(playerTarget: Point, instance: Instance) {
         instance.setBlock(playerTarget.buildingPosition, block, false)
         count++
@@ -43,6 +42,7 @@ class MatterExtractor : Building {
     }
 
     companion object MatterExtractorCompanion : Building.BuildingCompanion {
+        override val menuSlot: Int = 0
         override val block: Block = Block.BREWING_STAND
         override val identifier: String = "matter:generator"
 

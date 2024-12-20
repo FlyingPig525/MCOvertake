@@ -64,7 +64,7 @@ object SelectBuildingItem : Actionable {
         inventory[0, 3] = yellowItem
         inventory[8, 3] = yellowItem
 
-        for ((i, building) in Building.BuildingCompanion.registry.withIndex()) {
+        for ((i, building) in Building.BuildingCompanion.registry.withIndex().sortedBy { it.value.menuSlot }) {
             val x = (i % 7) + 1
             val y = (i / 7) + 1
             inventory[x, y] = building.getItem(playerData)

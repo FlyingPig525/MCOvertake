@@ -23,10 +23,8 @@ import net.minestom.server.tag.Tag
 
 @Serializable
 class MatterCompressionPlant : Building {
-
     override var count: Int = 0
     override val resourceUse: Int get() = count * 4
-
     override fun place(playerTarget: Point, instance: Instance) {
         instance.setBlock(playerTarget.buildingPosition, block, false)
         count++
@@ -48,6 +46,7 @@ class MatterCompressionPlant : Building {
     }
 
     companion object MatterCompressionPlantCompanion : Building.BuildingCompanion {
+        override val menuSlot: Int = 4
         override val block: Block = Block.HEAVY_CORE
         override val identifier: String = "mechanical:generator"
 

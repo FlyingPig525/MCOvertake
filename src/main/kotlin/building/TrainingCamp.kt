@@ -25,7 +25,6 @@ import net.minestom.server.tag.Tag
 class TrainingCamp : Building {
     override var count: Int = 0
     override val resourceUse: Int get() = count * 3
-
     override fun place(playerTarget: Point, instance: Instance) {
         instance.setBlock(playerTarget.buildingPosition, block, false)
         count++
@@ -44,6 +43,7 @@ class TrainingCamp : Building {
     }
 
     companion object TrainingCampCompanion : Building.BuildingCompanion {
+        override val menuSlot: Int = 1
         override val block: Block = Block.POLISHED_BLACKSTONE_BUTTON.withProperty("face", "floor")
         override val identifier: String = "power:generator"
 

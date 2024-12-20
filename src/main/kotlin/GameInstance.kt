@@ -16,6 +16,7 @@ import io.github.flyingpig525.log.MCOvertakeLogType
 import io.github.flyingpig525.wall.blockIsWall
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.bladehunt.kotstom.InstanceManager
@@ -46,7 +47,9 @@ import net.minestom.server.potion.PotionEffect
 import net.minestom.server.tag.Tag
 import net.minestom.server.timer.TaskSchedule
 import java.nio.file.Path
+import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.createDirectories
+import kotlin.io.path.deleteRecursively
 import kotlin.io.path.exists
 
 
@@ -58,7 +61,7 @@ class GameInstance(val path: Path, val name: String) {
         if (file.exists()) {
             return@run json.decodeFromString(file.readText())
         } else {
-            return@run InstanceConfig()
+            return@run parentInstanceConfig.copy(noiseSeed = (Long.MIN_VALUE..Long.MAX_VALUE).random())
         }
     }
 
@@ -391,6 +394,15 @@ class GameInstance(val path: Path, val name: String) {
         instance.saveInstance()
     }
 
+    fun totalInit() = runBlocking {
+        setupInstance()
+        setupSpawning()
+        setupScoreboard()
+        registerInteractionEvents()
+        registerTasks()
+        registerTickEvent()
+    }
+
     fun clearBlock(block: Block) {
         scheduleImmediately {
             for (x in 0..instanceConfig.mapSize) {
@@ -410,6 +422,13 @@ class GameInstance(val path: Path, val name: String) {
                     }
                 }
             }
+        }
+    }
+
+    @OptIn(ExperimentalPathApi::class)
+    fun delete() {
+        if (path.exists()) {
+            path.deleteRecursively()
         }
     }
 

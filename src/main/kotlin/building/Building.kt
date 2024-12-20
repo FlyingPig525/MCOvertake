@@ -11,13 +11,13 @@ import net.minestom.server.item.ItemStack
 interface Building {
     var count: Int
     val resourceUse: Int
-
     fun place(playerTarget: Point, instance: Instance)
+
     fun select(player: Player, cost: Int)
     fun select(player: Player, data: PlayerData)
     fun tick(data: PlayerData) {}
-
     interface BuildingCompanion {
+        val menuSlot: Int
         val block: Block
         val identifier: String
         fun getItem(cost: Int, count: Int): ItemStack

@@ -16,7 +16,7 @@ data class Config(
     val packServerPort: Int = 25566,
     // List of names to be used for game instances
     // Each name must be unique, as each instance will have its own directory
-    val instanceNames: Set<String> = setOf("instance1"),
+    val instanceNames: MutableSet<String> = mutableSetOf("instance1"),
     // List of usernames to be on the whitelist
     // No whitelist if empty
     val whitelisted: Set<String> = emptySet(),

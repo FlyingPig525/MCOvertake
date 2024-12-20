@@ -12,6 +12,7 @@ import io.github.flyingpig525.console.ConfigCommand
 import io.github.flyingpig525.console.OpCommand
 import io.github.flyingpig525.console.SaveCommand
 import io.github.flyingpig525.data.Config
+import io.github.flyingpig525.data.InstanceConfig
 import io.github.flyingpig525.data.PlayerData
 import io.github.flyingpig525.item.*
 import io.github.flyingpig525.log.MCOvertakeLogType
@@ -21,10 +22,12 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.bladehunt.kotstom.*
+import net.bladehunt.kotstom.command.Kommand
 import net.bladehunt.kotstom.dsl.item.amount
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.dsl.kbar
+import net.bladehunt.kotstom.dsl.kommand.buildSyntax
 import net.bladehunt.kotstom.dsl.kommand.kommand
 import net.bladehunt.kotstom.dsl.listen
 import net.bladehunt.kotstom.extension.adventure.asMini
@@ -37,6 +40,10 @@ import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.MinecraftServer
 import net.minestom.server.collision.ShapeImpl
 import net.minestom.server.color.Color
+import net.minestom.server.command.builder.CommandExecutor
+import net.minestom.server.command.builder.arguments.Argument
+import net.minestom.server.command.builder.arguments.ArgumentString
+import net.minestom.server.command.builder.suggestion.SuggestionEntry
 import net.minestom.server.coordinate.Point
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.coordinate.Vec
@@ -53,8 +60,9 @@ import net.minestom.server.instance.Instance
 import net.minestom.server.instance.LightingChunk
 import net.minestom.server.instance.block.Block
 import net.minestom.server.inventory.Inventory
-import net.minestom.server.inventory.InventoryType
+import net.minestom.server.inventory.InventoryType.*
 import net.minestom.server.inventory.PlayerInventory
+import net.minestom.server.inventory.click.ClickType
 import net.minestom.server.item.ItemComponent
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
@@ -101,6 +109,7 @@ val json = Json { prettyPrint = true; encodeDefaults = true; allowComments = tru
 var scoreboardTitleProgress = -1.0
 
 lateinit var config: Config
+lateinit var parentInstanceConfig: InstanceConfig
 
 var instances: MutableMap<String, GameInstance> = mutableMapOf()
 
@@ -120,14 +129,19 @@ fun main() = runBlocking { try {
 
     val configFile = File("config.json")
     if (!configFile.exists()) {
-        withContext(Dispatchers.IO) {
-            configFile.createNewFile()
-        }
+        configFile.createNewFile()
         configFile.writeText(json.encodeToString(Config()))
     }
     config = json.decodeFromString<Config>(configFile.readText())
     configFile.writeText(json.encodeToString(config))
     log("Config imported...", MCOvertakeLogType.FILESYSTEM)
+    val parentCFile = File("parent-instance-config.json")
+    if (!parentCFile.exists()) {
+        parentCFile.createNewFile()
+        parentCFile.writeText(json.encodeToString(InstanceConfig()))
+    }
+    parentInstanceConfig = json.decodeFromString(parentCFile.readText())
+    parentCFile.writeText(json.encodeToString(InstanceConfig()))
 
     val resourcePack = MinecraftResourcePackReader.minecraft().readFromZipFile(File("res/pack.zip"))
     val builtResourcePack = MinecraftResourcePackWriter.minecraft().build(resourcePack)
@@ -199,7 +213,15 @@ fun main() = runBlocking { try {
     }
     lobbyInstance.eventNode().listen<PlayerUseItemEvent> { e ->
         if (e.itemStack.material() == Material.COMPASS) {
-            val inventory = Inventory(InventoryType.CHEST_5_ROW, "Game Instances")
+            val type = with(instances) {
+                if (size <= 9) CHEST_1_ROW
+                else if (size <= 18) CHEST_2_ROW
+                else if (size <= 27) CHEST_3_ROW
+                else if (size <= 36) CHEST_4_ROW
+                else if (size <= 45) CHEST_5_ROW
+                else CHEST_6_ROW
+            }
+            val inventory = Inventory(type, "Game Instances")
             instances.onEachIndexed { index, (name, _) ->
                 inventory[index] = item(Material.WHITE_WOOL) {
                     itemName = name.asMini()
@@ -216,13 +238,18 @@ fun main() = runBlocking { try {
                 if (it.inventory != inventory) {
                     lobbyInstance.eventNode().removeChildren("instance-picker${e.player.uuid.mostSignificantBits}")
                 }
+                if (it.clickType != ClickType.LEFT_CLICK) return@listen
+
+
                 if (it.clickedItem.hasTag(Tag.String("selector"))) {
                     val instance = instances[it.clickedItem.getTag(Tag.String("selector")) ?: "auhdiauowhd2y0189dh7278dhw89dh7 2"]
                     if (instance != null) {
+                        if (it.player.instance == instance.instance) return@listen
                         lobbyInstance.eventNode().removeChildren("instance-picker${e.player.uuid.mostSignificantBits}")
                         it.player.inventory.clear()
                         it.player.closeInventory()
-                        BossBarManager.removeAllBossBars(it.player)
+                        it.player.removeBossBars()
+                        it.player.sendMessage("<gray>Sending you to <red>${it.clickedItem.getTag(Tag.String("selector"))}<gray>...".asMini())
                         it.player.instance = instance.instance
                     }
                 }
@@ -242,6 +269,8 @@ fun main() = runBlocking { try {
             lobbyInstance.players.onEach { addViewer(it) }
         }
     }, TaskSchedule.tick(1), TaskSchedule.tick(1))
+
+    SchedulerManager.scheduleTask({ System.gc() }, TaskSchedule.seconds(30), TaskSchedule.seconds(30))
 
     instances.values.onEach { it.setupSpawning() }
     log("Player spawning setup...")
@@ -269,17 +298,93 @@ fun main() = runBlocking { try {
             )
         }
     }
-    CommandManager.register(tickCommand)
-    val lobbyCommand = kommand {
-        name = "lobby"
-        defaultExecutor {
-            player.closeInventory()
-            player.inventory.clear()
-            player.instance = lobbyInstance
-            BossBarManager.removeAllBossBars(player)
+    val lobbyCommand = Kommand("lobby", "hub", "s", "home").apply {
+        defaultExecutor = CommandExecutor { sender, context ->
+            if (sender !is Player) return@CommandExecutor
+            if (sender.instance == lobbyInstance) return@CommandExecutor
+            sender.closeInventory()
+            sender.inventory.clear()
+            sender.instance = lobbyInstance
+            sender.removeBossBars()
+            sender.sendMessage("<gray>Sending you to the lobby...".asMini())
         }
     }
-    CommandManager.register(lobbyCommand)
+    val createInstanceCommand = kommand {
+        name = "createInstance"
+        buildSyntax(ArgumentString("name")) {
+            executorAsync {
+                val name = context.getRaw("name")
+                try {
+                    if (name == "") {
+                        player.sendMessage("<red><bold>Invalid instance name!".asMini())
+                        return@executorAsync
+                    }
+                    if (name in instances.keys) {
+                        player.sendMessage("<red><bold>Instance \"$name\" already exists!".asMini())
+                        return@executorAsync
+                    }
+                    instances[name] = GameInstance(Path.of("instances", name), name).apply { totalInit() }
+                    config.instanceNames += name
+                    configFile.writeText(json.encodeToString(config))
+                    player.sendMessage("<green><bold>Created instance \"$name\" successfully!".asMini())
+                } catch(e: Exception) {
+                    // IllegalPathException doesnt exist but it does??????
+                    if (e::class.simpleName == "IllegalPathException") {
+                        player.sendMessage("<red><bold>Name \"$name\" contains illegal characters!".asMini())
+                    }
+                    player.sendMessage("<red><bold>Something went wrong! </bold>(${e::class.simpleName} || ${e.message})".asMini())
+                    log(e)
+                }
+            }
+        }
+    }
+    val deleteInstanceCommand = kommand {
+        name = "removeInstance"
+        val argument = ArgumentString("name").apply {
+            setSuggestionCallback { sender, context, suggestion ->
+                for (name in instances.keys) {
+                    val current = context.getRaw("name")
+                    if (current in name) {
+                        suggestion.addEntry(SuggestionEntry(name))
+                    }
+                }
+                if (suggestion.entries.size == 0) {
+                    suggestion.entries += instances.keys.map { SuggestionEntry(it) }
+                }
+            }
+        }
+        buildSyntax(argument) {
+            onlyPlayers()
+            executorAsync {
+                val name = get(argument)
+                if (name !in instances.keys) {
+                    player.sendMessage("<red><bold>Instance \"$name\" does not exist!".asMini())
+                }
+                val gameInstance = instances[name]!!
+                if (!gameInstance.instance.players.isEmpty()) {
+                    player.sendMessage("<red><bold>Cannot delete an instance with players!".asMini())
+                }
+                InstanceManager.unregisterInstance(gameInstance.instance)
+                gameInstance.delete()
+                instances.remove(name)
+                config.instanceNames.remove(name)
+                configFile.writeText(json.encodeToString(config))
+                player.sendMessage("<green><bold>Instance \"$name\" successfully removed!".asMini())
+                System.gc()
+            }
+        }
+    }
+    val gcCommand = kommand {
+        name = "gc"
+        defaultExecutor {
+            var ramUsage = (BenchmarkManager.usedMemory / 1e6).toLong()
+            player.sendMessage("Before: ${ramUsage}mb")
+            System.gc()
+            ramUsage = (BenchmarkManager.usedMemory / 1e6).toLong()
+            player.sendMessage("After: ${ramUsage}mb")
+        }
+    }
+    CommandManager.register(createInstanceCommand, lobbyCommand, tickCommand, deleteInstanceCommand, gcCommand)
 
     // Save loop
     SchedulerManager.scheduleTask({
@@ -458,6 +563,13 @@ val Player.data: PlayerData? get() = instances.fromInstance(instance)?.playerDat
 fun InventoryClickEvent.cancel() {
     inventory[slot] = clickedItem
     player.inventory.cursorItem = cursorItem
+}
+
+fun Player.removeBossBars() {
+    val bars = BossBarManager.getPlayerBossBars(this)
+    for (bar in bars) {
+        hideBossBar(bar)
+    }
 }
 
 fun initItems() {

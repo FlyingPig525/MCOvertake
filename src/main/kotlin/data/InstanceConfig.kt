@@ -13,7 +13,7 @@ data class InstanceConfig(
     // Seed for noise, randomly generated when config is created. Change when resetting map
     val noiseSeed: Long = (Long.MIN_VALUE..Long.MAX_VALUE).random(),
     // Length and width of map (will always be a square)
-    val mapSize: Int = 1000,
+    val mapSize: Int = 300,
     // Block identifier for underground claimable tile, can be any block, but it is recommended to keep it a block players cant be
     @Serializable(with = BlockSerializer::class) val undergroundBlock: Block = Block.BEDROCK,
 )

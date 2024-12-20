@@ -29,7 +29,6 @@ import net.minestom.server.tag.Tag
 class UndergroundTeleporter : Building, Interactable {
     override var count: Int = 0
     override val resourceUse: Int = count * 20
-
     override fun place(playerTarget: Point, instance: Instance) {
         instance.setBlock(playerTarget.buildingPosition, block)
         spawn(playerTarget.buildingPosition, instance)
@@ -55,6 +54,7 @@ class UndergroundTeleporter : Building, Interactable {
     }
 
     companion object UndergroundTeleporterCompanion : Building.BuildingCompanion, DisplayEntityBlock {
+        override val menuSlot: Int = 5
         init {
             Building.BuildingCompanion.registry += this
             log("${this::class.simpleName} initialized...")

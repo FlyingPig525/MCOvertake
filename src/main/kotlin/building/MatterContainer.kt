@@ -24,7 +24,6 @@ import net.minestom.server.tag.Tag
 class MatterContainer : Building {
     override var count: Int = 0
     override val resourceUse: Int get() = count * 2
-
     override fun place(playerTarget: Point, instance: Instance) {
         instance.setBlock(playerTarget.buildingPosition, block, false)
         count++
@@ -39,6 +38,7 @@ class MatterContainer : Building {
     }
 
     companion object MatterContainerCompanion : Building.BuildingCompanion {
+        override val menuSlot: Int = 2
         override val block: Block = Block.LANTERN
         override val identifier: String = "matter:container"
 

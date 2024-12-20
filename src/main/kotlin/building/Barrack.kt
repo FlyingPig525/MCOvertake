@@ -23,10 +23,8 @@ import net.minestom.server.tag.Tag
 
 @Serializable
 class Barrack : Building {
-
     override var count: Int = 0
     override val resourceUse: Int get() = count * 2
-
     override fun place(playerTarget: Point, instance: Instance) {
         instance.setBlock(playerTarget.buildingPosition, block, false)
         count++
@@ -41,6 +39,7 @@ class Barrack : Building {
     }
 
     companion object BarrackCompanion : Building.BuildingCompanion {
+        override val menuSlot: Int = 3
         override val block: Block = Block.SOUL_LANTERN
         override val identifier: String = "power:container"
 
