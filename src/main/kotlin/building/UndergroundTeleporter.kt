@@ -1,10 +1,9 @@
 package io.github.flyingpig525.building
 
-import cz.lukynka.prettylog.LogType
 import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
-import io.github.flyingpig525.data.PlayerData
+import io.github.flyingpig525.data.player.PlayerData
 import io.github.flyingpig525.dsl.blockDisplay
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item

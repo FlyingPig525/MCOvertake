@@ -1,12 +1,11 @@
 package io.github.flyingpig525.item
 
 import com.sun.jdi.InvalidTypeException
-import cz.lukynka.prettylog.LogType
 import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
-import io.github.flyingpig525.data.PlayerData
-import io.github.flyingpig525.data.PlayerData.Companion.toBlockList
+import io.github.flyingpig525.data.player.PlayerData
+import io.github.flyingpig525.data.player.PlayerData.Companion.toBlockList
 import io.github.flyingpig525.data.block.*
 import net.bladehunt.kotstom.GlobalEventHandler
 import net.bladehunt.kotstom.dsl.item.item

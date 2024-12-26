@@ -9,8 +9,8 @@ import io.github.flyingpig525.building.Building
 import io.github.flyingpig525.building.DisplayEntityBlock
 import io.github.flyingpig525.building.Interactable
 import io.github.flyingpig525.data.InstanceConfig
-import io.github.flyingpig525.data.PlayerData
-import io.github.flyingpig525.data.PlayerData.Companion.toBlockSortedList
+import io.github.flyingpig525.data.player.PlayerData
+import io.github.flyingpig525.data.player.PlayerData.Companion.toBlockSortedList
 import io.github.flyingpig525.item.*
 import io.github.flyingpig525.log.MCOvertakeLogType
 import io.github.flyingpig525.wall.blockIsWall

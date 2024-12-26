@@ -1,7 +1,7 @@
 package io.github.flyingpig525.data.research.action
 
 import io.github.flyingpig525.building.Building
-import io.github.flyingpig525.data.PlayerData
+import io.github.flyingpig525.data.player.PlayerData
 import net.minestom.server.entity.Player
 import net.minestom.server.instance.Instance
 import net.minestom.server.utils.time.Cooldown

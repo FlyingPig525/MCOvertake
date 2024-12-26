@@ -1,14 +1,12 @@
 package io.github.flyingpig525.item
 
-import cz.lukynka.prettylog.LogType
 import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.building.*
-import io.github.flyingpig525.data.PlayerData
-import io.github.flyingpig525.data.PlayerData.Companion.getDataByPoint
+import io.github.flyingpig525.data.player.PlayerData
+import io.github.flyingpig525.data.player.PlayerData.Companion.getDataByPoint
 import io.github.flyingpig525.data.research.action.ActionData
-import io.github.flyingpig525.wall.blockIsWall
 import io.github.flyingpig525.wall.getWallAttackCost
 import io.github.flyingpig525.wall.lastWall
 import io.github.flyingpig525.wall.wallLevel

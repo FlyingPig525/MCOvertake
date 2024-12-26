@@ -14,6 +14,10 @@ data class Config(
     val serverPort: Int = 25565,
     // Server port for resource pack server, recommended to stay 25566
     val packServerPort: Int = 25566,
+    // Path to the resource pack to be sent to players, ensure it ends with ".zip"
+    val resourcePackPath: String = "res/pack.zip",
+    // Path to the player permission file, ensure it ends with ".json"
+    val permissionFilePath: String = "res/permissions.json",
     // List of names to be used for game instances
     // Each name must be unique, as each instance will have its own directory
     val instanceNames: MutableSet<String> = mutableSetOf("instance1"),

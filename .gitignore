@@ -45,3 +45,4 @@ logs/
 world.polar
 instances/
 parent-instance-config.json
+res/permissions.json

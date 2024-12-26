@@ -1,7 +1,7 @@
 package io.github.flyingpig525.building
 
 import io.github.flyingpig525.building.Building.BuildingCompanion.Companion.registry
-import io.github.flyingpig525.data.PlayerData
+import io.github.flyingpig525.data.player.PlayerData
 import net.minestom.server.coordinate.Point
 import net.minestom.server.entity.Player
 import net.minestom.server.instance.Instance

@@ -1,10 +1,9 @@
 package io.github.flyingpig525.building
 
-import cz.lukynka.prettylog.LogType
 import cz.lukynka.prettylog.log
 import io.github.flyingpig525.MATTER_SYMBOL
 import io.github.flyingpig525.buildingPosition
-import io.github.flyingpig525.data.PlayerData
+import io.github.flyingpig525.data.player.PlayerData
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName

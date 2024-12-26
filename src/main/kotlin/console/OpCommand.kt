@@ -2,8 +2,11 @@ package io.github.flyingpig525.console
 
 import cz.lukynka.prettylog.log
 import io.github.flyingpig525.config
+import io.github.flyingpig525.data.player.permission.Permission
 import io.github.flyingpig525.instances
 import io.github.flyingpig525.lobbyInstance
+import io.github.flyingpig525.permissionManager
+import net.bladehunt.kotstom.CommandManager
 import net.minestom.server.utils.mojang.MojangUtils
 
 object OpCommand : Command {
@@ -32,7 +35,7 @@ object OpCommand : Command {
         for (instance in instances.values) {
             for (player in instance.instance.players) {
                 if (player.username == arguments[1]) {
-                    player.permissionLevel = 4
+                    permissionManager.addPermission(player, Permission("*"))
                     return
                 }
             }

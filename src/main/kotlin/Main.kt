@@ -9,7 +9,9 @@ import io.github.flyingpig525.console.OpCommand
 import io.github.flyingpig525.console.SaveCommand
 import io.github.flyingpig525.data.Config
 import io.github.flyingpig525.data.InstanceConfig
-import io.github.flyingpig525.data.PlayerData
+import io.github.flyingpig525.data.player.PermissionManager
+import io.github.flyingpig525.data.player.PlayerData
+import io.github.flyingpig525.data.player.permission.Permission
 import io.github.flyingpig525.item.*
 import io.github.flyingpig525.log.MCOvertakeLogType
 import kotlinx.coroutines.*
@@ -65,6 +67,7 @@ import net.minestom.server.item.Material
 import net.minestom.server.tag.Tag
 import net.minestom.server.timer.TaskSchedule
 import net.minestom.server.utils.time.Cooldown
+import team.unnamed.creative.BuiltResourcePack
 import team.unnamed.creative.serialize.minecraft.MinecraftResourcePackReader
 import team.unnamed.creative.serialize.minecraft.MinecraftResourcePackWriter
 import team.unnamed.creative.server.ResourcePackServer
@@ -106,6 +109,8 @@ lateinit var parentInstanceConfig: InstanceConfig
 var instances: MutableMap<String, GameInstance> = mutableMapOf()
 lateinit var lobbyInstance: InstanceContainer
 
+lateinit var permissionManager: PermissionManager private set
+
 fun main() = runBlocking { try {
     LoggerSettings.saveToFile = true
     LoggerSettings.saveDirectoryPath = "./logs/"
@@ -136,13 +141,24 @@ fun main() = runBlocking { try {
     parentInstanceConfig = json.decodeFromString(parentCFile.readText())
     parentCFile.writeText(json.encodeToString(InstanceConfig()))
 
-    val resourcePack = MinecraftResourcePackReader.minecraft().readFromZipFile(File("res/pack.zip"))
-    val builtResourcePack = MinecraftResourcePackWriter.minecraft().build(resourcePack)
-    val packServer = ResourcePackServer.server()
-        .address(config.serverAddress, config.packServerPort)
-        .pack(builtResourcePack)
-        .build()
-    log("Resource pack loaded...", MCOvertakeLogType.FILESYSTEM)
+    var packServer: ResourcePackServer? = null
+    var builtResourcePack: BuiltResourcePack? = null
+    if (File(config.resourcePackPath).exists()) {
+        val resourcePack = MinecraftResourcePackReader.minecraft().readFromZipFile(File(config.resourcePackPath))
+        builtResourcePack = MinecraftResourcePackWriter.minecraft().build(resourcePack)
+        packServer = ResourcePackServer.server()
+            .address(config.serverAddress, config.packServerPort)
+            .pack(builtResourcePack)
+            .build()
+        log("Resource pack loaded...", MCOvertakeLogType.FILESYSTEM)
+    }
+
+    val permissionsFile = File(config.permissionFilePath)
+    if (!permissionsFile.exists()) {
+        permissionsFile.createNewFile()
+        permissionsFile.writeText("{}")
+    }
+    permissionManager = json.decodeFromString(permissionsFile.readText())
 
     lobbyInstance = InstanceManager.createInstanceContainer().apply {
         setGenerator { unit ->
@@ -177,14 +193,17 @@ fun main() = runBlocking { try {
             )
         }
         if (player.username in config.opUsernames && player.uuid.toString() in config.opUUID) {
-            player.permissionLevel = 4
+            permissionManager.addPermission(player, Permission("*"))
         }
         player.respawnPoint = Pos(8.0, 11.0, 8.0)
-        player.sendResourcePacks(ResourcePackInfo.resourcePackInfo()
-            .hash(builtResourcePack.hash())
-            .uri(URI("http://${config.serverAddress}:${config.packServerPort}/${builtResourcePack.hash()}.zip"))
-            .build()
-        )
+
+        if (builtResourcePack != null) {
+            player.sendResourcePacks(ResourcePackInfo.resourcePackInfo()
+                .hash(builtResourcePack.hash())
+                .uri(URI("http://${config.serverAddress}:${config.packServerPort}/${builtResourcePack.hash()}.zip"))
+                .build()
+            )
+        }
     }
 
     lobbyInstance.eventNode().listen<PlayerSpawnEvent> { e ->
@@ -310,7 +329,7 @@ fun main() = runBlocking { try {
         name = "createInstance"
         buildSyntax {
             condition {
-                player.permissionLevel == 4
+                permissionManager.hasPermission(player, Permission("instance.creation"))
             }
             executor {
                 player.sendMessage("<red><bold>Missing required arguments!".asMini())
@@ -319,7 +338,7 @@ fun main() = runBlocking { try {
 
         buildSyntax(ArgumentString("name")) {
             condition {
-                player.permissionLevel == 4
+                permissionManager.hasPermission(player, Permission("instance.creation"))
             }
             onlyPlayers()
             executorAsync(Dispatchers.IO) {
@@ -365,12 +384,18 @@ fun main() = runBlocking { try {
             }
         }
 
-        defaultExecutor {
-            player.sendMessage("<red><bold>Missing required arguments!".asMini())
+        buildSyntax {
+            condition {
+                permissionManager.hasPermission(player, Permission("instance.deletion"))
+            }
+            executor {
+                player.sendMessage("<red><bold>Missing required arguments!".asMini())
+            }
         }
+
         buildSyntax(argument) {
             condition {
-                player.permissionLevel >= 4
+                permissionManager.hasPermission(player, Permission("instance.deletion"))
             }
             onlyPlayers()
             executorAsync {
@@ -399,7 +424,7 @@ fun main() = runBlocking { try {
 
         buildSyntax {
             condition {
-                player.permissionLevel >= 4
+                permissionManager.hasPermission(player, Permission("process.garbage_collect"))
             }
             executor {
                 var ramUsage = (BenchmarkManager.usedMemory / 1e6).toLong()
@@ -429,8 +454,10 @@ fun main() = runBlocking { try {
 
     minecraftServer.start(config.serverAddress, config.serverPort)
     log("GameServer online!")
-    packServer.start()
-    log("PackServer online!")
+    if (packServer != null) {
+        packServer.start()
+        log("PackServer online!")
+    }
 
     initConsoleCommands()
     log("Console commands initialized...")
@@ -547,11 +574,6 @@ fun scheduleImmediately(fn: () -> Unit) =
 fun PlayerInventory.idle() {
     set(0, idleItem())
 }
-
-fun AbstractInventory.custom() {
-    setTag(Tag.Integer("server-created-inventory"), 1)
-}
-fun AbstractInventory.isCustom() = hasTag(Tag.Integer("server-created-inventory"))
 
 fun idleItem(): ItemStack = item(Material.GRAY_DYE) {
     itemName = "".asMini()

@@ -1,4 +1,4 @@
-package io.github.flyingpig525.data
+package io.github.flyingpig525.data.player
 
 import io.github.flyingpig525.*
 import io.github.flyingpig525.building.*
