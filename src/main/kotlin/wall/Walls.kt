@@ -82,7 +82,7 @@ private val walls = buildMap<Block, Int> {
             else -> {}
         }
     }
-    WOODEN_FENCE_RANGE = 1..woodenEnd
+    WOODEN_FENCE_RANGE = 2..woodenEnd
     BRICK_FENCE_RANGE = brickFence..brickFence
     WALL_RANGE = wallStart..wallEnd
     GLASS_PANE_RANGE = paneStart..wallBlocks.size

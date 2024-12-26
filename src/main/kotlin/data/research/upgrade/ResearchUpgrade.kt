@@ -5,6 +5,7 @@ import io.github.flyingpig525.data.research.currency.ResearchCurrency
 import kotlinx.serialization.Required
 import kotlinx.serialization.Serializable
 import net.minestom.server.event.inventory.InventoryClickEvent
+import net.minestom.server.inventory.condition.InventoryConditionResult
 import net.minestom.server.item.ItemStack
 
 @Serializable
@@ -46,7 +47,7 @@ sealed class ResearchUpgrade {
 
     abstract fun item(): ItemStack
 
-    open fun onPurchase(clickEvent: InventoryClickEvent, currency: ResearchCurrency): PurchaseState {
+    open fun onPurchase(clickEvent: InventoryConditionResult, currency: ResearchCurrency): PurchaseState {
         if (level == maxLevel) return PurchaseState.MaxLevel(currency, this)
         if (currency.count < cost) return PurchaseState.NotEnoughCurrency(currency, this)
         currency.count -= cost

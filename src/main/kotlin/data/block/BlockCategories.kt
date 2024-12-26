@@ -8,6 +8,7 @@ import net.minestom.server.item.Material.*
 
 interface CategoryBlock {
     val material: Material
+    val block get() = material.block()
 }
 
 val NATURAL_CATEGORY = item(OAK_LEAVES) { itemName = "<green><bold>Natural Blocks".asMini() }

@@ -44,10 +44,7 @@ import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.Entity
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
-import net.minestom.server.event.EventFilter
-import net.minestom.server.event.EventNode
 import net.minestom.server.event.inventory.InventoryClickEvent
-import net.minestom.server.event.inventory.InventoryPreClickEvent
 import net.minestom.server.event.item.ItemDropEvent
 import net.minestom.server.event.player.*
 import net.minestom.server.event.server.ServerListPingEvent
@@ -56,11 +53,11 @@ import net.minestom.server.instance.Instance
 import net.minestom.server.instance.InstanceContainer
 import net.minestom.server.instance.LightingChunk
 import net.minestom.server.instance.block.Block
-import net.minestom.server.inventory.AbstractInventory
 import net.minestom.server.inventory.Inventory
 import net.minestom.server.inventory.InventoryType.*
 import net.minestom.server.inventory.PlayerInventory
 import net.minestom.server.inventory.click.ClickType
+import net.minestom.server.inventory.condition.InventoryConditionResult
 import net.minestom.server.item.ItemComponent
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
@@ -244,33 +241,21 @@ fun main() = runBlocking { try {
                     set(Tag.String("selector"), name)
                 }
             }
-            e.player.openInventory(inventory)
-            val node = EventNode.event(
-                "instance-picker${e.player.uuid.mostSignificantBits}",
-                EventFilter.INSTANCE)
-            { it.instance == lobbyInstance }
-            node.listen<InventoryPreClickEvent> {
-                it.isCancelled = true
-                if (it.inventory != inventory) {
-                    lobbyInstance.eventNode().removeChildren("instance-picker${e.player.uuid.mostSignificantBits}")
-                }
-                if (it.clickType != ClickType.LEFT_CLICK) return@listen
-
-
-                if (it.clickedItem.hasTag(Tag.String("selector"))) {
-                    val instance = instances[it.clickedItem.getTag(Tag.String("selector")) ?: "auhdiauowhd2y0189dh7278dhw89dh7 2"]
+            inventory.addInventoryCondition { player: Player, slot: Int, clickType: ClickType, res: InventoryConditionResult ->
+                res.isCancel = true
+                if (res.clickedItem.hasTag(Tag.String("selector"))) {
+                    val instance = instances[res.clickedItem.getTag(Tag.String("selector")) ?: "auhdiauowhd2y0189dh7278dhw89dh7 2"]
                     if (instance != null) {
-                        if (it.player.instance == instance.instance) return@listen
-                        lobbyInstance.eventNode().removeChildren("instance-picker${e.player.uuid.mostSignificantBits}")
-                        it.player.inventory.clear()
-                        it.player.closeInventory()
-                        it.player.removeBossBars()
-                        it.player.sendMessage("<gray>Sending you to <red>${it.clickedItem.getTag(Tag.String("selector"))}<gray>...".asMini())
-                        it.player.instance = instance.instance
+                        if (player.instance == instance.instance) return@addInventoryCondition
+                        player.inventory.clear()
+                        player.closeInventory()
+                        player.removeBossBars()
+                        player.sendMessage("<gray>Sending you to <red>${res.clickedItem.getTag(Tag.String("selector"))}<gray>...".asMini())
+                        player.instance = instance.instance
                     }
                 }
             }
-            lobbyInstance.eventNode().addChild(node)
+            e.player.openInventory(inventory)
         }
     }
 

@@ -33,15 +33,11 @@ class PermissionManager {
         for ((i, str) in p.permissions.withIndex()) {
             perms = perms.filter {
                 if (it.permissions[i] == "*") {
-                    println(p)
-                    println(perms)
                     return true
                 }
                 it.permissions[i] == str
             }
         }
-        println(p)
-        println(perms)
         return perms.isNotEmpty()
     }
 

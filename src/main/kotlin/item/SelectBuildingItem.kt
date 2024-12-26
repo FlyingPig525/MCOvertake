@@ -9,17 +9,15 @@ import io.github.flyingpig525.instances
 import net.bladehunt.kotstom.GlobalEventHandler
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
-import net.bladehunt.kotstom.dsl.listen
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.bladehunt.kotstom.extension.get
 import net.bladehunt.kotstom.extension.set
 import net.minestom.server.entity.Player
-import net.minestom.server.event.EventFilter
-import net.minestom.server.event.EventNode
-import net.minestom.server.event.inventory.InventoryClickEvent
 import net.minestom.server.event.player.PlayerUseItemEvent
 import net.minestom.server.inventory.Inventory
 import net.minestom.server.inventory.InventoryType
+import net.minestom.server.inventory.click.ClickType
+import net.minestom.server.inventory.condition.InventoryConditionResult
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import net.minestom.server.tag.Tag
@@ -71,30 +69,23 @@ object SelectBuildingItem : Actionable {
         }
         inventory[4, 3] = clearItem
         event.player.openInventory(inventory)
-
-        val inventoryEventNode = EventNode.type("select-building-inv", EventFilter.INVENTORY) { _, inv -> inventory == inv }
-            .listen<InventoryClickEvent> { e ->
-                val gameInstance = instances.fromInstance(e.instance) ?: return@listen
-                val data = gameInstance.playerData[e.player.uuid.toString()] ?: return@listen
-                var close = false
-                if (e.clickedItem == clearItem) {
-                    close = true
-                } else if (e.clickedItem.hasTag(Tag.String("identifier"))) {
-                    val identifier = e.clickedItem.getTag(Tag.String("identifier"))
-                    val ref = data.getBuildingReferenceByIdentifier(identifier)?.get() ?: return@listen
-                    ref.select(e.player, data)
-                    close = true
-                }
-
-                if (close) {
-                    e.player.closeInventory()
-                } else {
-                    e.player.inventory.cursorItem = ItemStack.AIR
-                    e.inventory[e.slot] = e.clickedItem
-                }
+        inventory.addInventoryCondition { player, slot, clickType, res ->
+            var close = false
+            if (res.clickedItem == clearItem) {
+                close = true
+            } else if (res.clickedItem.hasTag(Tag.String("identifier"))) {
+                val identifier = res.clickedItem.getTag(Tag.String("identifier"))
+                val ref = playerData.getBuildingReferenceByIdentifier(identifier)?.get() ?: return@addInventoryCondition
+                ref.select(player, playerData)
+                close = true
             }
-
-        GlobalEventHandler.addChild(inventoryEventNode)
+            if (close) {
+                player.closeInventory()
+            } else {
+                player.inventory.cursorItem = ItemStack.AIR
+                inventory[slot] = res.clickedItem
+            }
+        }
 
         return true
     }

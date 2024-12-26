@@ -1,6 +1,5 @@
 package io.github.flyingpig525.item
 
-import cz.lukynka.prettylog.LogType
 import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
@@ -53,7 +52,7 @@ object ColonyItem : Actionable {
         if (event.instance.getBlock(target) == Block.GRASS_BLOCK) {
             claimWithParticle(event.player, target, Block.GRASS_BLOCK, data.block, gameInstance.instance)
             data.blocks++
-            data.power -= data.colonyCost
+            data.power -= actionData.cost
             data.colonyCooldown = actionData.cooldown
             event.player.sendPacket(
                 SetCooldownPacket(

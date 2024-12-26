@@ -6,6 +6,7 @@ import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.minestom.server.event.inventory.InventoryClickEvent
+import net.minestom.server.inventory.condition.InventoryConditionResult
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 
@@ -21,7 +22,7 @@ class T2 : ResearchUpgrade() {
         itemName = "<gold><bold>$name</bold> <gray>-<aqua> Level: $level/$maxLevel".asMini()
     }
 
-    override fun onPurchase(clickEvent: InventoryClickEvent, currency: ResearchCurrency): PurchaseState {
+    override fun onPurchase(clickEvent: InventoryConditionResult, currency: ResearchCurrency): PurchaseState {
         if (level >= maxLevel) return PurchaseState.MaxLevel(currency, this)
         currency.count += (100 * level) + 100
         level++

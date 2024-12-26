@@ -7,20 +7,20 @@ import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.data.player.PlayerData
 import io.github.flyingpig525.data.player.PlayerData.Companion.toBlockList
 import io.github.flyingpig525.data.block.*
+import io.github.flyingpig525.data.inventory.InventoryConditionArguments
 import net.bladehunt.kotstom.GlobalEventHandler
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.dsl.item.lore
-import net.bladehunt.kotstom.dsl.listen
 import net.bladehunt.kotstom.extension.adventure.asMini
+import net.bladehunt.kotstom.extension.adventure.noItalic
 import net.bladehunt.kotstom.extension.set
 import net.minestom.server.entity.Player
-import net.minestom.server.event.EventFilter
-import net.minestom.server.event.EventNode
-import net.minestom.server.event.inventory.InventoryClickEvent
 import net.minestom.server.event.player.PlayerUseItemEvent
 import net.minestom.server.inventory.Inventory
 import net.minestom.server.inventory.InventoryType
+import net.minestom.server.inventory.click.ClickType
+import net.minestom.server.inventory.condition.InventoryConditionResult
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import net.minestom.server.tag.Tag
@@ -49,56 +49,54 @@ object SelectBlockItem : Actionable {
     }
 
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
+        val gameInstance = instances.fromInstance(event.instance) ?: return true
         val inventory = Inventory(InventoryType.CHEST_5_ROW, "Select Block")
 
         inventory[3, 1] = NATURAL_CATEGORY
         inventory[5, 1] = UNDERGROUND_CATEGORY
         inventory[4, 3] = NETHER_CATEGORY
 
-        event.player.openInventory(inventory)
-
-        val inventoryEventNode = EventNode.type("select-category-inv${event.player.uuid.mostSignificantBits}", EventFilter.INVENTORY, {_, inv -> inventory == inv}).listen<InventoryClickEvent> { e ->
-            if (e.clickedItem.material() == Material.AIR) return@listen
-            val gameInstance = instances.fromInstance(e.instance) ?: return@listen
-            e.player.inventory.cursorItem = ItemStack.AIR
-            when(e.clickedItem) {
-                NATURAL_CATEGORY -> openCategory(NaturalCategory.entries, e, gameInstance)
-                UNDERGROUND_CATEGORY -> openCategory(UndergroundCategory.entries, e, gameInstance)
-                NETHER_CATEGORY -> openCategory(NetherCategory.entries, e, gameInstance)
+        inventory.addInventoryCondition { player: Player, slot: Int, clickType: ClickType, res: InventoryConditionResult ->
+            res.isCancel = true
+            if (res.clickedItem.material() == Material.AIR) return@addInventoryCondition
+            player.inventory.cursorItem = ItemStack.AIR
+            val arguments = InventoryConditionArguments(player, slot, clickType, res)
+            when(res.clickedItem) {
+                NATURAL_CATEGORY -> openCategory(NaturalCategory.entries, arguments, gameInstance)
+                UNDERGROUND_CATEGORY -> openCategory(UndergroundCategory.entries, arguments, gameInstance)
+                NETHER_CATEGORY -> openCategory(NetherCategory.entries, arguments, gameInstance)
                 else -> {}
             }
-            GlobalEventHandler.removeChildren("select-category-inv${event.player.uuid.mostSignificantBits}")
         }
 
-        GlobalEventHandler.addChild(inventoryEventNode)
-
+        event.player.openInventory(inventory)
         return true
     }
 
-    private fun openCategory(entries: EnumEntries<*>, e: InventoryClickEvent, instance: GameInstance) {
+    private fun openCategory(entries: EnumEntries<*>, e: InventoryConditionArguments, instance: GameInstance) {
         val inventory = Inventory(InventoryType.CHEST_6_ROW, "Select Block")
 
 
-        for ((i, block) in entries.withIndex()) {
-            if (block is CategoryBlock) {
-                val item = item(block.material) {
-                    itemName = "<gray>- <gold><bold>${block.name} <reset><gray>-".asMini()
+        for ((i, cBlock) in entries.withIndex()) {
+            if (cBlock is CategoryBlock) {
+                val item = item(cBlock.material) {
+                    itemName = "<gray>- <gold><bold>${cBlock.name.replace('_', ' ')} <reset><gray>-".asMini()
                     lore {
-                        +"<gray>-| <green><bold>Click to Select".asMini()
+                        if (cBlock.block !in instance.playerData.toBlockList()) {
+                            +"<gray>-| <green><bold><i>Click to Select<reset> <gray>|-".asMini().noItalic()
+                        } else {
+                            +"<gray>-| <red><bold><i>Block already in use<reset> <gray>|-".asMini().noItalic()
+                        }
                     }
                 }
                 inventory[i % 9, i / 9] = item
             } else throw InvalidTypeException("block is not type CategoryBlock")
         }
-        e.player.openInventory(inventory)
 
-        val inventoryEventNode = EventNode.type(
-            "select-block-inv${e.player.uuid.mostSignificantBits}",
-            EventFilter.INVENTORY,
-            {_, inv -> inventory == inv}
-        )
-            .listen<InventoryClickEvent> { e ->
-            if (e.clickedItem.material() == Material.AIR || e.clickedItem.material().block() in instance.playerData.toBlockList()) return@listen
+        inventory.addInventoryCondition { player: Player, slot: Int, clickType: ClickType, res: InventoryConditionResult ->
+            res.isCancel = true
+            if (res.clickedItem.material() == Material.AIR
+                || res.clickedItem.material().block() in instance.playerData.toBlockList()) return@addInventoryCondition
             if (instance.playerData[e.player.uuid.toString()] != null) {
                 val data = instance.playerData[e.player.uuid.toString()]!!
                 instance.clearBlock(data.block)
@@ -107,16 +105,14 @@ object SelectBlockItem : Actionable {
                 e.player.hideBossBar(data.resourcesBossBar)
             }
             instance.playerData[e.player.uuid.toString()] =
-                PlayerData(e.player.uuid.toString(), e.clickedItem.material().block()!!, e.player.username)
+                PlayerData(e.player.uuid.toString(), res.clickedItem.material().block()!!, e.player.username)
             e.player.closeInventory()
             for (i in 0..8) {
                 e.player.inventory[i] = ItemStack.AIR
             }
             instance.playerData[e.player.uuid.toString()]!!.setupPlayer(e.player)
-            GlobalEventHandler.removeChildren("select-block-inv${e.player.uuid.mostSignificantBits}")
         }
-
-        GlobalEventHandler.addChild(inventoryEventNode)
+        e.player.openInventory(inventory)
     }
 
     override fun setItemSlot(player: Player) {
