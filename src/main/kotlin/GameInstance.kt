@@ -57,7 +57,7 @@ import kotlin.io.path.exists
 class GameInstance(val path: Path, val name: String) {
     lateinit var instance: InstanceContainer
 
-    private val instanceConfig: InstanceConfig = run {
+    val instanceConfig: InstanceConfig = run {
         val file = path.resolve("instance-config.json").toFile()
         if (file.exists()) {
             return@run json.decodeFromString(file.readText())
@@ -334,6 +334,7 @@ class GameInstance(val path: Path, val name: String) {
             if (data == null) {
                 SelectBlockItem.setAllSlots(e.player)
             } else {
+                data.gameInstance = this
                 data.setupPlayer(e.player)
                 if (e.isFirstSpawn) {
                     data.sendCooldowns(e.player)

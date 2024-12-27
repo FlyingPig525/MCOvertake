@@ -23,6 +23,7 @@ import kotlin.reflect.KProperty0
 
 @Serializable
 class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val block: Block, var playerDisplayName: String) {
+    @Transient var gameInstance: GameInstance? = null
     var blocks: Int = 0
     val trainingCamps = TrainingCamp()
     val trainingCampCost: Int get() = computeGeneratorCost(trainingCamps.count)
@@ -162,7 +163,11 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
         showBossBars(player)
         updateBossBars()
         Actionable.persistentRegistry.forEach {
-            it.setItemSlot(player)
+            if (it is ResearchUpgradeItem) {
+                if (gameInstance?.instanceConfig?.allowResearch == true) {
+                    it.setItemSlot(player)
+                }
+            } else it.setItemSlot(player)
         }
         player.helmet = item(Material.fromNamespaceId(block.namespace())!!)
     }

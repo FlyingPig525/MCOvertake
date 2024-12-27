@@ -110,6 +110,7 @@ object SelectBlockItem : Actionable {
             for (i in 0..8) {
                 e.player.inventory[i] = ItemStack.AIR
             }
+            instance.playerData[e.player.uuid.toString()]!!.gameInstance = instance
             instance.playerData[e.player.uuid.toString()]!!.setupPlayer(e.player)
         }
         e.player.openInventory(inventory)

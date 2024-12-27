@@ -1,7 +1,6 @@
-package io.github.flyingpig525.data.player
+package io.github.flyingpig525.data.player.permission
 
 import io.github.flyingpig525.config
-import io.github.flyingpig525.data.player.permission.Permission
 import io.github.flyingpig525.json
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString

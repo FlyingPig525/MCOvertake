@@ -9,7 +9,7 @@ import io.github.flyingpig525.console.OpCommand
 import io.github.flyingpig525.console.SaveCommand
 import io.github.flyingpig525.data.Config
 import io.github.flyingpig525.data.InstanceConfig
-import io.github.flyingpig525.data.player.PermissionManager
+import io.github.flyingpig525.data.player.permission.PermissionManager
 import io.github.flyingpig525.data.player.PlayerData
 import io.github.flyingpig525.data.player.permission.Permission
 import io.github.flyingpig525.item.*
@@ -72,6 +72,7 @@ import java.io.File
 import java.net.URI
 import java.nio.file.Path
 import java.util.*
+import kotlin.reflect.KClass
 
 
 const val POWER_SYMBOL = "✘"
@@ -608,6 +609,19 @@ fun Player.removeBossBars() {
     val bars = BossBarManager.getPlayerBossBars(this)
     for (bar in bars) {
         hideBossBar(bar)
+    }
+}
+
+fun String.toType(t: KClass<out Any>): Any? {
+    return when (t.simpleName) {
+        "Int" -> toInt()
+        "String" -> this
+        "Double" -> toDouble()
+        "Float" -> toFloat()
+        "Long" -> toLong()
+        "Boolean" -> toBoolean()
+        "Block" -> Block.fromNamespaceId(this)
+        else -> null
     }
 }
 

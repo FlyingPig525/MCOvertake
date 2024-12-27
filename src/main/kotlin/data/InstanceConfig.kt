@@ -16,4 +16,6 @@ data class InstanceConfig(
     val mapSize: Int = 300,
     // Block identifier for underground claimable tile, can be any block, but it is recommended to keep it a block players cant be
     @Serializable(with = BlockSerializer::class) val undergroundBlock: Block = Block.BEDROCK,
+    // Whether to allow research upgrades or not
+    val allowResearch: Boolean = false
 )
