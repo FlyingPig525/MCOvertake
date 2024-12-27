@@ -8,7 +8,6 @@ import net.minestom.server.utils.time.Cooldown
 import java.time.Duration
 import kotlin.reflect.KProperty0
 
-// TODO: FINISH ADDING EVENTS
 sealed class ActionData(val playerData: PlayerData, val instance: Instance?, val player: Player?) {
     class Attacked(playerData: PlayerData, instance: Instance, player: Player?) : ActionData(
         playerData, instance,

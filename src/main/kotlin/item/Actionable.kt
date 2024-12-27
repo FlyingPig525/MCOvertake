@@ -48,7 +48,6 @@ fun claimWithParticle(player: Player, target: Point, resultBlock: Block, instanc
 fun claimWithParticle(player: Player, target: Point, targetBlock: Block, resultBlock: Block, instance: Instance) {
     instance.setBlock(target.visiblePosition, resultBlock)
     instance.setBlock(target.playerPosition, resultBlock)
-    // TODO: FIX CLAIM PARTICLES (likely minestom problem)
     val particle = ParticlePacket(
         Particle.BLOCK.withBlock(targetBlock),
         target.visiblePosition.add(0.5, 1.0, 0.5),

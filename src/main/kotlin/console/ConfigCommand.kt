@@ -7,7 +7,6 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
 
-// TODO: Add config manipulation
 object ConfigCommand : Command {
     init {
         Command.registry += ConfigCommand

@@ -55,7 +55,6 @@ object AttackItem : Actionable {
     private fun getAttacking(player: Player): PlayerData? {
         val players = instances.fromInstance(player.instance).let { it?.playerData } ?: return null
         val target = player.getTrueTarget(20)!!
-        // TODO: AFTER ADDING WALLS ADD WALL THINGS HERE
         return players.getDataByPoint(target, player.instance)
     }
 
@@ -66,7 +65,6 @@ object AttackItem : Actionable {
     }
 
     private fun getAttackCooldown(targetData: PlayerData?, wallLevel: Int): Cooldown {
-        // TODO: When research-like things get implemented, add them
         var cooldownTicks = 20L
         if (wallLevel <= 10) {
             cooldownTicks += 3 * wallLevel
@@ -102,7 +100,6 @@ object AttackItem : Actionable {
             wallLevel = buildingBlock.wallLevel
             this.targetData = _targetData
         }.let { data.research.onPreAttack(it) }
-        // TODO: ADD PRE ATTACK DATA RESEARCH MANIPULATION
         val attackCost = getAttackCost(preAttackData.targetData, preAttackData.wallLevel)
         val postAttack = ActionData.PostAttack(data, instance, event.player).apply {
             attackCooldown = getAttackCooldown(preAttackData.targetData, preAttackData.wallLevel)
