@@ -32,10 +32,12 @@ import net.bladehunt.kotstom.extension.get
 import net.bladehunt.kotstom.extension.roundToBlock
 import net.bladehunt.kotstom.extension.set
 import net.kyori.adventure.resource.ResourcePackInfo
+import net.kyori.adventure.resource.ResourcePackRequest
 import net.kyori.adventure.text.Component
 import net.minestom.server.MinecraftServer
 import net.minestom.server.collision.ShapeImpl
 import net.minestom.server.command.builder.CommandExecutor
+import net.minestom.server.command.builder.arguments.ArgumentBoolean
 import net.minestom.server.command.builder.arguments.ArgumentString
 import net.minestom.server.command.builder.suggestion.SuggestionEntry
 import net.minestom.server.coordinate.Point
@@ -44,7 +46,9 @@ import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.Entity
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
+import net.minestom.server.entity.PlayerHand
 import net.minestom.server.event.inventory.InventoryClickEvent
+import net.minestom.server.event.inventory.InventoryCloseEvent
 import net.minestom.server.event.item.ItemDropEvent
 import net.minestom.server.event.player.*
 import net.minestom.server.event.server.ServerListPingEvent
@@ -61,6 +65,8 @@ import net.minestom.server.inventory.condition.InventoryConditionResult
 import net.minestom.server.item.ItemComponent
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
+import net.minestom.server.network.packet.PacketReading
+import net.minestom.server.network.packet.PacketRegistry
 import net.minestom.server.tag.Tag
 import net.minestom.server.timer.TaskSchedule
 import net.minestom.server.utils.time.Cooldown
@@ -86,6 +92,9 @@ const val RESOURCE_SYMBOL = "⌘"
 const val WALL_SYMBOL = "\uD83E\uDE93"
 const val PICKAXE_SYMBOL = "⛏"
 const val GLOBAL_RESEARCH_SYMBOL = "\uD83E\uDDEA"
+const val OIL_SYMBOL = "☀"
+
+const val BUILDING_INVENTORY_SLOT = 4
 
 const val SERVER_VERSION = "v0.3"
 
@@ -175,11 +184,18 @@ fun main() = runBlocking { try {
 
     initItems()
 
-
     GlobalEventHandler.listen<ServerListPingEvent> {
         it.responseData.apply {
             description = "<gradient:green:gold><bold>MCOvertake - $SERVER_VERSION".asMini()
         }
+    }
+
+    GlobalEventHandler.listen<InventoryCloseEvent> {
+        it.player.inventory.cursorItem = ItemStack.AIR
+    }
+
+    GlobalEventHandler.listen<ItemDropEvent> {
+        it.isCancelled = true
     }
 
     GlobalEventHandler.listen<AsyncPlayerConfigurationEvent> { event ->
@@ -196,9 +212,13 @@ fun main() = runBlocking { try {
         player.respawnPoint = Pos(8.0, 11.0, 8.0)
 
         if (builtResourcePack != null) {
-            player.sendResourcePacks(ResourcePackInfo.resourcePackInfo()
+            val info = ResourcePackInfo.resourcePackInfo()
                 .hash(builtResourcePack.hash())
                 .uri(URI("http://${config.serverAddress}:${config.packServerPort}/${builtResourcePack.hash()}.zip"))
+                .build()
+            player.sendResourcePacks(ResourcePackRequest.resourcePackRequest()
+                .packs(info)
+                .prompt("<green>This resource pack provides \"crucial\" visual changes that allow for a better and more <i>smooth</i> experience.".asMini())
                 .build()
             )
         }
@@ -211,8 +231,12 @@ fun main() = runBlocking { try {
         e.player.inventory[0] = item(Material.COMPASS) {
             itemName = "<gradient:green:gold:$scoreboardTitleProgress><bold>MCOvertake Game Instances".asMini()
         }
-        e.player.inventory.addInventoryCondition { _, _, _, inventoryConditionResult ->
-            inventoryConditionResult.isCancel = true
+        e.player.inventory.addInventoryCondition { player, slot, type, res ->
+            res.isCancel = true
+            val item = player.inventory[slot]
+            if (item == SelectBlockItem.item) {
+                SelectBlockItem.onInteract(PlayerUseItemEvent(player, PlayerHand.MAIN, item, 0L))
+            }
         }
     }
     lobbyInstance.eventNode().listen<PlayerSwapItemEvent> { it.isCancelled = true }
@@ -322,13 +346,14 @@ fun main() = runBlocking { try {
             }
         }
 
-        buildSyntax(ArgumentString("name")) {
+        buildSyntax(ArgumentString("name"), ArgumentBoolean("research")) {
             condition {
                 permissionManager.hasPermission(player, Permission("instance.creation"))
             }
             onlyPlayers()
             executorAsync(Dispatchers.IO) {
                 val name = context.getRaw("name")
+                val research = context.get<Boolean>("research")
                 try {
                     player.sendMessage("<green>Attempting to create instance $name".asMini())
                     if (name == "") {
@@ -339,7 +364,15 @@ fun main() = runBlocking { try {
                         player.sendMessage("<red><bold>Instance \"$name\" already exists!".asMini())
                         return@executorAsync
                     }
-                    instances[name] = GameInstance(Path.of("instances", name), name).apply { totalInit(player) }
+                    instances[name] = GameInstance(Path.of("instances", name), name).apply {
+                        totalInit(player)
+                        val instanceC = path.resolve("instance-config.json").toFile()
+                        if (!instanceC.exists()) {
+                            instanceC.createNewFile()
+                        }
+                        instanceC.writeText(json.encodeToString(instanceConfig.copy(allowResearch = research)))
+                        updateConfig()
+                    }
                     config.instanceNames += name
                     configFile.writeText(json.encodeToString(config))
                     player.sendMessage("<green><bold>Created instance \"$name\" successfully!".asMini())
@@ -421,11 +454,25 @@ fun main() = runBlocking { try {
             }
         }
     }
-    CommandManager.register(createInstanceCommand, lobbyCommand, tickCommand, deleteInstanceCommand, gcCommand)
+    val validateResearchCommand = kommand {
+        name = "validateResearch"
+        buildSyntax {
+            condition {
+                permissionManager.hasPermission(player, Permission("data.research.validation"))
+            }
+            executor {
+                player.instance.players.onEach { it.data!!.research.basicResearch.validateUpgrades() }
+            }
+        }
+    }
+    CommandManager.register(createInstanceCommand, lobbyCommand, tickCommand, deleteInstanceCommand, gcCommand, validateResearchCommand)
 
     // Save loop
     SchedulerManager.scheduleTask({
-        instances.values.onEach { it.save() }
+        instances.values.onEach {
+            println("-----------${it.name}---------")
+            it.save()
+        }
         if (config.printSaveMessages) {
             log("Game data saved")
         }
@@ -577,7 +624,7 @@ fun Point.anyAdjacentBlocksMatch(block: Block, instance: Instance): Boolean {
 }
 
 /**
- * Calls [fn] with each adjacent location relative to [point] starting from the north-west going clockwise
+ * Calls [fn] with each adjacent location relative to this [Point] starting from the north-west going clockwise
  */
 inline fun Point.repeatAdjacent(fn: (point: Point) -> Unit) {
     fn(add(-1.0, 0.0, -1.0))
@@ -587,6 +634,16 @@ inline fun Point.repeatAdjacent(fn: (point: Point) -> Unit) {
     fn(add(1.0, 0.0, 1.0))
     fn(add(0.0, 0.0, 1.0))
     fn(add(-1.0, 0.0, 1.0))
+    fn(add(-1.0, 0.0, 0.0))
+}
+
+/**
+ * Calls [fn] with each adjacent location, without the corners, relative to this [Point] starting from north going clockwise
+ */
+inline fun Point.repeatDirection(fn: (point: Point) -> Unit) {
+    fn(add(0.0, 0.0, -1.0))
+    fn(add(1.0, 0.0, 0.0))
+    fn(add(0.0, 0.0, 1.0))
     fn(add(-1.0, 0.0, 0.0))
 }
 
@@ -609,19 +666,6 @@ fun Player.removeBossBars() {
     val bars = BossBarManager.getPlayerBossBars(this)
     for (bar in bars) {
         hideBossBar(bar)
-    }
-}
-
-fun String.toType(t: KClass<out Any>): Any? {
-    return when (t.simpleName) {
-        "Int" -> toInt()
-        "String" -> this
-        "Double" -> toDouble()
-        "Float" -> toFloat()
-        "Long" -> toLong()
-        "Boolean" -> toBoolean()
-        "Block" -> Block.fromNamespaceId(this)
-        else -> null
     }
 }
 

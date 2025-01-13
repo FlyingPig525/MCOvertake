@@ -1,7 +1,14 @@
 package io.github.flyingpig525.wall
 
+import io.github.flyingpig525.buildingPosition
+import io.github.flyingpig525.repeatAdjacent
+import net.minestom.server.coordinate.Point
+import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.instance.block.Block.*
+import java.lang.Math.pow
+import kotlin.math.max
+import kotlin.math.pow
 
 // These values will not be manually updated, set in map builder
 var WOODEN_FENCE_RANGE = 2..12
@@ -96,6 +103,22 @@ fun getWallAttackCost(block: Block): Int? {
 }
 
 fun getWallAttackCost(level: Int): Int = level * 2
+
+fun getWallAttackCost(wall: Point, instance: Instance, basePercentage: Double = 1.05, customWallLevel: Int? = null): Int {
+    val cost: Int
+    if (customWallLevel == null) {
+        val block = instance.getBlock(wall.buildingPosition)
+        if (block.wallLevel == 0) return 0
+        cost = getWallAttackCost(block.wallLevel)
+    } else {
+        cost = getWallAttackCost(customWallLevel)
+    }
+    var count = 0.0
+    wall.repeatAdjacent {
+        if (instance.getBlock(it).wallLevel != 0) count += 1
+    }
+    return ((cost + 15) * max(1.05, basePercentage).pow(max(0.0, count - 2))).toInt() - 15
+}
 
 fun getWallUpgradeCost(wall: Block): Int? {
     if (blockIsWall(wall.defaultState())) {

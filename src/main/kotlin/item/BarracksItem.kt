@@ -31,10 +31,7 @@ object BarracksItem : Actionable {
     }
 
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
-        if (event.player.isSneaking) {
-            SelectBuildingItem.onInteract(event)
-            return true
-        }
+        if (sneakCheck(event)) return true
         val instance = event.instance
         val gameInstance = instances.fromInstance(instance) ?: return true
         val target = event.player.getTrueTarget(20) ?: return true

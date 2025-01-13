@@ -53,7 +53,7 @@ class TrainingCamp : Building {
                     +"<dark_gray>Provides space for troops and other assets to".asMini()
                     +"<dark_gray>refine their specific skills".asMini()
                     +"<gray>Generates 0.5 $power".asMini().noItalic()
-                    resourcesConsumed(3)
+                    resourcesConsumed(3, count)
                     amountOwned(count)
                 }
                 set(Tag.String("identifier"), identifier)

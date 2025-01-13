@@ -10,7 +10,6 @@ import io.github.flyingpig525.data.research.action.ActionData
 import io.github.flyingpig525.wall.getWallAttackCost
 import io.github.flyingpig525.wall.lastWall
 import io.github.flyingpig525.wall.wallLevel
-import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.bladehunt.kotstom.extension.set
@@ -22,7 +21,6 @@ import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import net.minestom.server.network.packet.server.play.SetCooldownPacket
-import net.minestom.server.tag.Tag
 import net.minestom.server.utils.time.Cooldown
 import java.time.Duration
 import java.time.Instant
@@ -39,32 +37,43 @@ object AttackItem : Actionable {
     override val itemMaterial: Material = Material.DIAMOND_SWORD
 
     override fun getItem(uuid: UUID, instance: GameInstance): ItemStack {
-        return item(itemMaterial) {
+        return gameItem(itemMaterial, identifier) {
             val player = instance.instance.getPlayerByUuid(uuid) ?: return ERROR_ITEM
             val target = player.getTrueTarget(20) ?: return ERROR_ITEM
             val buildingBlock = instance.instance.getBlock(target.buildingPosition)
+            val data = player.data ?: return ERROR_ITEM
             val targetData = getAttacking(player)
-            val targetName = targetData?.playerDisplayName ?: ""
-            val attackCost = getAttackCost(targetData, buildingBlock.wallLevel)
+            val targetName = targetData.playerDisplayName
+            val attackCost = getAttackCost(
+                targetData,
+                target.buildingPosition,
+                instance.instance,
+                buildingBlock.wallLevel,
+                data.research.basicResearch.adjacentWallPercentageDecrease
+            )
 
             itemName = "<red>$ATTACK_SYMBOL <bold>Attack $targetName</bold> <gray>- <red>$POWER_SYMBOL <bold>$attackCost".asMini().asComponent()
-            set(Tag.String("identifier"), identifier)
         }
     }
 
-    private fun getAttacking(player: Player): PlayerData? {
-        val players = instances.fromInstance(player.instance).let { it?.playerData } ?: return null
+    private fun getAttacking(player: Player): PlayerData {
+        val players = instances.fromInstance(player.instance)!!.playerData
         val target = player.getTrueTarget(20)!!
-        return players.getDataByPoint(target, player.instance)
+        return players.getDataByPoint(target, player.instance)!!
     }
 
-    private fun getAttackCost(targetData: PlayerData?, wallLevel: Int): Int {
+    private fun getAttackCost(targetData: PlayerData, wall: Point, instance: Instance, wallLevel: Int, percentageDecrease: Double): Int {
         var additiveModifier = 0
-        additiveModifier += getWallAttackCost(wallLevel)
-        return (targetData?.baseAttackCost ?: 15) + additiveModifier
+        additiveModifier += getWallAttackCost(
+            wall,
+            instance,
+            customWallLevel = wallLevel,
+            basePercentage = 1.05 - percentageDecrease + targetData.research.basicResearch.adjacentWallPercentageIncrease
+        )
+        return (targetData.baseAttackCost) + additiveModifier
     }
 
-    private fun getAttackCooldown(targetData: PlayerData?, wallLevel: Int): Cooldown {
+    private fun getAttackCooldown(targetData: PlayerData, wallLevel: Int): Cooldown {
         var cooldownTicks = 20L
         if (wallLevel <= 10) {
             cooldownTicks += 3 * wallLevel
@@ -96,12 +105,18 @@ object AttackItem : Actionable {
             return true
         }
         val _targetData = getAttacking(event.player) ?: return true
-        var preAttackData = ActionData.PreAttack(data, instance, event.player).apply {
+        val preAttackData = ActionData.AttackCostCalculation(data, instance, event.player).apply {
             wallLevel = buildingBlock.wallLevel
-            this.targetData = _targetData
+            targetData = _targetData
         }.let { data.research.onPreAttack(it) }
-        val attackCost = getAttackCost(preAttackData.targetData, preAttackData.wallLevel)
-        val postAttack = ActionData.PostAttack(data, instance, event.player).apply {
+        val attackCost = getAttackCost(
+            preAttackData.targetData,
+            target.buildingPosition,
+            instance,
+            preAttackData.wallLevel,
+            data.research.basicResearch.adjacentWallPercentageDecrease
+        )
+        val postAttack = ActionData.Attack(data, instance, event.player).apply {
             attackCooldown = getAttackCooldown(preAttackData.targetData, preAttackData.wallLevel)
             this.attackCost = attackCost
             this.targetData = preAttackData.targetData

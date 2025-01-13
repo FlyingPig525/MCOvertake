@@ -8,6 +8,7 @@ import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.extension.adventure.asMini
+import net.bladehunt.kotstom.extension.adventure.noItalic
 import net.bladehunt.kotstom.extension.set
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.entity.Player
@@ -75,20 +76,36 @@ object ResearchUpgradeItem : Actionable {
         )
 
         for ((i, upgrade) in currency.upgrades.withIndex()) {
-            if (upgrade.requiredInternalLevel > currency.currencyLevel) continue
-            inventory[i * 2] = upgrade.item().withTag(Tag.String("name"), upgrade.name)
+            val newItem = upgrade.item().withTag(Tag.String("name"), upgrade.name)
+            val lore = newItem.get(ItemComponent.LORE)!!.map {
+                if (it.toString().contains("Cost:") && upgrade.level == upgrade.maxLevel) {
+                    return@map "<green><bold>Max Level".asMini().noItalic()
+                }
+                it
+            }
+            inventory[i * 2] = newItem.withLore(lore)
         }
-        inventory.addInventoryCondition { player, i, clickType, res ->
+        inventory.addInventoryCondition { player, slot, clickType, res ->
             res.isCancel = true
             val name = res.clickedItem.getTag(Tag.String("name")) ?: return@addInventoryCondition
             val upgrade = currency.upgradeByName(name) ?: return@addInventoryCondition
-            val purchaseState = upgrade.onPurchase(res, currency)
+            val purchaseState = upgrade.onPurchase(res, currency, player)
             if (purchaseState !is ResearchUpgrade.PurchaseState.Success) {
                 e.player.sendMessage(purchaseState.toString().asMini())
                 return@addInventoryCondition
             }
             e.instance.eventNode().removeChildren("purchase-upgrade-inv${e.player.uuid.mostSignificantBits}")
-            currencyInventory(e, currency)
+            (player.openInventory!! as Inventory).apply {
+                val newItem = upgrade.item().withTag(Tag.String("name"), upgrade.name)
+                val lore = newItem.get(ItemComponent.LORE)!!.map {
+                    if (it.toString().contains("Cost:") && upgrade.level == upgrade.maxLevel) {
+                        return@map "<green><bold>Max Level".asMini().noItalic()
+                    }
+                    it
+                }
+                set(slot, newItem.withLore(lore))
+                title = "<${currency.color}>${currency.symbol}</${currency.color}> - ${currency.count}".asMini()
+            }
         }
         e.player.closeInventory()
         e.player.openInventory(inventory)

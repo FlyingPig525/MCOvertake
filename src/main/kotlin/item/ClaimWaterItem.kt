@@ -85,7 +85,7 @@ object ClaimWaterItem : Actionable {
             with((it.entityMeta as BlockDisplayMeta)) {
                 setBlockState(playerBlock)
                 scale = Vec(0.875, 0.1625, 0.875)
-                translation = Vec(-0.4375+0.5, -0.15125, -0.4375+0.5)
+                translation = Vec(-0.4375+0.5, -0.145, -0.4375+0.5)
             }
             it.setInstance(instance, point)
         }

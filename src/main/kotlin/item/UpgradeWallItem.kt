@@ -17,7 +17,9 @@ import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
+import net.minestom.server.network.packet.server.play.SetCooldownPacket
 import net.minestom.server.tag.Tag
+import java.time.Instant
 import java.util.*
 
 object UpgradeWallItem : Actionable {
@@ -49,6 +51,7 @@ object UpgradeWallItem : Actionable {
         val instance = event.instance
         val gameInstance = instance.gameInstance ?: return true
         val data = gameInstance.playerData[event.player.uuid.toString()] ?: return true
+        if (!data.wallUpgradeCooldown.isReady(Instant.now().toEpochMilli())) return true
         val target = event.player.getTrueTarget(20)?.buildingPosition ?: return true
         val block = instance.getBlock(target).defaultState()
         if (!block.canUpgradeWall) return true
@@ -59,6 +62,13 @@ object UpgradeWallItem : Actionable {
         }.also { data.research.onUpgradeWall(it) }
         if (data.organicMatter < actionData.cost) return true
         data.organicMatter -= actionData.cost
+        data.wallUpgradeCooldown = actionData.cooldown
+        event.player.sendPacket(
+            SetCooldownPacket(
+                itemMaterial.cooldownIdentifier,
+                data.wallUpgradeCooldown.ticks
+            )
+        )
         instance.setBlock(target, nextWall(level))
         updateWall(target, instance)
         target.repeatAdjacent { updateWall(it, gameInstance.instance) }

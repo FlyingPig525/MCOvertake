@@ -34,11 +34,11 @@ class ResearchContainer : Iterable<ResearchCurrency> {
         var data = basicResearch.upgrades.onClaimLand(eventData)
         return data
     }
-    fun onPostAttack(eventData: PostAttack): PostAttack {
+    fun onPostAttack(eventData: Attack): Attack {
         var data = basicResearch.upgrades.onPostAttack(eventData)
         return data
     }
-    fun onPreAttack(eventData: PreAttack): PreAttack {
+    fun onPreAttack(eventData: AttackCostCalculation): AttackCostCalculation {
         var data = basicResearch.upgrades.onPreAttack(eventData)
         return data
     }

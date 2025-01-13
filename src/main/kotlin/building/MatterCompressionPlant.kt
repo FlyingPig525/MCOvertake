@@ -1,6 +1,7 @@
 package io.github.flyingpig525.building
 
 import cz.lukynka.prettylog.log
+import io.github.flyingpig525.BUILDING_INVENTORY_SLOT
 import io.github.flyingpig525.MATTER_SYMBOL
 import io.github.flyingpig525.MECHANICAL_SYMBOL
 import io.github.flyingpig525.buildingPosition
@@ -30,11 +31,11 @@ class MatterCompressionPlant : Building {
     }
 
     override fun select(player: Player, cost: Int) {
-        player.inventory[4] = getItem(cost, count)
+        player.inventory[BUILDING_INVENTORY_SLOT] = getItem(cost, count)
     }
 
     override fun select(player: Player, data: PlayerData) {
-        player.inventory[4] = getItem(data)
+        player.inventory[BUILDING_INVENTORY_SLOT] = getItem(data)
     }
 
     override fun tick(data: PlayerData) {
@@ -51,12 +52,12 @@ class MatterCompressionPlant : Building {
 
         override fun getItem(cost: Int, count: Int): ItemStack {
             return item(Material.HEAVY_CORE) {
-                itemName = "<white>$MECHANICAL_SYMBOL Matter Compression Plant <gray>-</gray><green> $MATTER_SYMBOL $cost".asMini()
+                itemName = "<white>$MECHANICAL_SYMBOL Matter Compression Plant <gray>-<green> $MATTER_SYMBOL $cost".asMini()
                 lore {
                     +"<dark_gray>Separates and compresses metallic materials found in".asMini()
                     +"<dark_gray>organic matter".asMini()
                     +"<gray>Uses 5 $organicMatter to generate 1 $mechanicalPart".asMini().noItalic()
-                    resourcesConsumed(4)
+                    resourcesConsumed(4, count)
                     amountOwned(count)
                 }
                 set(Tag.String("identifier"), identifier)

@@ -1,6 +1,7 @@
 package io.github.flyingpig525.building
 
 import cz.lukynka.prettylog.log
+import io.github.flyingpig525.BUILDING_INVENTORY_SLOT
 import io.github.flyingpig525.MATTER_SYMBOL
 import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.player.PlayerData
@@ -29,11 +30,11 @@ class MatterContainer : Building {
     }
 
     override fun select(player: Player, cost: Int) {
-        player.inventory[4] = getItem(cost, count)
+        player.inventory[BUILDING_INVENTORY_SLOT] = getItem(cost, count)
     }
 
     override fun select(player: Player, data: PlayerData) {
-        player.inventory[4] = getItem(data)
+        player.inventory[BUILDING_INVENTORY_SLOT] = getItem(data)
     }
 
     companion object MatterContainerCompanion : Building.BuildingCompanion {
@@ -47,7 +48,7 @@ class MatterContainer : Building {
                 lore {
                     +"<dark_gray>Stores 25 cubic feet of organic matter".asMini()
                     +"<gray>Increases Max $organicMatter Storage".asMini().noItalic()
-                    resourcesConsumed(2)
+                    resourcesConsumed(2, count)
                     amountOwned(count)
                 }
                 set(Tag.String("identifier"), identifier)

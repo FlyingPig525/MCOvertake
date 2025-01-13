@@ -4,7 +4,7 @@ import io.github.flyingpig525.data.research.action.ActionData.*
 import io.github.flyingpig525.data.research.currency.ResearchCurrency
 import kotlinx.serialization.Required
 import kotlinx.serialization.Serializable
-import net.minestom.server.event.inventory.InventoryClickEvent
+import net.minestom.server.entity.Player
 import net.minestom.server.inventory.condition.InventoryConditionResult
 import net.minestom.server.item.ItemStack
 
@@ -12,21 +12,19 @@ import net.minestom.server.item.ItemStack
 // TODO: MAKE COST USE A DIFFERENT CLASS THAT ALLOWS MULTI-CURRENCY COSTS
 /**
  * @property [name] - Unique (to currency) identifier
- * @property [requiredInternalLevel] - The internal [ResearchCurrency.currencyLevel] required for purchase, upgrade will not be visible without
- * meeting requirement
  */
 sealed class ResearchUpgrade {
-    @Required abstract var level: Int
+    open var level: Int = 0
 
     abstract var maxLevel: Int
     abstract val name: String
-    abstract val requiredInternalLevel: Int
     abstract val cost: Long
 
+    open fun onCurrencyUpgrade(newLevel: Int) {}
     /**
      * Executes after attacking another player
      */
-    open fun onPostAttack(eventData: PostAttack): PostAttack? = null
+    open fun onPostAttack(eventData: Attack): Attack? = null
     open fun onClaimLand(eventData: ClaimLand): ClaimLand? = null
     open fun onPlaceRaft(eventData: PlaceRaft): PlaceRaft? = null
     open fun onPlaceColony(eventData: PlaceColony): PlaceColony? = null
@@ -37,7 +35,7 @@ sealed class ResearchUpgrade {
     /**
      * Executes before attacking another player
      */
-    open fun onPreAttack(eventData: PreAttack): PreAttack? = null
+    open fun onPreAttack(eventData: AttackCostCalculation): AttackCostCalculation? = null
 
     /**
      * Executes when another player attacks
@@ -47,7 +45,7 @@ sealed class ResearchUpgrade {
 
     abstract fun item(): ItemStack
 
-    open fun onPurchase(clickEvent: InventoryConditionResult, currency: ResearchCurrency): PurchaseState {
+    open fun onPurchase(clickEvent: InventoryConditionResult, currency: ResearchCurrency, player: Player): PurchaseState {
         if (level == maxLevel) return PurchaseState.MaxLevel(currency, this)
         if (currency.count < cost) return PurchaseState.NotEnoughCurrency(currency, this)
         currency.count -= cost
@@ -65,6 +63,8 @@ sealed class ResearchUpgrade {
             override fun toString(): String = "<red><bold>Max Upgrade Level ${upgrade.maxLevel} Reached!"
         }
         data object Success : PurchaseState()
+
+        val success get() = this is Success
     }
 
     companion object {
@@ -77,7 +77,7 @@ sealed class ResearchUpgrade {
             return data
         }
         // Implemented
-        fun List<ResearchUpgrade>.onPostAttack(eventData: PostAttack): PostAttack {
+        fun List<ResearchUpgrade>.onPostAttack(eventData: Attack): Attack {
             var data = eventData
             forEach {
                 data = it.onPostAttack(data) ?: data
@@ -85,7 +85,7 @@ sealed class ResearchUpgrade {
             return data
         }
         // Implemented
-        fun List<ResearchUpgrade>.onPreAttack(eventData: PreAttack): PreAttack {
+        fun List<ResearchUpgrade>.onPreAttack(eventData: AttackCostCalculation): AttackCostCalculation {
             var data = eventData
             forEach {
                 data = it.onPreAttack(data) ?: data

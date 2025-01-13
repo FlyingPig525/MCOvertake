@@ -57,7 +57,7 @@ import kotlin.io.path.exists
 class GameInstance(val path: Path, val name: String) {
     lateinit var instance: InstanceContainer
 
-    val instanceConfig: InstanceConfig = run {
+    var instanceConfig: InstanceConfig = run {
         val file = path.resolve("instance-config.json").toFile()
         if (file.exists()) {
             return@run json.decodeFromString(file.readText())
@@ -65,6 +65,7 @@ class GameInstance(val path: Path, val name: String) {
             return@run parentInstanceConfig.copy(noiseSeed = (Long.MIN_VALUE..Long.MAX_VALUE).random())
         }
     }
+        private set
 
     val playerData: MutableMap<String, PlayerData> = Json.decodeFromString<MutableMap<String, PlayerData>>(
         if (path.resolve("player-data.json").toFile().exists())
@@ -90,21 +91,25 @@ class GameInstance(val path: Path, val name: String) {
     }
 
     fun save() {
-        if (!path.exists()) {
-            path.createDirectories()
+        try {
+            if (!path.exists()) {
+                path.createDirectories()
+            }
+            val icFile = path.resolve("instance-config.json").toFile()
+            if (!icFile.exists()) {
+                icFile.createNewFile()
+            }
+            icFile.writeText(json.encodeToString(instanceConfig))
+            val pdFile = path.resolve("player-data.json").toFile()
+            if (!pdFile.exists()) {
+                pdFile.createNewFile()
+            }
+            pdFile.writeText(Json.encodeToString(playerData))
+            instance.saveChunksToStorage()
+            instance.saveInstance()
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
-        val icFile = path.resolve("instance-config.json").toFile()
-        if (!icFile.exists()) {
-            icFile.createNewFile()
-        }
-        icFile.writeText(json.encodeToString(instanceConfig))
-        val pdFile = path.resolve("player-data.json").toFile()
-        if (!pdFile.exists()) {
-            pdFile.createNewFile()
-        }
-        pdFile.writeText(Json.encodeToString(playerData))
-        instance.saveChunksToStorage()
-        instance.saveInstance()
     }
 
     fun registerTickEvent() {
@@ -455,6 +460,17 @@ class GameInstance(val path: Path, val name: String) {
     fun delete() {
         if (path.exists()) {
             path.deleteRecursively()
+        }
+    }
+
+    fun updateConfig() {
+        instanceConfig = run {
+            val file = path.resolve("instance-config.json").toFile()
+            if (file.exists()) {
+                return@run json.decodeFromString(file.readText())
+            } else {
+                return@run parentInstanceConfig.copy(noiseSeed = (Long.MIN_VALUE..Long.MAX_VALUE).random())
+            }
         }
     }
 

@@ -2,6 +2,7 @@ package io.github.flyingpig525.item
 
 import io.github.flyingpig525.*
 import io.github.flyingpig525.data.player.PlayerData
+import net.bladehunt.kotstom.dsl.item.ItemDsl
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.extension.adventure.asMini
@@ -16,6 +17,7 @@ import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import net.minestom.server.network.packet.server.play.ParticlePacket
 import net.minestom.server.particle.Particle
+import net.minestom.server.tag.Tag
 import java.util.*
 
 val ERROR_ITEM = item(Material.BARRIER) {
@@ -62,4 +64,17 @@ fun checkBlockAvailable(data: PlayerData, target: Point, instance: Instance): Bo
     val playerBlock = instance.getBlock(target.playerPosition).defaultState()
     val buildingBlock = instance.getBlock(target.buildingPosition).defaultState()
     return playerBlock == data.block && (buildingBlock == Block.AIR || buildingBlock == Block.LILY_PAD)
+}
+
+fun sneakCheck(event: PlayerUseItemEvent): Boolean {
+    if (event.player.isSneaking) {
+        SelectBuildingItem.onInteract(event)
+        return true
+    }
+    return false
+}
+
+inline fun gameItem(material: Material, identifier: String, fn: @ItemDsl ItemStack.Builder.() -> Unit) = item(material) {
+    fn()
+    setTag(Tag.String("identifier"), identifier)
 }

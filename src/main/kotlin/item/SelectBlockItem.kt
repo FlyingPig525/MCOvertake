@@ -39,13 +39,13 @@ object SelectBlockItem : Actionable {
 
     override val identifier: String = "item:select_block"
     override val itemMaterial: Material = Material.STRUCTURE_VOID
-
+    val item = item(itemMaterial) {
+        itemName = "<green>$COLONY_SYMBOL <bold>Select Block</bold> $COLONY_SYMBOL".asMini()
+        set(Tag.String("identifier"), identifier)
+    }
 
     override fun getItem(uuid: UUID, instance: GameInstance): ItemStack {
-        return item(itemMaterial) {
-            itemName = "<green>$COLONY_SYMBOL <bold>Select Block</bold> $COLONY_SYMBOL".asMini()
-            set(Tag.String("identifier"), identifier)
-        }
+        return item
     }
 
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
@@ -118,7 +118,7 @@ object SelectBlockItem : Actionable {
 
     override fun setItemSlot(player: Player) {
         val gameInstance = instances.fromInstance(player.instance) ?: return
-        player.inventory[8] = getItem(player.uuid, gameInstance)
+        player.inventory[9] = getItem(player.uuid, gameInstance)
     }
 
     fun setAllSlots(player: Player) {

@@ -1,6 +1,7 @@
 package io.github.flyingpig525.building
 
 import cz.lukynka.prettylog.log
+import io.github.flyingpig525.BUILDING_INVENTORY_SLOT
 import io.github.flyingpig525.MATTER_SYMBOL
 import io.github.flyingpig525.POWER_SYMBOL
 import io.github.flyingpig525.buildingPosition
@@ -30,11 +31,11 @@ class Barrack : Building {
     }
 
     override fun select(player: Player, cost: Int) {
-        player.inventory[4] = getItem(cost, count)
+        player.inventory[BUILDING_INVENTORY_SLOT] = getItem(cost, count)
     }
 
     override fun select(player: Player, data: PlayerData) {
-        player.inventory[4] = getItem(data)
+        player.inventory[BUILDING_INVENTORY_SLOT] = getItem(data)
     }
 
     companion object BarrackCompanion : Building.BuildingCompanion {
@@ -48,7 +49,7 @@ class Barrack : Building {
                 lore {
                     +"<dark_gray>Provides area to store powerful assets"
                     +"<gray>Increases Max $power Storage".asMini().noItalic()
-                    resourcesConsumed(2)
+                    resourcesConsumed(2, count)
                     amountOwned(count)
                 }
                 set(Tag.String("identifier"), identifier)

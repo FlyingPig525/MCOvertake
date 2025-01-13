@@ -30,7 +30,7 @@ sealed class ActionData(val playerData: PlayerData, val instance: Instance?, val
         player
     ) {
         var claimCost = playerData.claimCost
-        var claimCooldown = playerData.maxClaimCooldown
+        var claimCooldown: Cooldown = Cooldown(Duration.ofMillis(playerData.maxClaimCooldown))
     }
 
     class PlaceColony(playerData: PlayerData, instance: Instance, player: Player) : ActionData(
@@ -49,7 +49,7 @@ sealed class ActionData(val playerData: PlayerData, val instance: Instance?, val
         var cooldown: Cooldown = Cooldown(Duration.ZERO)
     }
 
-    class PostAttack(playerData: PlayerData, instance: Instance, player: Player) : ActionData(
+    class Attack(playerData: PlayerData, instance: Instance, player: Player) : ActionData(
         playerData, instance,
         player
     ) {
@@ -58,11 +58,12 @@ sealed class ActionData(val playerData: PlayerData, val instance: Instance?, val
         var targetData: PlayerData = PlayerData.NONE
     }
 
-    class PreAttack(playerData: PlayerData, instance: Instance, player: Player) : ActionData(
+    class AttackCostCalculation(playerData: PlayerData, instance: Instance, player: Player) : ActionData(
         playerData, instance, player
     ) {
         var wallLevel = 0
         var targetData: PlayerData = PlayerData.NONE
+        var percentageDecrease: Double = 0.0
     }
 
     class UpgradeWall(playerData: PlayerData, instance: Instance, player: Player) : ActionData(

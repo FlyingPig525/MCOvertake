@@ -53,7 +53,7 @@ class UndergroundTeleporter : Building, Interactable {
     }
 
     companion object UndergroundTeleporterCompanion : Building.BuildingCompanion, DisplayEntityBlock {
-        override val menuSlot: Int = 5
+        override val menuSlot: Int = 6
         init {
             Building.BuildingCompanion.registry += this
             log("${this::class.simpleName} initialized...")
@@ -66,7 +66,8 @@ class UndergroundTeleporter : Building, Interactable {
                 itemName = "<dark_purple>Underground Gateway <gray>-<green> $MATTER_SYMBOL $cost".asMini()
                 lore {
                     +"<gray>Allows teleportation to the next underground layer".asMini().noItalic()
-                    resourcesConsumed(20)
+                    +"<dark_gray>Can only be placed on rafts".asMini().noItalic()
+                    resourcesConsumed(20, count)
                     amountOwned(count)
                 }
             }.withTag(Tag.String("identifier"), identifier)

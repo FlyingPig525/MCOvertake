@@ -19,8 +19,6 @@ class TestUpgrade : ResearchUpgrade() {
     override var maxLevel: Int = 1
     override val cost: Long
         get() = 600
-    override var level: Int = 0
-    override val requiredInternalLevel: Int = 1
 
     override fun item(): ItemStack = item(Material.GOLDEN_HOE) {
         itemName = "<gold><bold>Literally the best upgrade <gray>-<aqua> Level: $level/$maxLevel".asMini()
@@ -34,7 +32,7 @@ class TestUpgrade : ResearchUpgrade() {
         if (level == 0) return null
 //        log("Claim Land")
         return eventData.apply {
-            claimCooldown = 0
+            claimCooldown = Cooldown(Duration.ofMillis(100))
             claimCost = 0
         }
     }
@@ -50,7 +48,7 @@ class TestUpgrade : ResearchUpgrade() {
         if (level == 0) return null
 //        log("Build Wall")
         eventData.cost = 0
-        eventData.cooldown = Cooldown(Duration.ZERO)
+        eventData.cooldown = Cooldown(Duration.ofMillis(100))
         return eventData
     }
 
@@ -65,7 +63,7 @@ class TestUpgrade : ResearchUpgrade() {
         if (level == 0) return null
 //        log("Place Colony")
         eventData.cost = 0
-        eventData.cooldown = Cooldown(Duration.ZERO)
+        eventData.cooldown = Cooldown(Duration.ofMillis(100))
         return eventData
     }
 
@@ -73,19 +71,19 @@ class TestUpgrade : ResearchUpgrade() {
         if (level == 0) return null
 //        log("Place Raft")
         eventData.cost = 0
-        eventData.cooldown = Cooldown(Duration.ZERO)
+        eventData.cooldown = Cooldown(Duration.ofMillis(100))
         return eventData
     }
 
-    override fun onPostAttack(eventData: ActionData.PostAttack): ActionData.PostAttack? {
+    override fun onPostAttack(eventData: ActionData.Attack): ActionData.Attack? {
         if (level == 0) return null
 //        log("Post Attack")
         eventData.attackCost = 0
-        eventData.attackCooldown = Cooldown(Duration.ZERO)
+        eventData.attackCooldown = Cooldown(Duration.ofMillis(100))
         return eventData
     }
 
-    override fun onPreAttack(eventData: ActionData.PreAttack): ActionData.PreAttack? {
+    override fun onPreAttack(eventData: ActionData.AttackCostCalculation): ActionData.AttackCostCalculation? {
         if (level == 0) return null
 //        log("Pre Attack")
         eventData.wallLevel = 0
@@ -96,7 +94,7 @@ class TestUpgrade : ResearchUpgrade() {
         if (level == 0) return null
 //        log("Upgrade Wall")
         eventData.cost = 0
-        eventData.cooldown = Cooldown(Duration.ZERO)
+        eventData.cooldown = Cooldown(Duration.ofMillis(100))
         eventData.playerData.organicMatter += 1000000
         return eventData
     }

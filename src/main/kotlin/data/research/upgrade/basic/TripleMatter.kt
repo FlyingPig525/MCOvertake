@@ -12,10 +12,8 @@ import net.minestom.server.item.Material
 
 @Serializable
 class TripleMatter : ResearchUpgrade() {
-    override var level: Int = 0
     override var maxLevel: Int = 3
     override val name: String = "Triple Organic Matter"
-    override val requiredInternalLevel: Int = 1
     override val cost: Long
         get() = (level * 400L) + 400L
 

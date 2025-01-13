@@ -35,13 +35,9 @@ object UndergroundTeleporterItem : Actionable {
         val instance = event.instance
         val target = event.player.getTrueTarget(20) ?: return true
         val data = gameInstance.playerData[event.player.uuid.toString()] ?: return true
-        log("data")
         if (!target.isUnderground && instance.getBlock(target.visiblePosition).defaultState() != Block.WATER) return true
-        log("allowed")
         if (!checkBlockAvailable(data, target, instance)) return true
-        log("available")
         if (data.organicMatter < data.teleporterCost) return true
-        log("cost")
         data.organicMatter -= data.teleporterCost
         data.undergroundTeleporters.place(target.buildingPosition, instance)
         return true

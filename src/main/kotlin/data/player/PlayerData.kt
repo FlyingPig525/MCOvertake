@@ -11,9 +11,11 @@ import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.kyori.adventure.bossbar.BossBar
 import net.minestom.server.coordinate.Point
+import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.Player
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
+import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import net.minestom.server.network.packet.server.play.SetCooldownPacket
 import net.minestom.server.utils.time.Cooldown
@@ -26,12 +28,12 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
     @Transient var gameInstance: GameInstance? = null
     var blocks: Int = 0
     val trainingCamps = TrainingCamp()
-    val trainingCampCost: Int get() = computeGeneratorCost(trainingCamps.count)
+    val trainingCampCost: Int get() = genericBuildingCost(trainingCamps.count, 25)
     val barracks = Barrack()
     val maxPower: Int get() = 100 + barracks.count * 25
     val barracksCost: Int get() = (barracks.count * 20) + 20
     val matterExtractors = MatterExtractor()
-    val extractorCost: Int get() = computeGeneratorCost(matterExtractors.count)
+    val extractorCost: Int get() = genericBuildingCost(matterExtractors.count, 25)
     val matterContainers = MatterContainer()
     val containerCost: Int get() = (matterContainers.count * 20) + 20
     val matterCompressors = MatterCompressionPlant()
@@ -52,7 +54,8 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
     var power: Double = 100.0
         set(value) {
             field = value.coerceIn(0.0..maxPower.toDouble())
-            updateBossBars()
+            val player = gameInstance?.instance?.getPlayerByUuid(UUID.fromString(uuid))
+            updateBossBars(player)
         }
     @Transient val powerBossBar: BossBar = BossBar.bossBar(
                 "<red>$POWER_SYMBOL Power <gray>-<red> $power/$maxPower".asMini(),
@@ -63,7 +66,8 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
     var organicMatter: Double = 100.0
         set(value) {
             field = value.coerceIn(0.0..maxMatter.toDouble())
-            updateBossBars()
+            val player = gameInstance?.instance?.getPlayerByUuid(UUID.fromString(uuid))
+            updateBossBars(player)
         }
     @Transient val matterBossBar: BossBar = BossBar.bossBar(
                 "<green>$MATTER_SYMBOL Organic Matter <gray>- <green>$organicMatter/$maxMatter".asMini(),
@@ -74,7 +78,8 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
     var mechanicalParts: Int = 0
         set(value) {
             field = value
-            updateBossBars()
+            val player = gameInstance?.instance?.getPlayerByUuid(UUID.fromString(uuid))
+            updateBossBars(player)
         }
     val disposableResourcesUsed: Int get() {
         val barrack = barracks.resourceUse
@@ -221,8 +226,8 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
         fun Map<String, PlayerData>.toBlockList(): List<Block> {
             return values.map { it.block }
         }
-        fun computeGeneratorCost(generatorCount: Int): Int {
-            val generalCost = (generatorCount * 25) + 25
+        fun genericBuildingCost(count: Int, cost: Int): Int {
+            val generalCost = (count * cost) + cost
             if (generalCost > 10000) {
                 return (generalCost/1000) * 1000
             } else if (generalCost > 1000) {

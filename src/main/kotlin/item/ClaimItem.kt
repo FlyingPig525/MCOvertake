@@ -56,7 +56,7 @@ object ClaimItem : Actionable {
             claimWithParticle(event.player, target, Block.GRASS_BLOCK, data.block, gameInstance.instance)
             data.blocks++
             data.power -= claimData.claimCost
-            data.claimCooldown = Cooldown(Duration.ofMillis(claimData.claimCooldown))
+            data.claimCooldown = claimData.claimCooldown
             event.player.sendPacket(
                 SetCooldownPacket(
                     itemMaterial.cooldownIdentifier,

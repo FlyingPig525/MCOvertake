@@ -29,11 +29,8 @@ object MatterCompressorItem : Actionable {
     }
 
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
+        if (sneakCheck(event)) return true
         val instance = event.instance
-        if (event.player.isSneaking) {
-            SelectBuildingItem.onInteract(event)
-            return true
-        }
         val target = event.player.getTrueTarget(20) ?: return true
         val gameInstance = instances.fromInstance(instance) ?: return true
         val playerData = gameInstance.playerData[event.player.uuid.toString()] ?: return true
