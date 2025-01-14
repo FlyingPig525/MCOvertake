@@ -33,6 +33,7 @@ import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.color.Color
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.coordinate.Vec
+import net.minestom.server.entity.Entity
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
 import net.minestom.server.event.player.*
@@ -500,6 +501,7 @@ class GameInstance(val path: Path, val name: String) {
             return this[instance.getTag(Tag.String("name")) ?: "189271890379012837uoahwd-8127"]
         }
 
+        val Entity.gameInstance get() = instance.gameInstance
         val Instance.gameInstance get() = instances.fromInstance(this)
     }
 }

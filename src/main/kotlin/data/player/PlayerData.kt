@@ -2,6 +2,7 @@ package io.github.flyingpig525.data.player
 
 import io.github.flyingpig525.*
 import io.github.flyingpig525.building.*
+import io.github.flyingpig525.data.player.config.PlayerConfig
 import io.github.flyingpig525.data.research.ResearchContainer
 import io.github.flyingpig525.item.*
 import io.github.flyingpig525.serialization.BlockSerializer
@@ -30,6 +31,7 @@ import kotlin.reflect.KProperty0
 @Serializable
 class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val block: Block, var playerDisplayName: String) {
     @Transient var gameInstance: GameInstance? = null
+    val playerConfig = PlayerConfig()
     var blocks: Int = 0
     val trainingCamps = TrainingCamp()
     val trainingCampCost: Int get() = genericBuildingCost(trainingCamps.count, 25)

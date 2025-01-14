@@ -690,6 +690,7 @@ fun initItems() {
     UndergroundTeleporterItem
     TeleportBackItem
     ResearchUpgradeItem
+    PlayerConfigItem
 }
 
 fun initBuildingCompanions() {

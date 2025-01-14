@@ -52,14 +52,16 @@ fun claimWithParticle(player: Player, target: Point, resultBlock: Block, instanc
 fun claimWithParticle(player: Player, target: Point, targetBlock: Block, resultBlock: Block, instance: Instance) {
     instance.setBlock(target.visiblePosition, resultBlock)
     instance.setBlock(target.playerPosition, resultBlock)
-    val particle = ParticlePacket(
-        Particle.BLOCK.withBlock(targetBlock),
-        target.visiblePosition.add(0.5, 1.0, 0.5),
-        Vec(0.2, 0.0, 0.2),
-        1f,
-        30
-    )
-    player.sendPacket(particle)
+    if (player.data?.playerConfig?.claimParticles?.value == true) {
+        val particle = ParticlePacket(
+            Particle.BLOCK.withBlock(targetBlock),
+            target.visiblePosition.add(0.5, 1.0, 0.5),
+            Vec(0.2, 0.0, 0.2),
+            1f,
+            30
+        )
+        player.sendPacket(particle)
+    }
 }
 
 fun checkBlockAvailable(data: PlayerData, target: Point, instance: Instance): Boolean {
