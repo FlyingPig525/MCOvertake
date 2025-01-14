@@ -79,7 +79,7 @@ class TestUpgrade : ResearchUpgrade() {
         if (level == 0) return null
 //        log("Post Attack")
         eventData.attackCost = 0
-        eventData.attackCooldown = Cooldown(Duration.ofMillis(100))
+        eventData.attackCooldown = Cooldown(Duration.ofMillis(500))
         return eventData
     }
 
@@ -94,7 +94,7 @@ class TestUpgrade : ResearchUpgrade() {
         if (level == 0) return null
 //        log("Upgrade Wall")
         eventData.cost = 0
-        eventData.cooldown = Cooldown(Duration.ofMillis(100))
+        eventData.cooldown = Cooldown(Duration.ofMillis(50))
         eventData.playerData.organicMatter += 1000000
         return eventData
     }

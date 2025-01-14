@@ -97,6 +97,8 @@ private val walls = buildMap<Block, Int> {
 
 val Block.canUpgradeWall: Boolean get() = wallLevel < wallBlocks.size
 
+val maxWallLevel get() = walls.size
+
 fun getWallAttackCost(block: Block): Int? {
     val level = walls[block.defaultState()] ?: return null
     return level * 2
@@ -139,5 +141,6 @@ val Block.wallLevel: Int
 
 fun blockIsWall(block: Block): Boolean = walls.containsKey(block.defaultState())
 
+fun wall(level: Int): Block = walls.keys.elementAt(level - 1)
 fun nextWall(level: Int): Block = walls.keys.elementAt(level)
 fun lastWall(level: Int): Block = walls.keys.elementAt(level - 2)

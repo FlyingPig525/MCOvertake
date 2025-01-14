@@ -20,6 +20,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.bladehunt.kotstom.InstanceManager
+import net.bladehunt.kotstom.PacketListenerManager
 import net.bladehunt.kotstom.SchedulerManager
 import net.bladehunt.kotstom.dsl.kbar
 import net.bladehunt.kotstom.dsl.line
@@ -40,8 +41,11 @@ import net.minestom.server.instance.InstanceContainer
 import net.minestom.server.instance.LightingChunk
 import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
+import net.minestom.server.listener.PlayerInputListener
 import net.minestom.server.network.packet.server.SendablePacket
+import net.minestom.server.network.packet.server.play.EntityAnimationPacket
 import net.minestom.server.network.packet.server.play.ParticlePacket
+import net.minestom.server.network.packet.server.play.PlayerAbilitiesPacket
 import net.minestom.server.particle.Particle
 import net.minestom.server.potion.Potion
 import net.minestom.server.potion.PotionEffect
@@ -115,6 +119,8 @@ class GameInstance(val path: Path, val name: String) {
     fun registerTickEvent() {
         instance.eventNode().listen<PlayerTickEvent> { e ->
             val playerData = playerData[e.player.uuid.toString()] ?: return@listen
+            playerData.tick(e)
+
 
             if (e.player.position.isUnderground) {
                 if (e.player.inventory[2].isAir)
@@ -262,6 +268,20 @@ class GameInstance(val path: Path, val name: String) {
             }
             file.writeText(Json.encodeToString(playerData))
             instance.saveChunksToStorage()
+        }
+
+        instance.eventNode().listen<PlayerHandAnimationEvent> {
+            val item = it.player.getItemInHand(it.hand)
+            for (actionable in Actionable.registry) {
+                if (item.getTag(Tag.String("identifier")) == actionable.identifier) {
+                    try {
+                        actionable.onHandAnimation(it)
+                    } catch (e: Exception) {
+                        log(e)
+                    }
+                    break
+                }
+            }
         }
     }
 

@@ -68,6 +68,7 @@ import net.minestom.server.item.Material
 import net.minestom.server.network.packet.PacketReading
 import net.minestom.server.network.packet.PacketRegistry
 import net.minestom.server.tag.Tag
+import net.minestom.server.timer.ExecutionType
 import net.minestom.server.timer.TaskSchedule
 import net.minestom.server.utils.time.Cooldown
 import team.unnamed.creative.BuiltResourcePack
@@ -196,6 +197,8 @@ fun main() = runBlocking { try {
 
     GlobalEventHandler.listen<ItemDropEvent> {
         it.isCancelled = true
+        it.player.data?.handAnimationWasDrop = true
+        SchedulerManager.scheduleNextTick { it.player.data?.handAnimationWasDrop = false }
     }
 
     GlobalEventHandler.listen<AsyncPlayerConfigurationEvent> { event ->
@@ -269,7 +272,7 @@ fun main() = runBlocking { try {
             inventory.addInventoryCondition { player: Player, slot: Int, clickType: ClickType, res: InventoryConditionResult ->
                 res.isCancel = true
                 if (res.clickedItem.hasTag(Tag.String("selector"))) {
-                    val instance = instances[res.clickedItem.getTag(Tag.String("selector")) ?: "auhdiauowhd2y0189dh7278dhw89dh7 2"]
+                    val instance = instances[res.clickedItem.getTag(Tag.String("selector"))!!]
                     if (instance != null) {
                         if (player.instance == instance.instance) return@addInventoryCondition
                         player.inventory.clear()
@@ -470,7 +473,6 @@ fun main() = runBlocking { try {
     // Save loop
     SchedulerManager.scheduleTask({
         instances.values.onEach {
-            println("-----------${it.name}---------")
             it.save()
         }
         if (config.printSaveMessages) {

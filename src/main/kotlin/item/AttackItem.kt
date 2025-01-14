@@ -42,7 +42,7 @@ object AttackItem : Actionable {
             val target = player.getTrueTarget(20) ?: return ERROR_ITEM
             val buildingBlock = instance.instance.getBlock(target.buildingPosition)
             val data = player.data ?: return ERROR_ITEM
-            val targetData = getAttacking(player)
+            val targetData = getAttacking(player) ?: return ERROR_ITEM
             val targetName = targetData.playerDisplayName
             val attackCost = getAttackCost(
                 targetData,
@@ -56,10 +56,10 @@ object AttackItem : Actionable {
         }
     }
 
-    private fun getAttacking(player: Player): PlayerData {
+    private fun getAttacking(player: Player): PlayerData? {
         val players = instances.fromInstance(player.instance)!!.playerData
         val target = player.getTrueTarget(20)!!
-        return players.getDataByPoint(target, player.instance)!!
+        return players.getDataByPoint(target.playerPosition, player.instance)
     }
 
     private fun getAttackCost(targetData: PlayerData, wall: Point, instance: Instance, wallLevel: Int, percentageDecrease: Double): Int {
@@ -240,12 +240,12 @@ object AttackItem : Actionable {
         data.attackCooldown = postAttack.attackCooldown
         event.player.sendPacket(
             SetCooldownPacket(
-                getItem(event.player.uuid, gameInstance).material().cooldownIdentifier,
+                itemMaterial.cooldownIdentifier,
                 data.attackCooldown.ticks
             )
         )
         data.power -= postAttack.attackCost
-        val onAttacked = ActionData.Attacked(postAttack.targetData, instance, targetPlayer).apply {
+        ActionData.Attacked(postAttack.targetData, instance, targetPlayer).apply {
             this.attackerData = data
             this.attackerPlayer = event.player
         }.also { targetData.research.onAttacked(it) }

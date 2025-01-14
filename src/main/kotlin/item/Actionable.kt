@@ -10,6 +10,7 @@ import net.minestom.server.coordinate.Point
 import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerBlockBreakEvent
+import net.minestom.server.event.player.PlayerHandAnimationEvent
 import net.minestom.server.event.player.PlayerUseItemEvent
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
@@ -32,6 +33,7 @@ interface Actionable {
 
     fun onInteract(event: PlayerUseItemEvent): Boolean { return true }
     fun onBreakBlock(event: PlayerBlockBreakEvent): Boolean { return true }
+    fun onHandAnimation(event: PlayerHandAnimationEvent) {  }
 
 
     fun setItemSlot(player: Player)
