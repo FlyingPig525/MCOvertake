@@ -20,7 +20,6 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.bladehunt.kotstom.InstanceManager
-import net.bladehunt.kotstom.PacketListenerManager
 import net.bladehunt.kotstom.SchedulerManager
 import net.bladehunt.kotstom.dsl.kbar
 import net.bladehunt.kotstom.dsl.line
@@ -42,11 +41,8 @@ import net.minestom.server.instance.InstanceContainer
 import net.minestom.server.instance.LightingChunk
 import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
-import net.minestom.server.listener.PlayerInputListener
 import net.minestom.server.network.packet.server.SendablePacket
-import net.minestom.server.network.packet.server.play.EntityAnimationPacket
 import net.minestom.server.network.packet.server.play.ParticlePacket
-import net.minestom.server.network.packet.server.play.PlayerAbilitiesPacket
 import net.minestom.server.particle.Particle
 import net.minestom.server.potion.Potion
 import net.minestom.server.potion.PotionEffect
@@ -319,7 +315,7 @@ class GameInstance(val path: Path, val name: String) {
             try {
                 for (uuid in playerData.keys) {
                     val data = playerData[uuid]!!
-                    data.mechanicalTick()
+                    data.researchTick()
                 }
             } catch (e: Exception) {
                 log("AAA")

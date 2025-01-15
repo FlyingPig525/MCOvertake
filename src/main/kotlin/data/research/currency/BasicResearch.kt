@@ -9,10 +9,10 @@ import net.minestom.server.item.Material
 
 @Serializable
 class BasicResearch : ResearchCurrency {
-    @Transient override val symbol: String = "🧪"
-    @Transient override val color: String = NamedTextColor.AQUA.asHexString()
+    @Transient override val symbol: String = Companion.symbol
+    @Transient override val color: String = Companion.color
     @Transient override val currencyLevel: Int = 1
-    @Transient override val colorItem: Material = Material.CYAN_WOOL
+    @Transient override val colorItem: Material = Companion.colorItem
     @Required override var internalLevel: Int = 1
         set(value) {
             field = value
@@ -44,5 +44,11 @@ class BasicResearch : ResearchCurrency {
             }
         }
         upgrades += missing
+    }
+
+    companion object {
+        const val symbol = "\uD83E\uDDEA"
+        val color = NamedTextColor.AQUA.asHexString()
+        val colorItem = Material.CYAN_WOOL
     }
 }

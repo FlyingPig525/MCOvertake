@@ -128,16 +128,16 @@ object UpgradeWallItem : Actionable {
                 val color = Color(NamedTextColor.WHITE)
                 val trailParticle = Particle.TRAIL.withColor(color).withDuration(config.targetParticleDuration)
                 targetParticles += ParticlePacket(
-                    trailParticle.withTarget(oneZero), y40, Vec.ZERO, 1f, 2
+                    trailParticle.withTarget(oneZero), y40, Vec.ZERO, 1f, 10
                 )
                 targetParticles += ParticlePacket(
-                    trailParticle.withTarget(oneOne), oneZero, Vec.ZERO, 1f, 2
+                    trailParticle.withTarget(oneOne), oneZero, Vec.ZERO, 1f, 10
                 )
                 targetParticles += ParticlePacket(
-                    trailParticle.withTarget(zeroOne), oneOne, Vec.ZERO, 1f, 2
+                    trailParticle.withTarget(zeroOne), oneOne, Vec.ZERO, 1f, 10
                 )
                 targetParticles += ParticlePacket(
-                    trailParticle.withTarget(y40), zeroOne, Vec.ZERO, 1f, 2
+                    trailParticle.withTarget(y40), zeroOne, Vec.ZERO, 1f, 10
                 )
                 player.sendPackets(targetParticles)
                 TaskSchedule.tick(1)
@@ -233,7 +233,7 @@ object UpgradeWallItem : Actionable {
                     setTag(Tag.Integer("value"), -values[i])
                 }
                 selectionInventory[8-i, 1] = item(Material.GREEN_STAINED_GLASS_PANE) {
-                    itemName = "<green>${values[i]}".asMini()
+                    itemName = "<green>+${values[i]}".asMini()
                     setTag(Tag.Integer("value"), values[i])
                 }
             }

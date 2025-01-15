@@ -691,6 +691,7 @@ fun initItems() {
     TeleportBackItem
     ResearchUpgradeItem
     PlayerConfigItem
+    BasicResearchGeneratorItem
 }
 
 fun initBuildingCompanions() {
@@ -699,6 +700,7 @@ fun initBuildingCompanions() {
     MatterContainer.MatterContainerCompanion
     MatterExtractor.MatterExtractorCompanion
     UndergroundTeleporter.UndergroundTeleporterCompanion
+    BasicResearchGenerator.BasicResearchGeneratorCompanion
 }
 
 fun initConsoleCommands() {

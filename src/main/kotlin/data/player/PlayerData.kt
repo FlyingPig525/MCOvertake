@@ -3,6 +3,7 @@ package io.github.flyingpig525.data.player
 import io.github.flyingpig525.*
 import io.github.flyingpig525.building.*
 import io.github.flyingpig525.data.player.config.PlayerConfig
+import io.github.flyingpig525.data.player.research.BasicCategory
 import io.github.flyingpig525.data.research.ResearchContainer
 import io.github.flyingpig525.item.*
 import io.github.flyingpig525.serialization.BlockSerializer
@@ -12,14 +13,14 @@ import kotlinx.serialization.Transient
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.kyori.adventure.bossbar.BossBar
+import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.coordinate.Point
-import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerTickEvent
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
-import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
+import net.minestom.server.network.packet.server.play.ActionBarPacket
 import net.minestom.server.network.packet.server.play.SetCooldownPacket
 import net.minestom.server.tag.Tag
 import net.minestom.server.utils.time.Cooldown
@@ -37,11 +38,11 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
     val trainingCampCost: Int get() = genericBuildingCost(trainingCamps.count, 25)
     val barracks = Barrack()
     val maxPower: Int get() = 100 + barracks.count * 25
-    val barracksCost: Int get() = (barracks.count * 20) + 20
+    val barracksCost: Int get() = genericBuildingCost(barracks.count, 25)
     val matterExtractors = MatterExtractor()
     val extractorCost: Int get() = genericBuildingCost(matterExtractors.count, 25)
     val matterContainers = MatterContainer()
-    val containerCost: Int get() = (matterContainers.count * 20) + 20
+    val containerCost: Int get() = genericBuildingCost(matterContainers.count, 20)
     val matterCompressors = MatterCompressionPlant()
     val matterCompressorCost: Int get() = (matterCompressors.count * 50) + 50
     val maxMatter: Int get() = 100 + matterContainers.count * 25
@@ -51,6 +52,7 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
     val raftCost: Int get() = (blocks.floorDiv(10000) * 500) + 500
     val undergroundTeleporters = UndergroundTeleporter()
     val teleporterCost: Int get() = undergroundTeleporters.count * 1000 + 1000
+    val basicResearchCategory = BasicCategory()
     @Transient var claimCooldown = Cooldown(Duration.ofMillis(maxClaimCooldown))
     @Transient var colonyCooldown = Cooldown(Duration.ofSeconds(if (blocks > 0) 15 else 0))
     @Transient var attackCooldown = Cooldown(Duration.ofSeconds(10))
@@ -82,11 +84,6 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
                 BossBar.Overlay.PROGRESS
             )
     var mechanicalParts: Int = 0
-        set(value) {
-            field = value
-            val player = gameInstance?.instance?.getPlayerByUuid(UUID.fromString(uuid))
-            updateBossBars(player)
-        }
     val disposableResourcesUsed: Int get() {
         val barrack = barracks.resourceUse
         val matterContainer = matterContainers.resourceUse
@@ -111,11 +108,11 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
         BossBar.Color.BLUE,
         BossBar.Overlay.PROGRESS
     )
-    @Transient val mechanicalBossBar = BossBar.bossBar(
-        "<white>$MECHANICAL_SYMBOL Mechanical Parts<gray> - <white>$mechanicalParts".asMini(),
-        1f,
-        BossBar.Color.WHITE,
-        BossBar.Overlay.PROGRESS
+    @Transient val researchTickProgress = BossBar.bossBar(
+        "<white>Research Tick <gray>-<white> ${tick % 400uL}/400".asMini(),
+        0f,
+        BossBar.Color.YELLOW,
+        BossBar.Overlay.NOTCHED_20
     )
     val baseAttackCost: Int get() {
         return 15
@@ -128,6 +125,7 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
     @Transient var bulkWallQueueFirstPosJustReset = false
 
     fun tick(e: PlayerTickEvent) {
+        actionBar(e.player)
         if (wallUpgradeQueue.isNotEmpty() && wallUpgradeCooldown.isReady(Instant.now().toEpochMilli())) run {
             val (wallPos, targetLevel) = wallUpgradeQueue.first()
             val wall = e.instance.getBlock(wallPos)
@@ -141,6 +139,14 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
                 wallUpgradeQueue.removeFirst()
                 e.instance.getNearbyEntities(wallPos, 0.2).onEach { if (it.hasTag(Tag.Boolean("wallUpgrade"))) it.remove() }
             }
+        }
+        if (matterCompressors.count > 0 || mechanicalParts > 0 || research.basicResearch.count > 0) {
+            researchTickProgress.name("<white>Research Tick <gray>-<white> ${tick % 400uL}/400".asMini())
+            val perc = ((tick % 400uL).toFloat() / 400f).coerceIn(0f..1f)
+            researchTickProgress.progress(perc)
+            e.player.showBossBar(researchTickProgress)
+        } else {
+            e.player.hideBossBar(researchTickProgress)
         }
     }
 
@@ -157,8 +163,9 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
         trainingCamps.tick(this)
     }
 
-    fun mechanicalTick() {
+    fun researchTick() {
         matterCompressors.tick(this)
+        basicResearchCategory.basicResearchStations.tick(this)
     }
 
     fun updateBossBars(player: Player? = null) {
@@ -173,12 +180,14 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
         resourcesBossBar.progress((disposableResourcesUsed.toFloat() / maxDisposableResources.toFloat()).coerceIn(0f..1f))
         resourcesBossBar.color(if (disposableResourcesUsed > maxDisposableResources) BossBar.Color.PURPLE else BossBar.Color.BLUE)
 
-        mechanicalBossBar.name("<white>$MECHANICAL_SYMBOL Mechanical Parts<gray> - <white>$mechanicalParts".asMini())
-        mechanicalBossBar.progress(((tick % 400uL).toFloat() / 400f).coerceIn(0f, 1f))
-        if (player != null) {
-            if (mechanicalParts > 0) player.showBossBar(mechanicalBossBar)
-            else player.hideBossBar(mechanicalBossBar)
+    }
+
+    fun actionBar(player: Player) {
+        var str = "<white>$MECHANICAL_SYMBOL <bold>$mechanicalParts <reset><dark_gray>| ".asMini()
+        research.forEach {
+            str = str.append("<${it.color}>${it.symbol} <bold>${it.count} <reset><dark_gray>| ".asMini())
         }
+        player.sendPacket(ActionBarPacket(str))
     }
 
     private fun showBossBars(player: Player) {
@@ -186,8 +195,10 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
             showBossBar(powerBossBar)
             showBossBar(matterBossBar)
             showBossBar(resourcesBossBar)
-            if (mechanicalParts > 0) {
-                showBossBar(mechanicalBossBar)
+            if (matterCompressors.count > 0 || mechanicalParts > 0 || research.basicResearch.count > 0) {
+                showBossBar(researchTickProgress)
+            } else {
+                hideBossBar(researchTickProgress)
             }
         }
     }
@@ -234,6 +245,7 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
             "matter:generator" -> ::matterExtractors
             "mechanical:generator" -> ::matterCompressors
             "underground:teleport" -> ::undergroundTeleporters
+            "research:basic_research" -> basicResearchCategory::basicResearchStations
             else -> null
         }
     }

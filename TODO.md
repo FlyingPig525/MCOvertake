@@ -1,7 +1,7 @@
 TODO:
 - [x] walls
-- [ ] better wall upgrading
-- - auto repair (after 2x cooldown) (maybe some kind of drone)
+- [x] better wall upgrading
+  - [ ] auto repair (after 2x cooldown) (maybe some kind of drone)
 - [x] research -- different system than conquest did 
   - more tiles adjacent to enemy tile, the lower the cooldown for attacking
   - multiple currencies
