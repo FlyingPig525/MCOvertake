@@ -209,9 +209,9 @@ object AttackItem : Actionable {
                 false
             }
             BasicResearchGenerator.block -> run {
-                targetData.basicResearchCategory.basicResearchStations.count--
+                targetData.basicResearchStations.count--
                 if (waterBlock.defaultState() != Block.WATER) {
-                    data.basicResearchCategory.basicResearchStations.count++
+                    data.basicResearchStations.count++
                     return@run true
                 }
                 attackRaft(targetData, target, instance)
