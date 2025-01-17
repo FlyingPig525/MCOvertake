@@ -55,6 +55,7 @@ import net.minestom.server.event.inventory.InventoryOpenEvent
 import net.minestom.server.event.item.ItemDropEvent
 import net.minestom.server.event.player.*
 import net.minestom.server.event.server.ServerListPingEvent
+import net.minestom.server.extras.MojangAuth
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.InstanceContainer
 import net.minestom.server.instance.LightingChunk
@@ -95,7 +96,7 @@ const val OIL_SYMBOL = "☀"
 
 const val BUILDING_INVENTORY_SLOT = 4
 
-const val SERVER_VERSION = "v0.3"
+const val SERVER_VERSION = "v0.4"
 
 const val PIXEL_SIZE = 1.0 / 16.0
 
@@ -126,7 +127,7 @@ fun main() = runBlocking { try {
     // Initialize the servers
     val minecraftServer = MinecraftServer.init()
 
-//    MojangAuth.init()
+    MojangAuth.init()
     MinecraftServer.setBrandName("MCOvertake")
     MinecraftServer.getExceptionManager().setExceptionHandler {
         log(it as Exception)
@@ -338,11 +339,11 @@ fun main() = runBlocking { try {
         defaultExecutor = CommandExecutor { sender, context ->
             if (sender !is Player) return@CommandExecutor
             if (sender.instance == lobbyInstance) return@CommandExecutor
+            sender.sendMessage("<gray>Sending you to the <red>lobby<gray>...".asMini())
             sender.closeInventory()
             sender.inventory.clear()
             sender.instance = lobbyInstance
             sender.removeBossBars()
-            sender.sendMessage("<gray>Sending you to the <red>lobby<gray>...".asMini())
         }
     }
     val createInstanceCommand = kommand {

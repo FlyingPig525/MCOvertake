@@ -79,10 +79,10 @@ object SelectBuildingItem : Actionable {
                 ref.select(player, playerData)
                 close = true
             }
+            player.inventory.cursorItem = ItemStack.AIR
             if (close) {
                 player.closeInventory()
             } else {
-                player.inventory.cursorItem = ItemStack.AIR
                 inventory[slot] = res.clickedItem
             }
         }
