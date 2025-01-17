@@ -1,6 +1,5 @@
 package io.github.flyingpig525.item
 
-import cz.lukynka.prettylog.LogType
 import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
@@ -20,7 +19,6 @@ import net.minestom.server.item.Material
 import net.minestom.server.network.packet.server.play.SetCooldownPacket
 import net.minestom.server.tag.Tag
 import net.minestom.server.utils.time.Cooldown
-import java.lang.Exception
 import java.time.Duration
 import java.time.Instant
 import java.util.*

@@ -2,13 +2,15 @@ package io.github.flyingpig525.item
 
 import com.sun.jdi.InvalidTypeException
 import cz.lukynka.prettylog.log
-import io.github.flyingpig525.*
+import io.github.flyingpig525.COLONY_SYMBOL
+import io.github.flyingpig525.GameInstance
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
-import io.github.flyingpig525.data.player.PlayerData
-import io.github.flyingpig525.data.player.PlayerData.Companion.toBlockList
+import io.github.flyingpig525.data
 import io.github.flyingpig525.data.block.*
 import io.github.flyingpig525.data.inventory.InventoryConditionArguments
-import net.bladehunt.kotstom.GlobalEventHandler
+import io.github.flyingpig525.data.player.PlayerData
+import io.github.flyingpig525.data.player.PlayerData.Companion.toBlockList
+import io.github.flyingpig525.instances
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.dsl.item.lore
@@ -105,15 +107,15 @@ object SelectBlockItem : Actionable {
                 e.player.hideBossBar(data.powerBossBar)
                 e.player.hideBossBar(data.resourcesBossBar)
             }
-            instance.playerData[e.player.uuid.toString()] =
+            instance.uuidParents[e.player.uuid.toString()] = e.player.uuid.toString()
+            instance.dataResolver[e.player.uuid.toString()] =
                 PlayerData(e.player.uuid.toString(), res.clickedItem.material().block()!!, e.player.username)
             e.player.closeInventory()
             for (i in 0..8) {
                 e.player.inventory[i] = ItemStack.AIR
             }
-            instance.playerData[e.player.uuid.toString()]!!.gameInstance = instance
-            instance.playerData[e.player.uuid.toString()]!!.setupPlayer(e.player)
-            instance.uuidParents[e.player.uuid.toString()] = e.player.uuid.toString()
+            instance.dataResolver[e.player.uuid.toString()]!!.gameInstance = instance
+            instance.dataResolver[e.player.uuid.toString()]!!.setupPlayer(e.player)
             instance.outgoingCoopInvites[e.player.uuid] = mutableListOf()
         }
         e.player.openInventory(inventory)

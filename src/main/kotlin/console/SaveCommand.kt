@@ -4,8 +4,6 @@ import cz.lukynka.prettylog.log
 import io.github.flyingpig525.config
 import io.github.flyingpig525.data.config.getCommentString
 import io.github.flyingpig525.instances
-import io.github.flyingpig525.json
-import kotlinx.serialization.encodeToString
 import java.io.File
 
 object SaveCommand : Command {

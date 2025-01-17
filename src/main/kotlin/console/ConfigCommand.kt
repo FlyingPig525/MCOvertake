@@ -9,8 +9,6 @@ import io.github.flyingpig525.instances
 import io.github.flyingpig525.json
 import io.github.flyingpig525.log.MCOvertakeLogType
 import io.github.flyingpig525.parentInstanceConfig
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import java.io.File
 
 object ConfigCommand : Command {

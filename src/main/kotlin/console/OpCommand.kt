@@ -6,7 +6,6 @@ import io.github.flyingpig525.data.player.permission.Permission
 import io.github.flyingpig525.instances
 import io.github.flyingpig525.lobbyInstance
 import io.github.flyingpig525.permissionManager
-import net.bladehunt.kotstom.CommandManager
 import net.minestom.server.utils.mojang.MojangUtils
 
 object OpCommand : Command {

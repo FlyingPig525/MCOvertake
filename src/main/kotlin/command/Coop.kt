@@ -2,7 +2,6 @@ package io.github.flyingpig525.command
 
 import io.github.flyingpig525.GameInstance.Companion.gameInstance
 import io.github.flyingpig525.data
-import io.github.flyingpig525.instances
 import io.github.flyingpig525.item.SelectBlockItem
 import io.github.flyingpig525.removeBossBars
 import io.github.flyingpig525.toUUID
@@ -15,9 +14,7 @@ import net.minestom.server.command.builder.arguments.ArgumentString
 import net.minestom.server.command.builder.arguments.minecraft.ArgumentEntity
 import net.minestom.server.command.builder.suggestion.SuggestionEntry
 import net.minestom.server.entity.Player
-import net.minestom.server.extras.MojangAuth
 import net.minestom.server.timer.TaskSchedule
-import net.minestom.server.utils.mojang.MojangUtils
 
 val coopCommand = kommand {
     name = "coop"

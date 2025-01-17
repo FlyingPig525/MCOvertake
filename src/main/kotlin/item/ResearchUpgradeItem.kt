@@ -1,10 +1,13 @@
 package io.github.flyingpig525.item
 
 import cz.lukynka.prettylog.log
-import io.github.flyingpig525.*
+import io.github.flyingpig525.GLOBAL_RESEARCH_SYMBOL
+import io.github.flyingpig525.GameInstance
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
+import io.github.flyingpig525.data
 import io.github.flyingpig525.data.research.currency.ResearchCurrency
 import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade
+import io.github.flyingpig525.instances
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.extension.adventure.asMini
@@ -12,12 +15,9 @@ import net.bladehunt.kotstom.extension.adventure.noItalic
 import net.bladehunt.kotstom.extension.set
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.entity.Player
-import net.minestom.server.event.inventory.InventoryCloseEvent
 import net.minestom.server.event.player.PlayerUseItemEvent
 import net.minestom.server.inventory.Inventory
 import net.minestom.server.inventory.InventoryType
-import net.minestom.server.inventory.click.ClickType
-import net.minestom.server.inventory.condition.InventoryConditionResult
 import net.minestom.server.item.ItemComponent
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material

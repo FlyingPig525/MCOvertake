@@ -1,7 +1,9 @@
 package io.github.flyingpig525.building
 
 import cz.lukynka.prettylog.log
-import io.github.flyingpig525.*
+import io.github.flyingpig525.BUILDING_INVENTORY_SLOT
+import io.github.flyingpig525.MECHANICAL_SYMBOL
+import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.player.PlayerData
 import io.github.flyingpig525.data.research.currency.BasicResearch
 import kotlinx.serialization.Serializable

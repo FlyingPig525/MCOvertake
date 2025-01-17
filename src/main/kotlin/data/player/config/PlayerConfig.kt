@@ -1,19 +1,12 @@
 package io.github.flyingpig525.data.player.config
 
-import io.github.flyingpig525.data.inventory.InventoryConditionArguments
 import io.github.flyingpig525.serialization.MaterialSerializer
-import kotlinx.serialization.Contextual
 import kotlinx.serialization.Required
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.extension.adventure.asMini
-import net.kyori.adventure.nbt.CompoundBinaryTag
-import net.kyori.adventure.text.Component
 import net.minestom.server.item.ItemStack
-import kotlin.reflect.KClass
-import net.minestom.server.inventory.click.ClickType
-import net.minestom.server.item.ItemComponent
 import net.minestom.server.item.Material
 import kotlin.reflect.KProperty0
 

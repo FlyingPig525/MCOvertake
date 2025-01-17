@@ -11,14 +11,16 @@ import io.github.flyingpig525.console.SaveCommand
 import io.github.flyingpig525.data.config.Config
 import io.github.flyingpig525.data.config.InstanceConfig
 import io.github.flyingpig525.data.config.getCommentString
-import io.github.flyingpig525.data.player.permission.PermissionManager
 import io.github.flyingpig525.data.player.PlayerData
 import io.github.flyingpig525.data.player.permission.Permission
+import io.github.flyingpig525.data.player.permission.PermissionManager
 import io.github.flyingpig525.item.*
 import io.github.flyingpig525.log.MCOvertakeLogType
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.bladehunt.kotstom.*
 import net.bladehunt.kotstom.command.Kommand
@@ -655,10 +657,6 @@ inline fun Point.repeatDirection(fn: (point: Point) -> Unit) {
     fn(add(0.0, 0.0, 1.0))
     fn(add(-1.0, 0.0, 0.0))
 }
-
-var Entity.hasGravity: Boolean
-    get() = !this.hasNoGravity()
-    set(value) = this.setNoGravity(!value)
 
 val Cooldown.ticks: Int get() = (duration.toMillis() / 50).toInt()
 

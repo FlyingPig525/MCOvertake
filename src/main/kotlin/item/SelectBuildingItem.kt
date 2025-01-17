@@ -7,7 +7,6 @@ import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.building.Building
 import io.github.flyingpig525.data
 import io.github.flyingpig525.instances
-import net.bladehunt.kotstom.GlobalEventHandler
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.extension.adventure.asMini
@@ -17,8 +16,6 @@ import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerUseItemEvent
 import net.minestom.server.inventory.Inventory
 import net.minestom.server.inventory.InventoryType
-import net.minestom.server.inventory.click.ClickType
-import net.minestom.server.inventory.condition.InventoryConditionResult
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import net.minestom.server.tag.Tag
@@ -70,6 +67,7 @@ object SelectBuildingItem : Actionable {
         inventory[4, 3] = clearItem
         event.player.openInventory(inventory)
         inventory.addInventoryCondition { player, slot, clickType, res ->
+            res.isCancel = true
             var close = false
             if (res.clickedItem == clearItem) {
                 close = true
@@ -79,7 +77,6 @@ object SelectBuildingItem : Actionable {
                 ref.select(player, playerData)
                 close = true
             }
-            player.inventory.cursorItem = ItemStack.AIR
             if (close) {
                 player.closeInventory()
             } else {

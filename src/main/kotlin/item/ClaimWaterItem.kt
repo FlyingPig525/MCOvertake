@@ -1,20 +1,17 @@
 package io.github.flyingpig525.item
 
-import cz.lukynka.prettylog.LogType
 import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.data.research.action.ActionData
+import io.github.flyingpig525.dsl.blockDisplay
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.bladehunt.kotstom.extension.set
 import net.minestom.server.coordinate.Point
 import net.minestom.server.coordinate.Vec
-import net.minestom.server.entity.Entity
-import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.Player
-import net.minestom.server.entity.metadata.display.BlockDisplayMeta
 import net.minestom.server.event.player.PlayerUseItemEvent
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
@@ -70,25 +67,25 @@ object ClaimWaterItem : Actionable {
     }
 
     fun spawnPlayerRaft(playerBlock: Block, point: Point, instance: Instance) {
-        Entity(EntityType.BLOCK_DISPLAY).also {
-            it.hasGravity = false
-            with((it.entityMeta as BlockDisplayMeta)) {
-                setBlockState(Block.SPRUCE_TRAPDOOR)
-                scale = Vec(0.9, 0.866, 0.9)
-                translation = Vec(0.05, -0.15125, 0.05)
+        blockDisplay {
+            hasGravity = false
+            scale = Vec(0.9, 0.866, 0.9)
+            block = Block.SPRUCE_TRAPDOOR
+            translation = Vec(0.05, -0.15125, 0.05)
+            entity {
+                setTag(Tag.Boolean("player_raft"), true)
+                setInstance(instance, point)
             }
-            it.setTag(Tag.Boolean("player_raft"), true)
-            it.setInstance(instance, point)
         }
-        Entity(EntityType.BLOCK_DISPLAY).also {
-            it.hasGravity = false
-            with((it.entityMeta as BlockDisplayMeta)) {
-                setBlockState(playerBlock)
-                scale = Vec(0.875, 0.1625, 0.875)
-                translation = Vec(-0.4375+0.5, -0.145, -0.4375+0.5)
+        blockDisplay {
+            hasGravity = false
+            scale = Vec(0.875, 0.1625, 0.875)
+            translation = Vec(-0.4375+0.5, -0.145, -0.4375+0.5)
+            block = playerBlock
+            entity {
+                setTag(Tag.Boolean("player_raft"), true)
+                setInstance(instance, point)
             }
-            it.setTag(Tag.Boolean("player_raft"), true)
-            it.setInstance(instance, point)
         }
     }
 

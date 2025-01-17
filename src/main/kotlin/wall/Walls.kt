@@ -6,7 +6,6 @@ import net.minestom.server.coordinate.Point
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.instance.block.Block.*
-import java.lang.Math.pow
 import kotlin.math.max
 import kotlin.math.pow
 

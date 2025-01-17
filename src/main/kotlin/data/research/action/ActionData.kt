@@ -63,7 +63,6 @@ sealed class ActionData(val playerData: PlayerData, val instance: Instance?, val
     ) {
         var wallLevel = 0
         var targetData: PlayerData = PlayerData.NONE
-        var percentageDecrease: Double = 0.0
     }
 
     class UpgradeWall(playerData: PlayerData, instance: Instance, player: Player) : ActionData(

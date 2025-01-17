@@ -4,9 +4,6 @@ import io.github.flyingpig525.*
 import net.bladehunt.kotstom.dsl.item.ItemLore
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.bladehunt.kotstom.extension.adventure.noItalic
-import net.kyori.adventure.util.RGBLike
-import net.minestom.server.color.Color
-import net.minestom.server.item.ItemStack
 
 val ItemLore.power: String
     get() = "<red>$POWER_SYMBOL <bold>Power</bold><gray>"

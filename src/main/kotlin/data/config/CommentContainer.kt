@@ -1,9 +1,9 @@
 package io.github.flyingpig525.data.config
 
 import io.github.flyingpig525.json
-import kotlinx.serialization.Contextual
 import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.jsonObject
 
 interface CommentContainer {
     val comments: List<String>
@@ -35,10 +35,4 @@ fun getCommentString(obj: InstanceConfig): String {
     str = str.dropLast(1)
     str += "\n}"
     return str
-}
-
-fun main() {
-    println(getCommentString(Config()))
-    println("")
-    println(getCommentString(InstanceConfig()))
 }

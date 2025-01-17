@@ -3,8 +3,6 @@ package io.github.flyingpig525.item
 import io.github.flyingpig525.GameInstance
 import io.github.flyingpig525.GameInstance.Companion.gameInstance
 import io.github.flyingpig525.data
-import io.github.flyingpig525.data.inventory.InventoryConditionArguments.Companion.addInventoryCondition
-import io.github.flyingpig525.instances
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.dsl.item.lore
