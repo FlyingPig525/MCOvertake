@@ -3,7 +3,7 @@ package io.github.flyingpig525.item
 import io.github.flyingpig525.GameInstance
 import io.github.flyingpig525.building.BasicResearchGenerator
 import io.github.flyingpig525.data
-import io.github.flyingpig525.getTrueTarget
+import io.github.flyingpig525.data.player.PlayerData
 import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerUseItemEvent
 import net.minestom.server.item.ItemStack
@@ -25,13 +25,16 @@ object BasicResearchGeneratorItem : Actionable {
 
     override fun setItemSlot(player: Player) {
         val data = player.data ?: return
-        data.basicResearchCategory.basicResearchStations.select(player, data)
+        data.basicResearchStations.select(player, data)
     }
 
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
-        val target = event.player.getTrueTarget(20) ?: return true
-        val data = event.player.data ?: return true
-        data.basicResearchCategory.basicResearchStations.place(target, event.instance)
-        return true
+        return basicBuildingPlacement(
+            event,
+            BasicResearchGenerator,
+            PlayerData::basicResearchStations,
+            PlayerData::mechanicalParts,
+            PlayerData::basicResearchStationCost
+        )
     }
 }

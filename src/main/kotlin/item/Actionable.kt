@@ -1,6 +1,7 @@
 package io.github.flyingpig525.item
 
 import io.github.flyingpig525.*
+import io.github.flyingpig525.building.Building
 import io.github.flyingpig525.data.player.PlayerData
 import net.bladehunt.kotstom.dsl.item.ItemDsl
 import net.bladehunt.kotstom.dsl.item.item
@@ -20,6 +21,8 @@ import net.minestom.server.network.packet.server.play.ParticlePacket
 import net.minestom.server.particle.Particle
 import net.minestom.server.tag.Tag
 import java.util.*
+import kotlin.reflect.KMutableProperty1
+import kotlin.reflect.KProperty1
 
 val ERROR_ITEM = item(Material.BARRIER) {
     itemName = "<red><bold>ERROR".asMini()
@@ -81,4 +84,52 @@ fun sneakCheck(event: PlayerUseItemEvent): Boolean {
 inline fun gameItem(material: Material, identifier: String, fn: @ItemDsl ItemStack.Builder.() -> Unit) = item(material) {
     fn()
     setTag(Tag.String("identifier"), identifier)
+}
+
+fun <T : Building> basicBuildingPlacement(
+    event: PlayerUseItemEvent,
+    buildingCompanion: Building.BuildingCompanion,
+    buildingRef: KProperty1<PlayerData, T>,
+    currencyRef: KMutableProperty1<PlayerData, Int>,
+    costRef: KProperty1<PlayerData, Int>
+): Boolean {
+    if (sneakCheck(event)) return true
+    val instance = event.instance
+    val target = event.player.getTrueTarget(20) ?: return true
+    val playerData = event.player.data ?: return true
+    if (!checkBlockAvailable(playerData, target, instance)) return true
+    if (buildingCompanion.getResourceUse(playerData.disposableResourcesUsed) > playerData.maxDisposableResources) return true
+    val cost = costRef.get(playerData)
+    val currency = currencyRef.get(playerData)
+    if (currency < cost) return true
+    currencyRef.set(playerData, currency - cost)
+    val building = buildingRef.get(playerData)
+    building.place(target, instance)
+    building.select(event.player, costRef.get(playerData))
+    playerData.updateBossBars()
+    return true
+}
+
+fun <T : Building> basicBuildingPlacement(
+    event: PlayerUseItemEvent,
+    buildingCompanion: Building.BuildingCompanion,
+    buildingRef: KProperty1<PlayerData, T>,
+    currencyRef: KMutableProperty1<PlayerData, Double>,
+    costRef: KProperty1<PlayerData, Int>
+): Boolean {
+    if (sneakCheck(event)) return true
+    val instance = event.instance
+    val target = event.player.getTrueTarget(20) ?: return true
+    val playerData = event.player.data ?: return true
+    if (!checkBlockAvailable(playerData, target, instance)) return true
+    if (buildingCompanion.getResourceUse(playerData.disposableResourcesUsed) > playerData.maxDisposableResources) return true
+    val cost = costRef.get(playerData)
+    val currency = currencyRef.get(playerData)
+    if (currency < cost) return true
+    currencyRef.set(playerData, currency - cost)
+    val building = buildingRef.get(playerData)
+    building.place(target, instance)
+    building.select(event.player, costRef.get(playerData))
+    playerData.updateBossBars()
+    return true
 }

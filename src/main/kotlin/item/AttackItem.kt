@@ -126,6 +126,7 @@ object AttackItem : Actionable {
         }
         val targetPlayer = instance.getPlayerByUuid(postAttack.targetData.uuid.toUUID())
         val targetData = postAttack.targetData
+        // TODO: REFACTOR THIS TO USE BUILDING REFERENCES
         val taken = when(buildingBlock) {
             Block.AIR -> { true }
             Block.LILY_PAD -> {
@@ -199,6 +200,18 @@ object AttackItem : Actionable {
                 targetData.undergroundTeleporters.count--
                 if (waterBlock.defaultState() != Block.WATER) {
                     data.undergroundTeleporters.count++
+                    return@run true
+                }
+                attackRaft(targetData, target, instance)
+                if (targetPlayer != null) {
+                    SelectBuildingItem.updatePlayerItem(targetPlayer)
+                }
+                false
+            }
+            BasicResearchGenerator.block -> run {
+                targetData.basicResearchCategory.basicResearchStations.count--
+                if (waterBlock.defaultState() != Block.WATER) {
+                    data.basicResearchCategory.basicResearchStations.count++
                     return@run true
                 }
                 attackRaft(targetData, target, instance)

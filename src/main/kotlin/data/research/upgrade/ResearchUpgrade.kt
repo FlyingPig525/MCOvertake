@@ -2,7 +2,6 @@ package io.github.flyingpig525.data.research.upgrade
 
 import io.github.flyingpig525.data.research.action.ActionData.*
 import io.github.flyingpig525.data.research.currency.ResearchCurrency
-import kotlinx.serialization.Required
 import kotlinx.serialization.Serializable
 import net.minestom.server.entity.Player
 import net.minestom.server.inventory.condition.InventoryConditionResult
@@ -24,7 +23,7 @@ sealed class ResearchUpgrade {
     /**
      * Executes after attacking another player
      */
-    open fun onPostAttack(eventData: Attack): Attack? = null
+    open fun onAttack(eventData: Attack): Attack? = null
     open fun onClaimLand(eventData: ClaimLand): ClaimLand? = null
     open fun onPlaceRaft(eventData: PlaceRaft): PlaceRaft? = null
     open fun onPlaceColony(eventData: PlaceColony): PlaceColony? = null
@@ -35,7 +34,7 @@ sealed class ResearchUpgrade {
     /**
      * Executes before attacking another player
      */
-    open fun onPreAttack(eventData: AttackCostCalculation): AttackCostCalculation? = null
+    open fun onAttackCostCalculation(eventData: AttackCostCalculation): AttackCostCalculation? = null
 
     /**
      * Executes when another player attacks
@@ -80,7 +79,7 @@ sealed class ResearchUpgrade {
         fun List<ResearchUpgrade>.onPostAttack(eventData: Attack): Attack {
             var data = eventData
             forEach {
-                data = it.onPostAttack(data) ?: data
+                data = it.onAttack(data) ?: data
             }
             return data
         }
@@ -88,7 +87,7 @@ sealed class ResearchUpgrade {
         fun List<ResearchUpgrade>.onPreAttack(eventData: AttackCostCalculation): AttackCostCalculation {
             var data = eventData
             forEach {
-                data = it.onPreAttack(data) ?: data
+                data = it.onAttackCostCalculation(data) ?: data
             }
             return data
         }

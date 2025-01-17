@@ -6,6 +6,5 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 class BasicCategory {
-    val basicResearchStations = BasicResearchGenerator()
-    val basicResearchStationCost get() = PlayerData.genericBuildingCost(basicResearchStations.count, 100)
+
 }

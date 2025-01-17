@@ -4,8 +4,10 @@ import cz.lukynka.prettylog.LogType
 import cz.lukynka.prettylog.log
 import io.github.flyingpig525.GameInstance
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
+import io.github.flyingpig525.building.Barrack
 import io.github.flyingpig525.building.TrainingCamp
 import io.github.flyingpig525.data
+import io.github.flyingpig525.data.player.PlayerData
 import io.github.flyingpig525.getTrueTarget
 import io.github.flyingpig525.instances
 import net.minestom.server.entity.Player
@@ -32,18 +34,13 @@ object TrainingCampItem : Actionable {
     }
 
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
-        if (sneakCheck(event)) return true
-        val instance = event.instance
-        val target = event.player.getTrueTarget(20) ?: return true
-        val playerData = event.player.data ?: return true
-        if (!checkBlockAvailable(playerData, target, instance)) return true
-        if (TrainingCamp.getResourceUse(playerData.disposableResourcesUsed) > playerData.maxDisposableResources) return true
-        if (playerData.organicMatter < playerData.trainingCampCost) return true
-        playerData.organicMatter -= playerData.trainingCampCost
-        playerData.trainingCamps.place(target, instance)
-        playerData.trainingCamps.select(event.player, playerData.trainingCampCost)
-        playerData.updateBossBars()
-        return true
+        return basicBuildingPlacement(
+            event,
+            TrainingCamp,
+            PlayerData::trainingCamps,
+            PlayerData::organicMatter,
+            PlayerData::trainingCampCost
+        )
     }
 
     override fun setItemSlot(player: Player) {

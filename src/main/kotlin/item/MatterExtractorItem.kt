@@ -1,13 +1,10 @@
 package io.github.flyingpig525.item
 
-import cz.lukynka.prettylog.LogType
 import cz.lukynka.prettylog.log
 import io.github.flyingpig525.GameInstance
-import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.building.MatterExtractor
 import io.github.flyingpig525.data
-import io.github.flyingpig525.getTrueTarget
-import io.github.flyingpig525.instances
+import io.github.flyingpig525.data.player.PlayerData
 import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerUseItemEvent
 import net.minestom.server.item.ItemStack
@@ -30,22 +27,17 @@ object MatterExtractorItem : Actionable {
     }
 
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
-        if (sneakCheck(event)) return true
-        val instance = event.instance
-        val target = event.player.getTrueTarget(20) ?: return true
-        val playerData = event.player.data ?: return true
-        if (!checkBlockAvailable(playerData, target, instance)) return true
-        if (MatterExtractor.getResourceUse(playerData.disposableResourcesUsed) > playerData.maxDisposableResources) return true
-        if (playerData.organicMatter < playerData.extractorCost) return true
-        playerData.organicMatter -= playerData.extractorCost
-        playerData.matterExtractors.place(target, instance)
-        playerData.matterExtractors.select(event.player, playerData.extractorCost)
-        playerData.updateBossBars()
-        return true
+        return basicBuildingPlacement(
+            event,
+            MatterExtractor,
+            PlayerData::matterExtractors,
+            PlayerData::organicMatter,
+            PlayerData::matterExtractorCost
+        )
     }
 
     override fun setItemSlot(player: Player) {
         val data = player.data!!
-        data.matterExtractors.select(player, data.extractorCost)
+        data.matterExtractors.select(player, data.matterExtractorCost)
     }
 }

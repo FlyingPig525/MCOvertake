@@ -5,7 +5,9 @@ import cz.lukynka.prettylog.log
 import io.github.flyingpig525.GameInstance
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.building.Barrack
+import io.github.flyingpig525.building.BasicResearchGenerator
 import io.github.flyingpig525.data
+import io.github.flyingpig525.data.player.PlayerData
 import io.github.flyingpig525.getTrueTarget
 import io.github.flyingpig525.instances
 import net.minestom.server.entity.Player
@@ -32,18 +34,13 @@ object BarracksItem : Actionable {
     }
 
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
-        if (sneakCheck(event)) return true
-        val instance = event.instance
-        val target = event.player.getTrueTarget(20) ?: return true
-        val playerData = event.player.data ?: return true
-        if (!checkBlockAvailable(playerData, target, instance)) return true
-        if (Barrack.getResourceUse(playerData.disposableResourcesUsed) > playerData.maxDisposableResources) return true
-        if (playerData.organicMatter < playerData.barracksCost) return true
-        playerData.organicMatter -= playerData.barracksCost
-        playerData.barracks.place(target, instance)
-        playerData.barracks.select(event.player, playerData.barracksCost)
-        playerData.updateBossBars()
-        return true
+        return basicBuildingPlacement(
+            event,
+            Barrack,
+            PlayerData::barracks,
+            PlayerData::organicMatter,
+            PlayerData::barracksCost
+        )
     }
 
     override fun setItemSlot(player: Player) {

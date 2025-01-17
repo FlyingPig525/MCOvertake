@@ -2,7 +2,6 @@ package io.github.flyingpig525.building
 
 import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
-import io.github.flyingpig525.building.Barrack.BarrackCompanion
 import io.github.flyingpig525.data.player.PlayerData
 import io.github.flyingpig525.data.research.currency.BasicResearch
 import kotlinx.serialization.Serializable
@@ -35,7 +34,7 @@ class BasicResearchGenerator : Building {
     }
 
     override fun select(player: Player, data: PlayerData) {
-        select(player, data.basicResearchCategory.basicResearchStationCost)
+        select(player, data.basicResearchStationCost)
     }
 
     override fun tick(data: PlayerData) {
@@ -57,7 +56,7 @@ class BasicResearchGenerator : Building {
                 lore {
                     +"<dark_gray>Employs scientists to aid development of new tech".asMini()
                     +"<dark_gray>using mechanical parts"
-                    +"<gray>Consumes 2 power and 3 mechanical parts to generate 1 basic research".asMini().noItalic()
+                    +"<gray>Consumes 2 $power and 3 $mechanicalPart to generate 1 basic research".asMini().noItalic()
                     resourcesConsumed(3, count)
                     amountOwned(count)
                 }
@@ -66,8 +65,7 @@ class BasicResearchGenerator : Building {
         }
 
         override fun getItem(playerData: PlayerData): ItemStack {
-            val r = playerData.basicResearchCategory
-            return getItem(r.basicResearchStationCost, r.basicResearchStations.count)
+            return getItem(playerData.basicResearchStationCost, playerData.basicResearchStations.count)
         }
 
         override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 3

@@ -75,7 +75,7 @@ class TestUpgrade : ResearchUpgrade() {
         return eventData
     }
 
-    override fun onPostAttack(eventData: ActionData.Attack): ActionData.Attack? {
+    override fun onAttack(eventData: ActionData.Attack): ActionData.Attack? {
         if (level == 0) return null
 //        log("Post Attack")
         eventData.attackCost = 0
@@ -83,7 +83,7 @@ class TestUpgrade : ResearchUpgrade() {
         return eventData
     }
 
-    override fun onPreAttack(eventData: ActionData.AttackCostCalculation): ActionData.AttackCostCalculation? {
+    override fun onAttackCostCalculation(eventData: ActionData.AttackCostCalculation): ActionData.AttackCostCalculation? {
         if (level == 0) return null
 //        log("Pre Attack")
         eventData.wallLevel = 0

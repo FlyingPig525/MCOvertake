@@ -3,7 +3,6 @@ package io.github.flyingpig525.data.player
 import io.github.flyingpig525.*
 import io.github.flyingpig525.building.*
 import io.github.flyingpig525.data.player.config.PlayerConfig
-import io.github.flyingpig525.data.player.research.BasicCategory
 import io.github.flyingpig525.data.research.ResearchContainer
 import io.github.flyingpig525.item.*
 import io.github.flyingpig525.serialization.BlockSerializer
@@ -13,7 +12,6 @@ import kotlinx.serialization.Transient
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.kyori.adventure.bossbar.BossBar
-import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.coordinate.Point
 import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerTickEvent
@@ -41,9 +39,9 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
     val maxPower: Int get() = 100 + barracks.count * 25
     val barracksCost: Int get() = genericBuildingCost(barracks.count, 25)
     val matterExtractors = MatterExtractor()
-    val extractorCost: Int get() = genericBuildingCost(matterExtractors.count, 25)
+    val matterExtractorCost: Int get() = genericBuildingCost(matterExtractors.count, 25)
     val matterContainers = MatterContainer()
-    val containerCost: Int get() = genericBuildingCost(matterContainers.count, 20)
+    val matterContainerCost: Int get() = genericBuildingCost(matterContainers.count, 20)
     val matterCompressors = MatterCompressionPlant()
     val matterCompressorCost: Int get() = (matterCompressors.count * 50) + 50
     val maxMatter: Int get() = 100 + matterContainers.count * 25
@@ -53,7 +51,8 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
     val raftCost: Int get() = (blocks.floorDiv(10000) * 500) + 500
     val undergroundTeleporters = UndergroundTeleporter()
     val teleporterCost: Int get() = undergroundTeleporters.count * 1000 + 1000
-    val basicResearchCategory = BasicCategory()
+    val basicResearchStations = BasicResearchGenerator()
+    val basicResearchStationCost get() = PlayerData.genericBuildingCost(basicResearchStations.count, 100)
     @Transient var claimCooldown = Cooldown(Duration.ofMillis(maxClaimCooldown))
     @Transient var colonyCooldown = Cooldown(Duration.ofSeconds(if (blocks > 0) 15 else 0))
     @Transient var attackCooldown = Cooldown(Duration.ofSeconds(10))
@@ -166,7 +165,7 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
 
     fun researchTick() {
         matterCompressors.tick(this)
-        basicResearchCategory.basicResearchStations.tick(this)
+        basicResearchStations.tick(this)
     }
 
     fun updateBossBars(player: Player? = null) {
@@ -260,7 +259,7 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
             "matter:generator" -> ::matterExtractors
             "mechanical:generator" -> ::matterCompressors
             "underground:teleport" -> ::undergroundTeleporters
-            "research:basic_research" -> basicResearchCategory::basicResearchStations
+            "research:basic_research" -> ::basicResearchStations
             else -> null
         }
     }

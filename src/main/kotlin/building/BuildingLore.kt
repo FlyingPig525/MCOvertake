@@ -15,9 +15,9 @@ val ItemLore.organicMatter: String
 val ItemLore.attack: String
     get() = "<red>$ATTACK_SYMBOL <bold>Attack</bold><gray>"
 val ItemLore.disposableResources: String
-    get() = "<aqua>$RESOURCE_SYMBOL <bold>Disposable Resources</bold><gray>"
+    get() = "<aqua>$RESOURCE_SYMBOL <bold>Disposable Resource(s)</bold><gray>"
 val ItemLore.mechanicalPart: String
-    get() = "<white>$MECHANICAL_SYMBOL <bold>Mechanical Part</bold><gray>"
+    get() = "<white>$MECHANICAL_SYMBOL <bold>Mechanical Part(s)</bold><gray>"
 
 const val oilColor: String = "<#22252A>"
 

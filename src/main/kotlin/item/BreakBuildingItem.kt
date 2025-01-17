@@ -68,6 +68,9 @@ object BreakBuildingItem : Actionable {
             instance.setBlock(buildingPos, Block.LILY_PAD)
         } else {
             instance.setBlock(buildingPos, Block.AIR)
+            buildingPos.repeatAdjacent {
+                UpgradeWallItem.updateWall(it, instance)
+            }
         }
         return true
     }

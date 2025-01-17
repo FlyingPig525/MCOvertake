@@ -1,13 +1,10 @@
 package io.github.flyingpig525.item
 
-import cz.lukynka.prettylog.LogType
 import cz.lukynka.prettylog.log
 import io.github.flyingpig525.GameInstance
-import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.building.MatterCompressionPlant
 import io.github.flyingpig525.data
-import io.github.flyingpig525.getTrueTarget
-import io.github.flyingpig525.instances
+import io.github.flyingpig525.data.player.PlayerData
 import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerUseItemEvent
 import net.minestom.server.item.ItemStack
@@ -30,23 +27,17 @@ object MatterCompressorItem : Actionable {
     }
 
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
-        if (sneakCheck(event)) return true
-        val instance = event.instance
-        val target = event.player.getTrueTarget(20) ?: return true
-        val gameInstance = instances.fromInstance(instance) ?: return true
-        val playerData = event.player.data ?: return true
-        if (!checkBlockAvailable(playerData, target, instance)) return true
-        if (MatterCompressionPlant.getResourceUse(playerData.disposableResourcesUsed) > playerData.maxDisposableResources) return true
-        if (playerData.organicMatter < playerData.matterCompressorCost) return true
-        playerData.organicMatter -= playerData.matterCompressorCost
-        playerData.matterCompressors.place(target, instance)
-        playerData.matterCompressors.select(event.player, playerData.extractorCost)
-        playerData.updateBossBars()
-        return true
+        return basicBuildingPlacement(
+            event,
+            MatterCompressionPlant,
+            PlayerData::matterCompressors,
+            PlayerData::organicMatter,
+            PlayerData::matterCompressorCost
+        )
     }
 
     override fun setItemSlot(player: Player) {
         val data = player.data!!
-        data.matterCompressors.select(player, data.extractorCost)
+        data.matterCompressors.select(player, data.matterExtractorCost)
     }
 }

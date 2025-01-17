@@ -66,7 +66,7 @@ class MatterExtractor : Building {
         }
 
         override fun getItem(playerData: PlayerData): ItemStack {
-            return getItem(playerData.extractorCost, playerData.matterExtractors.count)
+            return getItem(playerData.matterExtractorCost, playerData.matterExtractors.count)
         }
 
         override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 3
