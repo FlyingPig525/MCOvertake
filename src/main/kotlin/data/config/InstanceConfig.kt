@@ -17,7 +17,10 @@ data class InstanceConfig(
     // Block identifier for underground claimable tile, can be any block, but it is recommended to keep it a block players cant be
     @Serializable(with = BlockSerializer::class) val undergroundBlock: Block = Block.BEDROCK,
     // Whether to allow research upgrades or not
-    val allowResearch: Boolean = false
+    val allowResearch: Boolean = false,
+    // The amount of time a co-op kicked is queued for in minutes
+    // Can be lowered to make inviting the wrong people less punishing, but that is not recommended
+    val coopKickWaitTime: Long = 60
 ) {
     companion object : CommentContainer {
         override val comments: List<String> = listOf(
@@ -27,7 +30,9 @@ data class InstanceConfig(
             "// Length and width of map (will always be a square). Default: 300",
             "// Block identifier for underground claimable tile.\n\t" +
                     "// Can be any block, but it is recommended to keep it a block players cant be for visual purposes. Default: \"minecraft:bedrock\"",
-            "// Whether to allow research upgrades or not"
+            "// Whether to allow research upgrades or not",
+            "// The amount of time a co-op kicked is queued for in minutes\n\t" +
+                    "// Can be lowered to make inviting the wrong people less punishing, but that is not recommended"
         )
     }
 }

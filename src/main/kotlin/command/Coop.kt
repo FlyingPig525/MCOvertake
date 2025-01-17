@@ -181,7 +181,7 @@ val coopCommand = kommand {
                     }
                     gameInstance.uuidParents[targetUUID.toString()] = targetUUID.toString()
                     TaskSchedule.stop()
-                }, TaskSchedule.seconds(10))
+                }, TaskSchedule.minutes(gameInstance.instanceConfig.coopKickWaitTime))
             }
         }
     }
