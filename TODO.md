@@ -12,7 +12,7 @@ TODO:
 - [x] underground (where you can do oil) (less digging more cave systems? maybe inverted ground noise)
 - [x] mechanical parts
 - [ ] aoe buildings
-- [ ] co-op
+- [x] co-op
 - [ ] biomes? more details needed -- seems cool but probably no
 - [ ] vacation mode?
 - [ ] natural resources periodically spawn in ocean -- most likely not

@@ -154,7 +154,7 @@ class GameInstance(val path: Path, val name: String) {
                 pdFile.createNewFile()
             }
             pdFile.writeText(Json.encodeToString(playerData))
-            val uuidFile = path.resolve("coop-uuids.json").toFile()
+            val uuidFile = path.resolve("coop-uuids.json5").toFile()
             if (!uuidFile.exists()) {
                 uuidFile.createNewFile()
             }
