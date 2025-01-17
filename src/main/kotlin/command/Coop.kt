@@ -5,14 +5,19 @@ import io.github.flyingpig525.data
 import io.github.flyingpig525.instances
 import io.github.flyingpig525.item.SelectBlockItem
 import io.github.flyingpig525.removeBossBars
+import io.github.flyingpig525.toUUID
 import net.bladehunt.kotstom.dsl.kommand.buildSyntax
 import net.bladehunt.kotstom.dsl.kommand.kommand
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.kyori.adventure.text.event.ClickEvent
+import net.kyori.adventure.text.event.HoverEvent
 import net.minestom.server.command.builder.arguments.ArgumentString
 import net.minestom.server.command.builder.arguments.minecraft.ArgumentEntity
 import net.minestom.server.command.builder.suggestion.SuggestionEntry
 import net.minestom.server.entity.Player
+import net.minestom.server.extras.MojangAuth
+import net.minestom.server.timer.TaskSchedule
+import net.minestom.server.utils.mojang.MojangUtils
 
 val coopCommand = kommand {
     name = "coop"
@@ -114,6 +119,69 @@ val coopCommand = kommand {
                 player.sendMessage("<aqua><bold>Successfully joined $targetUsername's co-op!".asMini())
                 player.instance.getPlayerByUuid(targetUUID.first)
                     ?.sendMessage("<aqua><bold>${player.username} has joined your co-op!".asMini())
+            }
+        }
+    }
+
+    subkommand {
+        name = "kick"
+
+        val playerName = ArgumentString("player").apply {
+            setSuggestionCallback { sender, ctx, suggestion ->
+                val player = sender as Player
+                val instance = player.gameInstance ?: return@setSuggestionCallback
+                val childUUIDs = instance.uuidParentsInverse[player.uuid.toString()]?.filter { it != player.uuid.toString() } ?: return@setSuggestionCallback
+                println(childUUIDs)
+                println(instance.uuidParentsInverse)
+                for (uuid in childUUIDs) {
+                    val name = uuid
+                    val current = ctx.getRaw("player")
+                    if (current in name) {
+                        suggestion.addEntry(SuggestionEntry(name))
+                    }
+                }
+                if (suggestion.entries.size == 0) {
+                    suggestion.entries += childUUIDs.map { SuggestionEntry(it) }
+                }
+            }
+        }
+        buildSyntax(playerName) {
+            executor {
+                val targetName = context.get(playerName)
+                val targetUUID = player.instance.getPlayerByUuid(targetName.toUUID())!!.uuid
+                val gameInstance = player.gameInstance
+                if (gameInstance == null) {
+                    player.sendMessage("<red><bold>You must be in a game instance to run this command".asMini())
+                    return@executor
+                }
+                val childUUIDs = gameInstance.uuidParentsInverse[player.uuid.toString()]?.filter { it != player.uuid.toString() }
+                if (childUUIDs.isNullOrEmpty()) {
+                    player.sendMessage("<red><bold>You must be the owner of a co-op to kick players".asMini())
+                    return@executor
+                }
+                if (targetUUID.toString() !in childUUIDs) {
+                    player.sendMessage("<red><bold>$targetName is not present in your co-op".asMini())
+                    return@executor
+                }
+                player.sendMessage("<green><bold>$targetName will be kicked from your co-op in one hour ".asMini().let {
+                    it.append("<light_purple>[why one hour]".asMini().hoverEvent { HoverEvent.showText(
+                        ("<light_purple>This is done to increase the risk of inviting someone to your co-op," +
+                                " meaning you must be more careful with those you decide to trust." +
+                                "\nThey will only be notified once they are kicked.").asMini()
+                    ) as HoverEvent<Any>})
+                })
+                player.instance.scheduler().scheduleTask({
+                    val targetPlayer = gameInstance.instance.getPlayerByUuid(targetUUID)
+                    if (targetPlayer != null) {
+                        targetPlayer.inventory.clear()
+                        SelectBlockItem.setAllSlots(targetPlayer)
+                        targetPlayer.sendMessage(
+                            "<aqua><bold>You have been kicked from ${player.username}'s co-op, this was scheduled one hour ago".asMini()
+                        )
+                    }
+                    gameInstance.uuidParents[targetUUID.toString()] = targetUUID.toString()
+                    TaskSchedule.stop()
+                }, TaskSchedule.seconds(10))
             }
         }
     }

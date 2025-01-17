@@ -126,8 +126,7 @@ fun main() = runBlocking { try {
     LoggerFileWriter.load()
     // Initialize the servers
     val minecraftServer = MinecraftServer.init()
-
-    MojangAuth.init()
+//    MojangAuth.init()
     MinecraftServer.setBrandName("MCOvertake")
     MinecraftServer.getExceptionManager().setExceptionHandler {
         log(it as Exception)

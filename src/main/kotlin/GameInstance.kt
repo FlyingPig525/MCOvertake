@@ -88,6 +88,7 @@ class GameInstance(val path: Path, val name: String) {
             path.resolve("coop-uuids.json5").toFile().readText()
         )
         else processParents()
+    // Block owner to player uuids
     val uuidParentsInverse: MutableMap<String, List<String>> get() {
         val map: MutableMap<String, List<String>> = mutableMapOf()
         for ((key, value) in uuidParents) {
