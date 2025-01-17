@@ -19,7 +19,7 @@ object BasicResearchGeneratorItem : Actionable {
     override val itemMaterial: Material = Material.SCULK_SENSOR
 
     override fun getItem(uuid: UUID, instance: GameInstance): ItemStack {
-        val data = instance.playerData[uuid.toString()] ?: return ERROR_ITEM
+        val data = instance.dataResolver[uuid.toString()] ?: return ERROR_ITEM
         return BasicResearchGenerator.getItem(data)
     }
 

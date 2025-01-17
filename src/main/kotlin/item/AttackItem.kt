@@ -93,8 +93,7 @@ object AttackItem : Actionable {
 
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
         val instance = event.instance
-        val gameInstance = instances.fromInstance(instance) ?: return true
-        val data = gameInstance.playerData[event.player.uuid.toString()] ?: return true
+        val data = event.player.data ?: return true
         if (!data.attackCooldown.isReady(Instant.now().toEpochMilli())) return true
         val target = event.player.getTrueTarget(20) ?: return true
         val buildingPoint = target.buildingPosition
@@ -238,7 +237,7 @@ object AttackItem : Actionable {
             }
         }
         data.attackCooldown = postAttack.attackCooldown
-        event.player.sendPacket(
+        data.sendPacket(
             SetCooldownPacket(
                 itemMaterial.cooldownIdentifier,
                 data.attackCooldown.ticks

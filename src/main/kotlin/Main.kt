@@ -3,12 +3,14 @@ package io.github.flyingpig525
 import cz.lukynka.prettylog.*
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.building.*
+import io.github.flyingpig525.command.coopCommand
 import io.github.flyingpig525.console.Command
 import io.github.flyingpig525.console.ConfigCommand
 import io.github.flyingpig525.console.OpCommand
 import io.github.flyingpig525.console.SaveCommand
-import io.github.flyingpig525.data.Config
-import io.github.flyingpig525.data.InstanceConfig
+import io.github.flyingpig525.data.config.Config
+import io.github.flyingpig525.data.config.InstanceConfig
+import io.github.flyingpig525.data.config.getCommentString
 import io.github.flyingpig525.data.player.permission.PermissionManager
 import io.github.flyingpig525.data.player.PlayerData
 import io.github.flyingpig525.data.player.permission.Permission
@@ -49,10 +51,10 @@ import net.minestom.server.entity.Player
 import net.minestom.server.entity.PlayerHand
 import net.minestom.server.event.inventory.InventoryClickEvent
 import net.minestom.server.event.inventory.InventoryCloseEvent
+import net.minestom.server.event.inventory.InventoryOpenEvent
 import net.minestom.server.event.item.ItemDropEvent
 import net.minestom.server.event.player.*
 import net.minestom.server.event.server.ServerListPingEvent
-import net.minestom.server.extras.MojangAuth
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.InstanceContainer
 import net.minestom.server.instance.LightingChunk
@@ -65,10 +67,7 @@ import net.minestom.server.inventory.condition.InventoryConditionResult
 import net.minestom.server.item.ItemComponent
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
-import net.minestom.server.network.packet.PacketReading
-import net.minestom.server.network.packet.PacketRegistry
 import net.minestom.server.tag.Tag
-import net.minestom.server.timer.ExecutionType
 import net.minestom.server.timer.TaskSchedule
 import net.minestom.server.utils.time.Cooldown
 import team.unnamed.creative.BuiltResourcePack
@@ -79,7 +78,6 @@ import java.io.File
 import java.net.URI
 import java.nio.file.Path
 import java.util.*
-import kotlin.reflect.KClass
 
 
 const val POWER_SYMBOL = "✘"
@@ -127,27 +125,28 @@ fun main() = runBlocking { try {
     LoggerFileWriter.load()
     // Initialize the servers
     val minecraftServer = MinecraftServer.init()
-    MojangAuth.init()
+
+//    MojangAuth.init()
     MinecraftServer.setBrandName("MCOvertake")
     MinecraftServer.getExceptionManager().setExceptionHandler {
         log(it as Exception)
     }
 
-    val configFile = File("config.json")
+    val configFile = File("config.json5")
     if (!configFile.exists()) {
         configFile.createNewFile()
-        configFile.writeText(json.encodeToString(Config()))
+        configFile.writeText(getCommentString(Config()))
     }
     config = json.decodeFromString<Config>(configFile.readText())
-    configFile.writeText(json.encodeToString(config))
+    configFile.writeText(getCommentString(config))
     log("Config imported...", MCOvertakeLogType.FILESYSTEM)
-    val parentCFile = File("parent-instance-config.json")
+    val parentCFile = File("parent-instance-config.json5")
     if (!parentCFile.exists()) {
         parentCFile.createNewFile()
-        parentCFile.writeText(json.encodeToString(InstanceConfig()))
+        parentCFile.writeText(getCommentString(InstanceConfig()))
     }
     parentInstanceConfig = json.decodeFromString(parentCFile.readText())
-    parentCFile.writeText(json.encodeToString(InstanceConfig()))
+    parentCFile.writeText(getCommentString(InstanceConfig()))
 
     var packServer: ResourcePackServer? = null
     var builtResourcePack: BuiltResourcePack? = null
@@ -188,6 +187,12 @@ fun main() = runBlocking { try {
     GlobalEventHandler.listen<ServerListPingEvent> {
         it.responseData.apply {
             description = "<gradient:green:gold><bold>MCOvertake - $SERVER_VERSION".asMini()
+        }
+    }
+
+    GlobalEventHandler.listen<InventoryOpenEvent> {
+        if (it.player.inventory == it.inventory) {
+            it.player.inventory.cursorItem = ItemStack.AIR
         }
     }
 
@@ -235,11 +240,13 @@ fun main() = runBlocking { try {
             itemName = "<gradient:green:gold:$scoreboardTitleProgress><bold>MCOvertake Game Instances".asMini()
         }
         e.player.inventory.addInventoryCondition { player, slot, type, res ->
-            res.isCancel = true
-            val item = player.inventory[slot]
-            if (item == SelectBlockItem.item) {
-                SelectBlockItem.onInteract(PlayerUseItemEvent(player, PlayerHand.MAIN, item, 0L))
-            }
+            try {
+                res.isCancel = true
+                val item = player.inventory[slot]
+                if (item == SelectBlockItem.item) {
+                    SelectBlockItem.onInteract(PlayerUseItemEvent(player, PlayerHand.MAIN, item, 0L))
+                }
+            } catch (_: Exception) {}
         }
     }
     lobbyInstance.eventNode().listen<PlayerSwapItemEvent> { it.isCancelled = true }
@@ -369,15 +376,15 @@ fun main() = runBlocking { try {
                     }
                     instances[name] = GameInstance(Path.of("instances", name), name).apply {
                         totalInit(player)
-                        val instanceC = path.resolve("instance-config.json").toFile()
+                        val instanceC = path.resolve("instance-config.json5").toFile()
                         if (!instanceC.exists()) {
                             instanceC.createNewFile()
                         }
-                        instanceC.writeText(json.encodeToString(instanceConfig.copy(allowResearch = research)))
+                        instanceC.writeText(getCommentString(instanceConfig.copy(allowResearch = research)))
                         updateConfig()
                     }
                     config.instanceNames += name
-                    configFile.writeText(json.encodeToString(config))
+                    configFile.writeText(getCommentString(config))
                     player.sendMessage("<green><bold>Created instance \"$name\" successfully!".asMini())
                 } catch(e: Exception) {
                     // IllegalPathException doesnt exist but it does??????
@@ -435,7 +442,7 @@ fun main() = runBlocking { try {
                 gameInstance.delete()
                 instances.remove(name)
                 config.instanceNames.remove(name)
-                configFile.writeText(json.encodeToString(config))
+                configFile.writeText(getCommentString(config))
                 player.sendMessage("<green><bold>Instance \"$name\" successfully removed!".asMini())
                 System.gc()
             }
@@ -468,7 +475,7 @@ fun main() = runBlocking { try {
             }
         }
     }
-    CommandManager.register(createInstanceCommand, lobbyCommand, tickCommand, deleteInstanceCommand, gcCommand, validateResearchCommand)
+    CommandManager.register(createInstanceCommand, lobbyCommand, tickCommand, deleteInstanceCommand, gcCommand, validateResearchCommand, coopCommand)
 
     // Save loop
     SchedulerManager.scheduleTask({
@@ -657,7 +664,7 @@ val Cooldown.ticks: Int get() = (duration.toMillis() / 50).toInt()
 
 val Material.cooldownIdentifier: String get() = key().value()
 
-val Player.data: PlayerData? get() = instances.fromInstance(instance)?.playerData?.get(uuid.toString())
+val Player.data: PlayerData? get() = instances.fromInstance(instance)?.dataResolver?.get(uuid.toString())
 
 fun InventoryClickEvent.cancel() {
     inventory[slot] = clickedItem

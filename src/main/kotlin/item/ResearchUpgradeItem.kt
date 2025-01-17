@@ -47,8 +47,7 @@ object ResearchUpgradeItem : Actionable {
     }
 
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
-        val gameInstance = instances.fromInstance(event.instance) ?: return true
-        val data = gameInstance.playerData[event.player.uuid.toString()] ?: return true
+        val data = event.player.data ?: return true
         val inventory = Inventory(InventoryType.CHEST_1_ROW, "Research Type")
 
         for ((i, currency) in data.research.withIndex()) {

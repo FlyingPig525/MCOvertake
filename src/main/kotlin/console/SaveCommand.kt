@@ -2,6 +2,7 @@ package io.github.flyingpig525.console
 
 import cz.lukynka.prettylog.log
 import io.github.flyingpig525.config
+import io.github.flyingpig525.data.config.getCommentString
 import io.github.flyingpig525.instances
 import io.github.flyingpig525.json
 import kotlinx.serialization.encodeToString
@@ -26,11 +27,11 @@ object SaveCommand : Command {
             log("Game data saved")
         } else {
             log("Saving main config")
-            val configFile = File("config.json")
+            val configFile = File("config.json5")
             if (!configFile.exists()) {
                 configFile.createNewFile()
             }
-            configFile.writeText(json.encodeToString(config))
+            configFile.writeText(getCommentString(config))
             log("Saved main config")
         }
     }

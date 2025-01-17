@@ -5,6 +5,7 @@ import cz.lukynka.prettylog.log
 import io.github.flyingpig525.GameInstance
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.building.MatterCompressionPlant
+import io.github.flyingpig525.data
 import io.github.flyingpig525.getTrueTarget
 import io.github.flyingpig525.instances
 import net.minestom.server.entity.Player
@@ -24,7 +25,7 @@ object MatterCompressorItem : Actionable {
     override val itemMaterial: Material = MatterCompressionPlant.getItem(1, 1).material()
 
     override fun getItem(uuid: UUID, instance: GameInstance): ItemStack {
-        val data = instance.playerData[uuid.toString()] ?: return ERROR_ITEM
+        val data = instance.dataResolver[uuid.toString()] ?: return ERROR_ITEM
         return MatterCompressionPlant.getItem(data)
     }
 
@@ -33,7 +34,7 @@ object MatterCompressorItem : Actionable {
         val instance = event.instance
         val target = event.player.getTrueTarget(20) ?: return true
         val gameInstance = instances.fromInstance(instance) ?: return true
-        val playerData = gameInstance.playerData[event.player.uuid.toString()] ?: return true
+        val playerData = event.player.data ?: return true
         if (!checkBlockAvailable(playerData, target, instance)) return true
         if (MatterCompressionPlant.getResourceUse(playerData.disposableResourcesUsed) > playerData.maxDisposableResources) return true
         if (playerData.organicMatter < playerData.matterCompressorCost) return true
@@ -45,8 +46,7 @@ object MatterCompressorItem : Actionable {
     }
 
     override fun setItemSlot(player: Player) {
-        val gameInstance = instances.fromInstance(player.instance) ?: return
-        val data = gameInstance.playerData[player.uuid.toString()]!!
+        val data = player.data!!
         data.matterCompressors.select(player, data.extractorCost)
     }
 }

@@ -30,7 +30,7 @@ class UndergroundTeleporter : Building, Interactable {
     override val resourceUse: Int = count * 20
     override fun place(playerTarget: Point, instance: Instance) {
         instance.setBlock(playerTarget.buildingPosition, block)
-        spawn(playerTarget.buildingPosition, instance)
+        spawn(playerTarget.buildingPosition, instance, )
         count++
     }
 
@@ -43,8 +43,7 @@ class UndergroundTeleporter : Building, Interactable {
     }
 
     override fun onInteract(e: PlayerBlockInteractEvent): Boolean {
-        val gameInstance = instances.fromInstance(e.instance) ?: return true
-        val data = gameInstance.playerData[e.player.uuid.toString()] ?: return true
+        val data = e.player.data ?: return true
         val pos = e.blockPosition.add(0.5, 0.0, 0.5)
         if (e.instance.getBlock(pos.playerPosition) != data.block) return true
         e.player.teleport(pos.sub(0.0, 9.0, 0.0).asPos())

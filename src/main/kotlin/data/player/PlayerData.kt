@@ -20,6 +20,7 @@ import net.minestom.server.event.player.PlayerTickEvent
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.item.Material
+import net.minestom.server.network.packet.server.SendablePacket
 import net.minestom.server.network.packet.server.play.ActionBarPacket
 import net.minestom.server.network.packet.server.play.SetCooldownPacket
 import net.minestom.server.tag.Tag
@@ -125,7 +126,7 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
     @Transient var bulkWallQueueFirstPosJustReset = false
 
     fun tick(e: PlayerTickEvent) {
-        actionBar(e.player)
+        actionBar()
         if (wallUpgradeQueue.isNotEmpty() && wallUpgradeCooldown.isReady(Instant.now().toEpochMilli())) run {
             val (wallPos, targetLevel) = wallUpgradeQueue.first()
             val wall = e.instance.getBlock(wallPos)
@@ -182,12 +183,15 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
 
     }
 
-    fun actionBar(player: Player) {
-        var str = "<white>$MECHANICAL_SYMBOL <bold>$mechanicalParts <reset><dark_gray>| ".asMini()
-        research.forEach {
-            str = str.append("<${it.color}>${it.symbol} <bold>${it.count} <reset><dark_gray>| ".asMini())
+    fun actionBar() {
+        var str = "".asMini()
+        fun AAA() { str = str.append(" <reset><dark_gray>| ".asMini()) }
+        if (mechanicalParts != 0) {
+            str = str.append("<white>$MECHANICAL_SYMBOL <bold>$mechanicalParts".asMini())
+            AAA()
         }
-        player.sendPacket(ActionBarPacket(str))
+        // for each intermediary resource run AAA() before appending it
+        sendPacket(ActionBarPacket(str.replaceText("| ", "".asMini())))
     }
 
     private fun showBossBars(player: Player) {
@@ -206,6 +210,7 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
     fun setupPlayer(player: Player) {
         showBossBars(player)
         updateBossBars()
+        player.inventory.clear()
         Actionable.persistentRegistry.forEach {
             if (it is ResearchUpgradeItem) {
                 if (gameInstance?.instanceConfig?.allowResearch == true) {
@@ -217,7 +222,7 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
     }
 
     fun sendCooldowns(player: Player) {
-        player.sendPackets(
+        sendPackets(
             SetCooldownPacket(
                 ClaimItem.itemMaterial.cooldownIdentifier,
                 claimCooldown.ticks
@@ -235,6 +240,16 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
                 raftCooldown.ticks
             )
         )
+    }
+
+    fun sendPacket(packet: SendablePacket) {
+        gameInstance!!.uuidParentsInverse[uuid]?.map {
+            gameInstance!!.instance.getEntityByUuid(it.toUUID()) as Player?
+        }?.onEach { it?.sendPacket(packet) }
+    }
+
+    fun sendPackets(vararg packets: SendablePacket) {
+        packets.forEach { sendPacket(it) }
     }
 
     fun getBuildingReferenceByIdentifier(identifier: String): KProperty0<Building>? {

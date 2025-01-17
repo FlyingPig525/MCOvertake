@@ -73,8 +73,7 @@ object UpgradeWallItem : Actionable {
 
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
         val instance = event.instance
-        val gameInstance = instance.gameInstance ?: return true
-        val data = gameInstance.playerData[event.player.uuid.toString()] ?: return true
+        val data = event.player.data ?: return true
         if (!data.wallUpgradeCooldown.isReady(Instant.now().toEpochMilli())) return true
         val target = event.player.getTrueTarget(20)?.buildingPosition ?: return true
         if (event.player.isSneaking && data.targetWallLevel != 0) {
@@ -106,7 +105,6 @@ object UpgradeWallItem : Actionable {
                         }.setInstance(event.instance, pos.buildingPosition)
                     }
                 }
-                println("done")
                 return true
             }
             instance.scheduleNextTick {
@@ -160,7 +158,7 @@ object UpgradeWallItem : Actionable {
         if (data.organicMatter < actionData.cost) return false
         data.organicMatter -= actionData.cost
         data.wallUpgradeCooldown = actionData.cooldown
-        player.sendPacket(
+        data.sendPacket(
             SetCooldownPacket(
                 itemMaterial.cooldownIdentifier,
                 data.wallUpgradeCooldown.ticks

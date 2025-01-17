@@ -95,10 +95,11 @@ object SelectBlockItem : Actionable {
 
         inventory.addInventoryCondition { player: Player, slot: Int, clickType: ClickType, res: InventoryConditionResult ->
             res.isCancel = true
+            val isOwnBlock = e.player.uuid.toString() == instance.uuidParents[e.player.uuid.toString()]
             if (res.clickedItem.material() == Material.AIR
                 || res.clickedItem.material().block() in instance.playerData.toBlockList()) return@addInventoryCondition
-            if (instance.playerData[e.player.uuid.toString()] != null) {
-                val data = instance.playerData[e.player.uuid.toString()]!!
+            if (e.player.data != null && isOwnBlock) {
+                val data = e.player.data!!
                 instance.clearBlock(data.block)
                 e.player.hideBossBar(data.matterBossBar)
                 e.player.hideBossBar(data.powerBossBar)
@@ -112,8 +113,14 @@ object SelectBlockItem : Actionable {
             }
             instance.playerData[e.player.uuid.toString()]!!.gameInstance = instance
             instance.playerData[e.player.uuid.toString()]!!.setupPlayer(e.player)
+            instance.uuidParents[e.player.uuid.toString()] = e.player.uuid.toString()
+            instance.outgoingCoopInvites[e.player.uuid] = mutableListOf()
         }
         e.player.openInventory(inventory)
+    }
+
+    fun setPlayerInventory(player: Player) {
+
     }
 
     override fun setItemSlot(player: Player) {

@@ -32,7 +32,7 @@ object ColonyItem : Actionable {
 
 
     override fun getItem(uuid: UUID, instance: GameInstance): ItemStack {
-        val playerData = instance.playerData[uuid.toString()] ?: return ERROR_ITEM
+        val playerData = instance.dataResolver[uuid.toString()] ?: return ERROR_ITEM
         return item(itemMaterial) {
             itemName = "<green>$COLONY_SYMBOL<bold> Instantiate Colony</bold> <dark_gray>-<red> $POWER_SYMBOL ${playerData.colonyCost}".asMini()
             set(Tag.String("identifier"), identifier)
@@ -41,7 +41,7 @@ object ColonyItem : Actionable {
 
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
         val gameInstance = instances.fromInstance(event.instance) ?: return true
-        val data = gameInstance.playerData[event.player.uuid.toString()] ?: return true
+        val data = event.player.data ?: return true
         if (!data.colonyCooldown.isReady(Instant.now().toEpochMilli())) return true
         val actionData = ActionData.PlaceColony(data, event.instance, event.player).apply {
             cost = data.colonyCost
@@ -54,7 +54,7 @@ object ColonyItem : Actionable {
             data.blocks++
             data.power -= actionData.cost
             data.colonyCooldown = actionData.cooldown
-            event.player.sendPacket(
+            data.sendPacket(
                 SetCooldownPacket(
                     itemMaterial.cooldownIdentifier,
                     data.colonyCooldown.ticks

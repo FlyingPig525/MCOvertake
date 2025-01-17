@@ -5,6 +5,7 @@ import cz.lukynka.prettylog.log
 import io.github.flyingpig525.GameInstance
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.building.MatterExtractor
+import io.github.flyingpig525.data
 import io.github.flyingpig525.getTrueTarget
 import io.github.flyingpig525.instances
 import net.minestom.server.entity.Player
@@ -24,7 +25,7 @@ object MatterExtractorItem : Actionable {
     override val itemMaterial: Material = MatterExtractor.getItem(1, 1).material()
 
     override fun getItem(uuid: UUID, instance: GameInstance): ItemStack {
-        val data = instance.playerData[uuid.toString()] ?: return ERROR_ITEM
+        val data = instance.dataResolver[uuid.toString()] ?: return ERROR_ITEM
         return MatterExtractor.getItem(data)
     }
 
@@ -32,8 +33,7 @@ object MatterExtractorItem : Actionable {
         if (sneakCheck(event)) return true
         val instance = event.instance
         val target = event.player.getTrueTarget(20) ?: return true
-        val gameInstance = instances.fromInstance(event.instance) ?: return true
-        val playerData = gameInstance.playerData[event.player.uuid.toString()] ?: return true
+        val playerData = event.player.data ?: return true
         if (!checkBlockAvailable(playerData, target, instance)) return true
         if (MatterExtractor.getResourceUse(playerData.disposableResourcesUsed) > playerData.maxDisposableResources) return true
         if (playerData.organicMatter < playerData.extractorCost) return true
@@ -45,8 +45,7 @@ object MatterExtractorItem : Actionable {
     }
 
     override fun setItemSlot(player: Player) {
-        val gameInstance = instances.fromInstance(player.instance) ?: return
-        val data = gameInstance.playerData[player.uuid.toString()]!!
+        val data = player.data!!
         data.matterExtractors.select(player, data.extractorCost)
     }
 }

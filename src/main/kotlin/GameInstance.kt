@@ -8,7 +8,9 @@ import de.articdive.jnoise.pipeline.JNoise
 import io.github.flyingpig525.building.Building
 import io.github.flyingpig525.building.DisplayEntityBlock
 import io.github.flyingpig525.building.Interactable
-import io.github.flyingpig525.data.InstanceConfig
+import io.github.flyingpig525.data.config.InstanceConfig
+import io.github.flyingpig525.data.config.getCommentString
+import io.github.flyingpig525.data.player.DataResolver
 import io.github.flyingpig525.data.player.PlayerData
 import io.github.flyingpig525.data.player.PlayerData.Companion.toBlockSortedList
 import io.github.flyingpig525.item.*
@@ -17,6 +19,7 @@ import io.github.flyingpig525.wall.blockIsWall
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.bladehunt.kotstom.InstanceManager
@@ -49,6 +52,7 @@ import net.minestom.server.potion.PotionEffect
 import net.minestom.server.tag.Tag
 import net.minestom.server.timer.TaskSchedule
 import java.nio.file.Path
+import java.util.UUID
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteRecursively
@@ -59,7 +63,7 @@ class GameInstance(val path: Path, val name: String) {
     lateinit var instance: InstanceContainer
 
     var instanceConfig: InstanceConfig = run {
-        val file = path.resolve("instance-config.json").toFile()
+        val file = path.resolve("instance-config.json5").toFile()
         if (file.exists()) {
             return@run json.decodeFromString(file.readText())
         } else {
@@ -69,21 +73,49 @@ class GameInstance(val path: Path, val name: String) {
         private set
 
     val playerData: MutableMap<String, PlayerData> = Json.decodeFromString<MutableMap<String, PlayerData>>(
-        if (path.resolve("player-data.json").toFile().exists())
-            path.resolve("player-data.json").toFile().readText()
+        if (path.resolve("player-data.json5").toFile().exists())
+            path.resolve("player-data.json5").toFile().readText()
         else "{}"
     )
+
+    /**
+     * Player uuid to block owner uuid
+     *
+     * ```uuidParents[uuid] = uuid key for playerData```
+     */
+    val uuidParents: MutableMap<String, String> =
+        if (path.resolve("coop-uuids.json5").toFile().exists()) Json.decodeFromString(
+            path.resolve("coop-uuids.json5").toFile().readText()
+        )
+        else processParents()
+    val uuidParentsInverse: MutableMap<String, List<String>> get() {
+        val map: MutableMap<String, List<String>> = mutableMapOf()
+        for ((key, value) in uuidParents) {
+            if (map[value] != null) {
+                map[value] = map[value]!! + key
+            } else {
+                map[value] = listOf(key)
+            }
+        }
+        return map
+    }
+    val dataResolver = DataResolver(this)
+
+    // Inviter uuid to list of uuids they have sent invites to
+    val outgoingCoopInvites = mutableMapOf<UUID, MutableList<Pair<UUID, String>>>()
+    // Invitee uuid to list of uuids who have sent them invites
+    val incomingCoopInvites = mutableMapOf<UUID, MutableList<Pair<UUID, String>>>()
 
     init {
         if (!path.exists()) {
             path.createDirectories()
         }
-        val icFile = path.resolve("instance-config.json").toFile()
+        val icFile = path.resolve("instance-config.json5").toFile()
         if (!icFile.exists()) {
             icFile.createNewFile()
-            icFile.writeText(json.encodeToString(instanceConfig))
+            icFile.writeText(getCommentString(instanceConfig))
         }
-        val pdFile = path.resolve("player-data.json").toFile()
+        val pdFile = path.resolve("player-data.json5").toFile()
         if (!pdFile.exists()) {
             pdFile.createNewFile()
             pdFile.writeText("{}")
@@ -91,21 +123,42 @@ class GameInstance(val path: Path, val name: String) {
         log("GameInstance $name created...", MCOvertakeLogType.FILESYSTEM)
     }
 
+    fun refreshConfig() {
+        val file = path.resolve("instance-config.json5").toFile()
+        if (file.exists()) {
+            instanceConfig = json.decodeFromString<InstanceConfig>(file.readText())
+        }
+    }
+
+    private fun processParents(): MutableMap<String, String> {
+        val ret = mutableMapOf<String, String>()
+        playerData.keys.forEach {
+            ret[it] = it
+        }
+        return ret
+    }
+
     fun save() {
         try {
             if (!path.exists()) {
                 path.createDirectories()
             }
-            val icFile = path.resolve("instance-config.json").toFile()
+            val icFile = path.resolve("instance-config.json5").toFile()
             if (!icFile.exists()) {
                 icFile.createNewFile()
             }
-            icFile.writeText(json.encodeToString(instanceConfig))
-            val pdFile = path.resolve("player-data.json").toFile()
+            // `json` is formatted, `Json` is not
+            icFile.writeText(getCommentString(instanceConfig))
+            val pdFile = path.resolve("player-data.json5").toFile()
             if (!pdFile.exists()) {
                 pdFile.createNewFile()
             }
             pdFile.writeText(Json.encodeToString(playerData))
+            val uuidFile = path.resolve("coop-uuids.json").toFile()
+            if (!uuidFile.exists()) {
+                uuidFile.createNewFile()
+            }
+            uuidFile.writeText(Json.encodeToString(uuidParents))
             instance.saveChunksToStorage()
             instance.saveInstance()
         } catch (e: Exception) {
@@ -115,9 +168,10 @@ class GameInstance(val path: Path, val name: String) {
 
     fun registerTickEvent() {
         instance.eventNode().listen<PlayerTickEvent> { e ->
-            val playerData = playerData[e.player.uuid.toString()] ?: return@listen
-            playerData.tick(e)
-
+            val playerData = e.player.data ?: return@listen
+            if (uuidParents[e.player.uuid.toString()] == e.player.uuid.toString()) {
+                playerData.tick(e)
+            }
 
             if (e.player.position.isUnderground) {
                 if (e.player.inventory[2].isAir)
@@ -243,7 +297,7 @@ class GameInstance(val path: Path, val name: String) {
             val identifier = Building.getBuildingIdentifier(e.block.defaultState())
             var callItemUse = true
             if (identifier != null) {
-                val ref = playerData[e.player.uuid.toString()]?.getBuildingReferenceByIdentifier(identifier)?.get()
+                val ref = dataResolver[e.player.uuid.toString()]?.getBuildingReferenceByIdentifier(identifier)?.get()
                 if (ref is Interactable) {
                     callItemUse = ref.onInteract(e)
                 }
@@ -352,7 +406,7 @@ class GameInstance(val path: Path, val name: String) {
             e.player.isAllowFlying = true
             e.player.teleport(Pos(5.0, 41.0, 5.0))
             e.player.addEffect(Potion(PotionEffect.NIGHT_VISION, 1, -1))
-            val data = playerData[e.player.uuid.toString()]
+            val data = e.player.data
             if (data == null) {
                 SelectBlockItem.setAllSlots(e.player)
             } else {
@@ -459,12 +513,16 @@ class GameInstance(val path: Path, val name: String) {
                         onAllBuildingPositions(Vec(x.toDouble(), 1.0, z.toDouble())) {
                             if (instance.getBlock(it.playerPosition) == block) {
                                 if (instance.getBlock(it.visiblePosition) == Block.WATER) {
-                                    ClaimWaterItem.destroyPlayerRaft(Vec(x.toDouble(), 39.0, z.toDouble()), instance)
+                                    ClaimWaterItem.destroyPlayerRaft(it.buildingPosition, instance)
+                                    instance.setBlock(it.playerPosition, Block.SAND)
                                 } else {
                                     instance.setBlock(it.visiblePosition, Block.GRASS_BLOCK)
                                     instance.setBlock(it.playerPosition, Block.GRASS_BLOCK)
                                 }
-                                instance.setBlock(x, 40, z, Block.AIR)
+                                instance.setBlock(it.buildingPosition, Block.AIR)
+                                instance.getNearbyEntities(it.buildingPosition, 0.2).onEach {
+                                    if (it !is Player) it.remove()
+                                }
                             }
                         }
                     }

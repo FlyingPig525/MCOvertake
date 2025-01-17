@@ -35,7 +35,7 @@ object ClaimItem : Actionable {
 
 
     override fun getItem(uuid: UUID, instance: GameInstance): ItemStack {
-        val data = instance.playerData[uuid.toString()] ?: return ERROR_ITEM
+        val data = instance.dataResolver[uuid.toString()] ?: return ERROR_ITEM
         return item(itemMaterial) {
             itemName = "<gold>$CLAIM_SYMBOL <bold>Expand</bold> <dark_gray>-<red> $POWER_SYMBOL ${data.claimCost}".asMini()
             amount = 1
@@ -46,7 +46,7 @@ object ClaimItem : Actionable {
 
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
         val gameInstance = instances.fromInstance(event.instance) ?: return true
-        val data = gameInstance.playerData[event.player.uuid.toString()] ?: return true
+        val data = event.player.data ?: return true
         if (!data.claimCooldown.isReady(Instant.now().toEpochMilli())) return true
         var claimData = ActionData.ClaimLand(data, event.instance, event.player)
         claimData = data.research.onClaimLand(claimData)
@@ -57,7 +57,7 @@ object ClaimItem : Actionable {
             data.blocks++
             data.power -= claimData.claimCost
             data.claimCooldown = claimData.claimCooldown
-            event.player.sendPacket(
+            data.sendPacket(
                 SetCooldownPacket(
                     itemMaterial.cooldownIdentifier,
                     data.claimCooldown.ticks

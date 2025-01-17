@@ -2,6 +2,7 @@ package io.github.flyingpig525.building
 
 import net.minestom.server.coordinate.Point
 import net.minestom.server.instance.Instance
+import net.minestom.server.instance.block.Block
 
 interface DisplayEntityBlock {
     fun checkShouldSpawn(point: Point, instance: Instance): Boolean

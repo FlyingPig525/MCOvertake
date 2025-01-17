@@ -37,12 +37,12 @@ bin/
 .DS_Store
 
 world
-player-data.json
+player-data.json5
 /.idea/
-config.json
+config.json5
 log.log
 logs/
 world.polar
 instances/
-parent-instance-config.json
-res/permissions.json
+parent-instance-config.json5
+res/permissions.json5

@@ -60,7 +60,7 @@ fun claimWithParticle(player: Player, target: Point, targetBlock: Block, resultB
             1f,
             30
         )
-        player.sendPacket(particle)
+        player.data?.sendPacket(particle)
     }
 }
 

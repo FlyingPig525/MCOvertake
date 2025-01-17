@@ -46,9 +46,8 @@ object WallItem : Actionable {
     }
 
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
-        val gameInstance = instances.fromInstance(event.instance) ?: return true
         val instance = event.instance
-        val data = gameInstance.playerData[event.player.uuid.toString()] ?: return true
+        val data = event.player.data ?: return true
         if (data.organicMatter < 15) return true
         if (!data.wallCooldown.isReady(Instant.now().toEpochMilli())) return true
         val target = event.player.getTrueTarget(20) ?: return true
@@ -67,7 +66,7 @@ object WallItem : Actionable {
             }
         }
 
-        event.player.sendPacket(
+        data.sendPacket(
             SetCooldownPacket(
                 itemMaterial.cooldownIdentifier,
                 data.wallCooldown.ticks

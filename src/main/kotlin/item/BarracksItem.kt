@@ -5,6 +5,7 @@ import cz.lukynka.prettylog.log
 import io.github.flyingpig525.GameInstance
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.building.Barrack
+import io.github.flyingpig525.data
 import io.github.flyingpig525.getTrueTarget
 import io.github.flyingpig525.instances
 import net.minestom.server.entity.Player
@@ -26,16 +27,15 @@ object BarracksItem : Actionable {
 
 
     override fun getItem(uuid: UUID, instance: GameInstance): ItemStack {
-        val data = instance.playerData[uuid.toString()] ?: return ERROR_ITEM
+        val data = instance.dataResolver[uuid.toString()] ?: return ERROR_ITEM
         return Barrack.getItem(data)
     }
 
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
         if (sneakCheck(event)) return true
         val instance = event.instance
-        val gameInstance = instances.fromInstance(instance) ?: return true
         val target = event.player.getTrueTarget(20) ?: return true
-        val playerData = gameInstance.playerData[event.player.uuid.toString()] ?: return true
+        val playerData = event.player.data ?: return true
         if (!checkBlockAvailable(playerData, target, instance)) return true
         if (Barrack.getResourceUse(playerData.disposableResourcesUsed) > playerData.maxDisposableResources) return true
         if (playerData.organicMatter < playerData.barracksCost) return true
@@ -47,7 +47,7 @@ object BarracksItem : Actionable {
     }
 
     override fun setItemSlot(player: Player) {
-        val data = instances.fromInstance(player.instance)?.playerData?.get(player.uuid.toString()) ?: return
+        val data = player.data ?: return
         data.barracks.select(player, data.barracksCost)
     }
 }

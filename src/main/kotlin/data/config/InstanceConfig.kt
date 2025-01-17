@@ -1,4 +1,4 @@
-package io.github.flyingpig525.data
+package io.github.flyingpig525.data.config
 
 import io.github.flyingpig525.serialization.BlockSerializer
 import kotlinx.serialization.Serializable
@@ -18,4 +18,16 @@ data class InstanceConfig(
     @Serializable(with = BlockSerializer::class) val undergroundBlock: Block = Block.BEDROCK,
     // Whether to allow research upgrades or not
     val allowResearch: Boolean = false
-)
+) {
+    companion object : CommentContainer {
+        override val comments: List<String> = listOf(
+            "// Scale for generation noise. Default: 0.03",
+            "// Threshold for noise result to be considered grass, else water. Default: 0.35",
+            "// Seed for noise, randomly generated when config is created. Change when resetting map. No default",
+            "// Length and width of map (will always be a square). Default: 300",
+            "// Block identifier for underground claimable tile.\n\t" +
+                    "// Can be any block, but it is recommended to keep it a block players cant be for visual purposes. Default: \"minecraft:bedrock\"",
+            "// Whether to allow research upgrades or not"
+        )
+    }
+}

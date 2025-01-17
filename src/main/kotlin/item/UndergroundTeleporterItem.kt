@@ -22,7 +22,7 @@ object UndergroundTeleporterItem : Actionable {
     override val itemMaterial: Material = Material.COPPER_GRATE
 
     override fun getItem(uuid: UUID, instance: GameInstance): ItemStack {
-        val data = instance.playerData[uuid.toString()] ?: return ERROR_ITEM
+        val data = instance.dataResolver[uuid.toString()] ?: return ERROR_ITEM
         return UndergroundTeleporter.getItem(data.teleporterCost, data.undergroundTeleporters.count)
     }
 
@@ -31,10 +31,9 @@ object UndergroundTeleporterItem : Actionable {
             SelectBuildingItem.onInteract(event)
             return true
         }
-        val gameInstance = instances.fromInstance(event.instance) ?: return true
         val instance = event.instance
         val target = event.player.getTrueTarget(20) ?: return true
-        val data = gameInstance.playerData[event.player.uuid.toString()] ?: return true
+        val data = event.player.data ?: return true
         if (!target.isUnderground && instance.getBlock(target.visiblePosition).defaultState() != Block.WATER) return true
         if (!checkBlockAvailable(data, target, instance)) return true
         if (data.organicMatter < data.teleporterCost) return true
@@ -44,8 +43,7 @@ object UndergroundTeleporterItem : Actionable {
     }
 
     override fun setItemSlot(player: Player) {
-        val gameInstance = instances.fromInstance(player.instance) ?: return
-        val data = gameInstance.playerData[player.uuid.toString()] ?: return
+        val data = player.data ?: return
         data.undergroundTeleporters.select(player, data)
     }
 }

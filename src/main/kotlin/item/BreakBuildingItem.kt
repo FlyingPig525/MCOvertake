@@ -44,8 +44,7 @@ object BreakBuildingItem : Actionable {
 
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
         val instance = event.instance
-        val gameInstance = instances.fromInstance(instance) ?: return true
-        val data = gameInstance.playerData[event.player.uuid.toString()] ?: return true
+        val data = event.player.data ?: return true
         val target = event.player.getTrueTarget(20) ?: return true
         val playerBlockPos = target.playerPosition
         val groundPos = target.visiblePosition

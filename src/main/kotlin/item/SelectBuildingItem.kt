@@ -5,6 +5,7 @@ import io.github.flyingpig525.BUILDING_SYMBOL
 import io.github.flyingpig525.GameInstance
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.building.Building
+import io.github.flyingpig525.data
 import io.github.flyingpig525.instances
 import net.bladehunt.kotstom.GlobalEventHandler
 import net.bladehunt.kotstom.dsl.item.item
@@ -44,9 +45,8 @@ object SelectBuildingItem : Actionable {
     }
 
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
-        val gameInstance = instances.fromInstance(event.instance) ?: return true
         val inventory = Inventory(InventoryType.CHEST_5_ROW, "Select Blueprint")
-        val playerData = gameInstance.playerData[event.player.uuid.toString()]!!
+        val playerData = event.player.data!!
         val clearItem = item(Material.BARRIER) { itemName = "<red><bold>Clear Selected Item".asMini() }
 
         val blackItem = item(Material.BLACK_STAINED_GLASS_PANE) { itemName = "".asMini()}
@@ -96,8 +96,7 @@ object SelectBuildingItem : Actionable {
     }
 
     fun updatePlayerItem(player: Player) {
-        val gameInstance = instances.fromInstance(player.instance) ?: return
-        val data = gameInstance.playerData[player.uuid.toString()] ?: return
+        val data = player.data ?: return
         val identifier = player.inventory[4].getTag(Tag.String("identifier"))
         val ref = data.getBuildingReferenceByIdentifier(identifier)?.get() ?: return
         ref.select(player, data)
