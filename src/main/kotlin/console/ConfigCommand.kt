@@ -30,9 +30,9 @@ object ConfigCommand : Command {
         val configFile = File("config.json5")
         if (!configFile.exists()) {
             configFile.createNewFile()
-            configFile.writeText(Json.encodeToString(Config()))
+            configFile.writeText(getCommentString(Config()))
         }
-        config = Json.decodeFromString<Config>(configFile.readText())
+        config = json.decodeFromString<Config>(configFile.readText())
         log("Loaded config refreshed", MCOvertakeLogType.FILESYSTEM)
         log("Reading parent instance config", MCOvertakeLogType.FILESYSTEM)
         val parentCFile = File("parent-instance-config.json5")

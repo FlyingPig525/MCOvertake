@@ -540,7 +540,7 @@ class GameInstance(val path: Path, val name: String) {
 
     fun updateConfig() {
         instanceConfig = run {
-            val file = path.resolve("instance-config.json").toFile()
+            val file = path.resolve("instance-config.json5").toFile()
             if (file.exists()) {
                 return@run json.decodeFromString(file.readText())
             } else {

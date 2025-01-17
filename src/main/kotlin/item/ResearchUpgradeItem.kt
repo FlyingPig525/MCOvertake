@@ -32,7 +32,6 @@ object ResearchUpgradeItem : Actionable {
         Actionable.registry += this
         Actionable.persistentRegistry += this
         log("${this::class.simpleName} initialized...")
-
     }
 
     override val identifier: String = "research:upgrades"
@@ -41,9 +40,11 @@ object ResearchUpgradeItem : Actionable {
 
     override fun getItem(uuid: UUID, instance: GameInstance): ItemStack {
         return item(itemMaterial) {
-            itemName = "<aqua>$GLOBAL_RESEARCH_SYMBOL <bold>Research Upgrades</bold>".asMini()
             set(Tag.String("identifier"), identifier)
         }.with(ItemComponent.POTION_CONTENTS, PotionContents(PotionType.AWKWARD, NamedTextColor.AQUA))
+            // item name set outside of builder because setting potion contents sets the item name
+            // that also makes it have to be custom name and not item name
+            .with(ItemComponent.CUSTOM_NAME, "<aqua>$GLOBAL_RESEARCH_SYMBOL <bold>Research Upgrades".asMini().noItalic())
     }
 
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
