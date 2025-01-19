@@ -86,7 +86,7 @@ inline fun gameItem(material: Material, identifier: String, fn: @ItemDsl ItemSta
     setTag(Tag.String("identifier"), identifier)
 }
 
-fun <T : Building> basicBuildingPlacement(
+fun <T : Building> basicBuildingPlacementInt(
     event: PlayerUseItemEvent,
     buildingCompanion: Building.BuildingCompanion,
     buildingRef: KProperty1<PlayerData, T>,
@@ -110,7 +110,7 @@ fun <T : Building> basicBuildingPlacement(
     return true
 }
 
-fun <T : Building> basicBuildingPlacement(
+fun <T : Building> basicBuildingPlacementDouble(
     event: PlayerUseItemEvent,
     buildingCompanion: Building.BuildingCompanion,
     buildingRef: KProperty1<PlayerData, T>,

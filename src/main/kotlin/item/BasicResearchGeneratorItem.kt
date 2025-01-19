@@ -29,7 +29,7 @@ object BasicResearchGeneratorItem : Actionable {
     }
 
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
-        return basicBuildingPlacement(
+        return basicBuildingPlacementInt(
             event,
             BasicResearchGenerator,
             PlayerData::basicResearchStations,

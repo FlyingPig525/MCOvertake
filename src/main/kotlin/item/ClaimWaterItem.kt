@@ -56,6 +56,7 @@ object ClaimWaterItem : Actionable {
         event.instance.setBlock(target.withY(40.0), Block.LILY_PAD)
         spawnPlayerRaft(data.block, target.withY(40.0), event.instance)
         data.blocks++
+        data.organicMatter -= actionData.cost
         data.raftCooldown = actionData.cooldown
         data.sendPacket(
             SetCooldownPacket(

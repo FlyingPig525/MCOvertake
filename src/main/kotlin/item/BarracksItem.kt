@@ -29,7 +29,7 @@ object BarracksItem : Actionable {
     }
 
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
-        return basicBuildingPlacement(
+        return basicBuildingPlacementDouble(
             event,
             Barrack,
             PlayerData::barracks,

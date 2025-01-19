@@ -52,7 +52,7 @@ class TrainingCamp : Building {
                 lore {
                     +"<dark_gray>Provides space for troops and other assets to".asMini()
                     +"<dark_gray>refine their specific skills".asMini()
-                    +"<gray>Generates 0.5 $power".asMini().noItalic()
+                    +"<gray>Generates 0.5 $power every 70 ticks".asMini().noItalic()
                     resourcesConsumed(3, count)
                     amountOwned(count)
                 }

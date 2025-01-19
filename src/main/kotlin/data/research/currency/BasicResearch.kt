@@ -20,14 +20,13 @@ class BasicResearch : ResearchCurrency {
         }
     @Required override var count: Long = 0
     @Required override val upgrades: MutableList<ResearchUpgrade> = mutableListOf(
+        AdjacentWallBonusPercentageIncrease(),
+        AdjacentWallBonusPercentageDecrease(),
         TestUpgrade(),
         T2(),
         TripleMatter(),
-        AdjacentWallBonusPercentageIncrease(),
-        AdjacentWallBonusPercentageDecrease(),
         UpMax()
     )
-
     var adjacentWallPercentageDecrease = 0.0
     var adjacentWallPercentageIncrease = 0.0
 

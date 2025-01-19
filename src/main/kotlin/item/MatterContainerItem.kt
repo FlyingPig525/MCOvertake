@@ -27,7 +27,7 @@ object MatterContainerItem : Actionable {
     }
 
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
-        return basicBuildingPlacement(
+        return basicBuildingPlacementDouble(
             event,
             MatterContainer,
             PlayerData::matterContainers,

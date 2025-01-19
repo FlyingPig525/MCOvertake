@@ -57,7 +57,7 @@ class MatterExtractor : Building {
                 itemName = "<green>$MATTER_SYMBOL Organic Matter Extractor <gray>-<green> $MATTER_SYMBOL $cost".asMini()
                 lore {
                     +"<dark_gray>Digs deep into the ground to extract organic materials".asMini()
-                    +"<gray>Generates 0.5 $organicMatter".asMini().noItalic()
+                    +"<gray>Generates 0.5 $organicMatter every 30 ticks".asMini().noItalic()
                     resourcesConsumed(3, count)
                     amountOwned(count)
                 }

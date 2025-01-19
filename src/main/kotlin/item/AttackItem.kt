@@ -67,6 +67,7 @@ object AttackItem : Actionable {
         additiveModifier += getWallAttackCost(
             wall,
             instance,
+            targetData.block,
             customWallLevel = wallLevel,
             basePercentage = 1.05 - percentageDecrease + targetData.research.basicResearch.adjacentWallPercentageIncrease
         )

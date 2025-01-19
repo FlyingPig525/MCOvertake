@@ -358,7 +358,7 @@ fun main() = runBlocking { try {
             }
         }
 
-        buildSyntax(ArgumentString("name"), ArgumentBoolean("research")) {
+        buildSyntax(ArgumentString("name"), ArgumentBoolean("research"), ArgumentBoolean("op_research")) {
             condition {
                 permissionManager.hasPermission(player, Permission("instance.creation"))
             }
@@ -366,6 +366,7 @@ fun main() = runBlocking { try {
             executorAsync(Dispatchers.IO) {
                 val name = context.getRaw("name")
                 val research = context.get<Boolean>("research")
+                val opResearch = context.get<Boolean>("op_research")
                 try {
                     player.sendMessage("<green>Attempting to create instance $name".asMini())
                     if (name == "") {

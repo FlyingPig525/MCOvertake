@@ -140,14 +140,6 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
                 e.instance.getNearbyEntities(wallPos, 0.2).onEach { if (it.hasTag(Tag.Boolean("wallUpgrade"))) it.remove() }
             }
         }
-        if (matterCompressors.count > 0 || mechanicalParts > 0 || research.basicResearch.count > 0) {
-            researchTickProgress.name("<white>Research Tick <gray>-<white> ${tick % 400uL}/400".asMini())
-            val perc = ((tick % 400uL).toFloat() / 400f).coerceIn(0f..1f)
-            researchTickProgress.progress(perc)
-            e.player.showBossBar(researchTickProgress)
-        } else {
-            e.player.hideBossBar(researchTickProgress)
-        }
     }
 
     fun playerTick(instance: Instance) {

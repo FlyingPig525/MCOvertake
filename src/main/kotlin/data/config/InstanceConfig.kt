@@ -20,7 +20,7 @@ data class InstanceConfig(
     val allowResearch: Boolean = false,
     // The amount of time a co-op kicked is queued for in minutes
     // Can be lowered to make inviting the wrong people less punishing, but that is not recommended
-    val coopKickWaitTime: Long = 60
+    val coopKickWaitTime: Long = 60,
 ) {
     companion object : CommentContainer {
         override val comments: List<String> = listOf(

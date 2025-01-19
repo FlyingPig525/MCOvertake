@@ -29,7 +29,7 @@ object TrainingCampItem : Actionable {
     }
 
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
-        return basicBuildingPlacement(
+        return basicBuildingPlacementDouble(
             event,
             TrainingCamp,
             PlayerData::trainingCamps,

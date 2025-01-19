@@ -34,7 +34,7 @@ data class Config(
     val consolePollingDelay: Long = 5000,
     // Duration the target particles last in ticks
     val targetParticleDuration: Int = 15
-) : ConfigIndicator() {
+) {
     companion object : CommentContainer {
         override val comments: List<String> = listOf(
             "// Server address for game server and pack server. Default: \"0.0.0.0\"",

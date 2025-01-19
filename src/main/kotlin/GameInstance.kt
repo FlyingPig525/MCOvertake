@@ -172,6 +172,14 @@ class GameInstance(val path: Path, val name: String) {
             if (uuidParents[e.player.uuid.toString()] == e.player.uuid.toString()) {
                 playerData.tick(e)
             }
+            if (playerData.matterCompressors.count > 0 || playerData.mechanicalParts > 0 || playerData.research.basicResearch.count > 0) {
+                playerData.researchTickProgress.name("<white>Research Tick <gray>-<white> ${tick % 400uL}/400".asMini())
+                val perc = ((tick % 400uL).toFloat() / 400f).coerceIn(0f..1f)
+                playerData.researchTickProgress.progress(perc)
+                e.player.showBossBar(playerData.researchTickProgress)
+            } else {
+                e.player.hideBossBar(playerData.researchTickProgress)
+            }
 
             if (e.player.position.isUnderground) {
                 if (e.player.inventory[2].isAir)
@@ -313,7 +321,7 @@ class GameInstance(val path: Path, val name: String) {
 
 
         instance.eventNode().listen<PlayerDisconnectEvent> { e ->
-            val file = path.resolve("player-data.json").toFile()
+            val file = path.resolve("player-data.json5").toFile()
             if (!file.exists()) {
                 file.createNewFile()
             }

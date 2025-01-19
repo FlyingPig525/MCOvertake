@@ -1,6 +1,7 @@
 package io.github.flyingpig525.wall
 
 import io.github.flyingpig525.buildingPosition
+import io.github.flyingpig525.playerPosition
 import io.github.flyingpig525.repeatAdjacent
 import net.minestom.server.coordinate.Point
 import net.minestom.server.instance.Instance
@@ -105,7 +106,7 @@ fun getWallAttackCost(block: Block): Int? {
 
 fun getWallAttackCost(level: Int): Int = level * 2
 
-fun getWallAttackCost(wall: Point, instance: Instance, basePercentage: Double = 1.05, customWallLevel: Int? = null): Int {
+fun getWallAttackCost(wall: Point, instance: Instance, targetBlock: Block, basePercentage: Double = 1.05, customWallLevel: Int? = null): Int {
     val cost: Int
     if (customWallLevel == null) {
         val block = instance.getBlock(wall.buildingPosition)
@@ -116,9 +117,10 @@ fun getWallAttackCost(wall: Point, instance: Instance, basePercentage: Double = 
     }
     var count = 0.0
     wall.repeatAdjacent {
+        if (instance.getBlock(it.playerPosition).defaultState() != targetBlock) return@repeatAdjacent
         if (instance.getBlock(it).wallLevel != 0) count += 1
     }
-    return ((cost + 15) * max(1.05, basePercentage).pow(max(0.0, count - 2))).toInt() - 15
+    return ((cost + 15) * max(1.02, basePercentage).pow(max(0.0, count - 2))).toInt() - 15
 }
 
 fun getWallUpgradeCost(wall: Block): Int? {
