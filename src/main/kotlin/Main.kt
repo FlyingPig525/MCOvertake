@@ -108,7 +108,7 @@ var tick: ULong = 0uL
 
 var runConsoleLoop = true
 @OptIn(ExperimentalSerializationApi::class)
-val json = Json { prettyPrint = true; encodeDefaults = true; allowComments = true;}
+val json = Json { prettyPrint = true; encodeDefaults = true; allowComments = true; ignoreUnknownKeys = true; allowTrailingComma = true}
 
 var scoreboardTitleProgress = -1.0
 
@@ -147,8 +147,13 @@ fun main() = runBlocking { try {
         parentCFile.createNewFile()
         parentCFile.writeText(getCommentString(InstanceConfig()))
     }
-    parentInstanceConfig = json.decodeFromString(parentCFile.readText())
-    parentCFile.writeText(getCommentString(InstanceConfig()))
+    try {
+        parentInstanceConfig = json.decodeFromString(parentCFile.readText())
+        parentCFile.writeText(getCommentString(InstanceConfig()))
+    } catch (e: Exception) {
+        log("Error when loading parent instance config", LogType.ERROR)
+        log(e)
+    }
 
     var packServer: ResourcePackServer? = null
     var builtResourcePack: BuiltResourcePack? = null

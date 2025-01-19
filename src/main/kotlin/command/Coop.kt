@@ -15,6 +15,7 @@ import net.minestom.server.command.builder.arguments.minecraft.ArgumentEntity
 import net.minestom.server.command.builder.suggestion.SuggestionEntry
 import net.minestom.server.entity.Player
 import net.minestom.server.timer.TaskSchedule
+import net.minestom.server.utils.mojang.MojangUtils
 
 val coopCommand = kommand {
     name = "coop"
@@ -128,24 +129,22 @@ val coopCommand = kommand {
                 val player = sender as Player
                 val instance = player.gameInstance ?: return@setSuggestionCallback
                 val childUUIDs = instance.uuidParentsInverse[player.uuid.toString()]?.filter { it != player.uuid.toString() } ?: return@setSuggestionCallback
-                println(childUUIDs)
-                println(instance.uuidParentsInverse)
                 for (uuid in childUUIDs) {
-                    val name = uuid
+                    val name = MojangUtils.getUsername(uuid.toUUID())
                     val current = ctx.getRaw("player")
                     if (current in name) {
                         suggestion.addEntry(SuggestionEntry(name))
                     }
                 }
                 if (suggestion.entries.size == 0) {
-                    suggestion.entries += childUUIDs.map { SuggestionEntry(it) }
+                    suggestion.entries += childUUIDs.map { SuggestionEntry(MojangUtils.getUsername(it.toUUID())) }
                 }
             }
         }
         buildSyntax(playerName) {
             executor {
                 val targetName = context.get(playerName)
-                val targetUUID = player.instance.getPlayerByUuid(targetName.toUUID())!!.uuid
+                val targetUUID = MojangUtils.getUUID(targetName)
                 val gameInstance = player.gameInstance
                 if (gameInstance == null) {
                     player.sendMessage("<red><bold>You must be in a game instance to run this command".asMini())
