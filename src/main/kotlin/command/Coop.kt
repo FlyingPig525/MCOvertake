@@ -159,9 +159,9 @@ val coopCommand = kommand {
                     player.sendMessage("<red><bold>$targetName is not present in your co-op".asMini())
                     return@executor
                 }
-                player.sendMessage("<green><bold>$targetName will be kicked from your co-op in one hour ".asMini().let {
-                    it.append("<light_purple>[why one hour]".asMini().hoverEvent { HoverEvent.showText(
-                        ("<light_purple>This is done to increase the risk of inviting someone to your co-op," +
+                player.sendMessage("<green><bold>$targetName will be kicked from your co-op in ${gameInstance.instanceConfig.coopKickWaitTime} minute(s) ".asMini().let {
+                    it.append("<light_purple>[why ${gameInstance.instanceConfig.coopKickWaitTime} minute(s)]".asMini().hoverEvent { HoverEvent.showText(
+                        ("<light_purple>If the delay is high, this is done to increase the risk of inviting someone to your co-op," +
                                 " meaning you must be more careful with those you decide to trust." +
                                 "\nThey will only be notified once they are kicked.").asMini()
                     ) as HoverEvent<Any>})

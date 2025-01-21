@@ -1,6 +1,16 @@
 package io.github.flyingpig525
 
 import cz.lukynka.prettylog.*
+import de.articdive.jnoise.core.api.functions.Interpolation
+import de.articdive.jnoise.core.api.pipeline.NoiseSourceBuilder
+import de.articdive.jnoise.generators.noise_parameters.fade_functions.FadeFunction
+import de.articdive.jnoise.generators.noise_parameters.simplex_variants.Simplex2DVariant
+import de.articdive.jnoise.generators.noisegen.opensimplex.SuperSimplexNoiseGenerator
+import de.articdive.jnoise.generators.noisegen.perlin.PerlinNoiseGenerator
+import de.articdive.jnoise.generators.noisegen.worley.WorleyNoiseGenerator
+import de.articdive.jnoise.modules.octavation.fractal_functions.FractalFunction
+import de.articdive.jnoise.pipeline.JNoise
+import de.articdive.jnoise.pipeline.JNoise.JNoiseBuilder
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.building.*
 import io.github.flyingpig525.command.coopCommand
@@ -128,7 +138,7 @@ fun main() = runBlocking { try {
     LoggerFileWriter.load()
     // Initialize the servers
     val minecraftServer = MinecraftServer.init()
-    MojangAuth.init()
+//    MojangAuth.init()
     MinecraftServer.setBrandName("MCOvertake")
     MinecraftServer.getExceptionManager().setExceptionHandler {
         log(it as Exception)
@@ -173,7 +183,6 @@ fun main() = runBlocking { try {
         permissionsFile.writeText("{}")
     }
     permissionManager = json.decodeFromString(permissionsFile.readText())
-
     lobbyInstance = InstanceManager.createInstanceContainer().apply {
         setGenerator { unit ->
             unit.fork(Vec(0.0, -1.0, 0.0), Vec(1.0, 1.0, 1.0)).modifier().fillHeight(9, 10, Block.GRASS_BLOCK)
@@ -241,7 +250,6 @@ fun main() = runBlocking { try {
 
     lobbyInstance.eventNode().listen<PlayerSpawnEvent> { e ->
         e.player.teleport(Pos(5.0, 11.0, 5.0))
-        e.player.isAllowFlying = true
         e.player.gameMode = GameMode.ADVENTURE
         e.player.inventory[0] = item(Material.COMPASS) {
             itemName = "<gradient:green:gold:$scoreboardTitleProgress><bold>MCOvertake Game Instances".asMini()
@@ -255,6 +263,8 @@ fun main() = runBlocking { try {
                 }
             } catch (_: Exception) {}
         }
+        e.player.isAllowFlying = true
+        e.player.isFlying = true
     }
     lobbyInstance.eventNode().listen<PlayerSwapItemEvent> { it.isCancelled = true }
 //    lobbyInstance.eventNode().listen<InventoryPreClickEvent> { it.isCancelled = true }
@@ -586,6 +596,9 @@ val Point.buildingPosition: Point get() {
     if (y() in 29.0..37.0) {
         return withY(31.0)
     }
+    if (y() in 47.0..91.0) {
+        return withY(91.0)
+    }
     return withY(40.0)
 }
 
@@ -596,6 +609,9 @@ val Point.playerPosition: Point get() {
     if (y() in 29.0..37.0) {
         return withY(29.0)
     }
+    if (y() in 47.0..91.0) {
+        return withY(89.0)
+    }
     return withY(38.0)
 }
 
@@ -605,6 +621,9 @@ val Point.visiblePosition: Point get() {
     }
     if (y() in 29.0..37.0) {
         return withY(30.0)
+    }
+    if (y() in 47.0..91.0) {
+        return withY(90.0)
     }
     return withY(39.0)
 }

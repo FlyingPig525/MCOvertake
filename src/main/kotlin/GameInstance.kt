@@ -438,6 +438,15 @@ class GameInstance(val path: Path, val name: String) {
             .scale(instanceConfig.noiseScale)
             .clamp(-1.0, 1.0)
             .build()
+        val skyNoise = JNoise.newBuilder().superSimplex(
+            SuperSimplexNoiseGenerator.newBuilder().setSeed(12312L).setVariant2D(
+                Simplex2DVariant.CLASSIC
+            )
+        )
+            .octavate(2, 0.1, 1.0, FractalFunction.TURBULENCE, true)
+            .scale(parentInstanceConfig.noiseScale + 0.015)
+            .clamp(-1.0, 1.0)
+            .build()
         instance = InstanceManager.createInstanceContainer().apply {
             chunkLoader = PolarLoader(path.resolve("world.polar"))
             setGenerator { unit ->
@@ -458,6 +467,10 @@ class GameInstance(val path: Path, val name: String) {
                         }
                         if (y in 38..39) {
                             return@setAll if (y == 39) Block.WATER else Block.SAND
+                        }
+                        if (y in 89..90) {
+                            val skyEval = ((skyNoise.evaluateNoise(x.toDouble(), z.toDouble()) + 1) / 2)
+                            return@setAll if (skyEval > 0.77) Block.GRASS_BLOCK else Block.AIR
                         }
                     }
                     if (x in -1..instanceConfig.mapSize + 1 && z in -1..instanceConfig.mapSize + 1 && y < 40) {
