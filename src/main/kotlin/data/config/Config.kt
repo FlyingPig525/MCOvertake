@@ -35,6 +35,12 @@ data class Config(
     // Duration the target particles last in ticks
     val targetParticleDuration: Int = 15
 ) {
+    init {
+        assert(serverAddress != "") { "Server address must actually be an ip address" }
+        assert(serverPort != packServerPort) { "Server port cannot be the same as the pack server port" }
+        assert(consolePollingDelay >= 0) { "Console polling delay must be higher than 0"}
+        assert(targetParticleDuration > 0) { "Target particle duration must be high than 0 ticks" }
+    }
     companion object : CommentContainer {
         override val comments: List<String> = listOf(
             "// Server address for game server and pack server. Default: \"0.0.0.0\"",

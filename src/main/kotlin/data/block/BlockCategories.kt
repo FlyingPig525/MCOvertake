@@ -1,3 +1,5 @@
+@file:Suppress("EnumEntryName")
+
 package io.github.flyingpig525.data.block
 
 import net.bladehunt.kotstom.dsl.item.item

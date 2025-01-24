@@ -160,11 +160,14 @@ val coopCommand = kommand {
                     return@executor
                 }
                 player.sendMessage("<green><bold>$targetName will be kicked from your co-op in ${gameInstance.instanceConfig.coopKickWaitTime} minute(s) ".asMini().let {
-                    it.append("<light_purple>[why ${gameInstance.instanceConfig.coopKickWaitTime} minute(s)]".asMini().hoverEvent { HoverEvent.showText(
-                        ("<light_purple>If the delay is high, this is done to increase the risk of inviting someone to your co-op," +
-                                " meaning you must be more careful with those you decide to trust." +
-                                "\nThey will only be notified once they are kicked.").asMini()
-                    ) as HoverEvent<Any>})
+                    if (gameInstance.instanceConfig.coopKickWaitTime > 0) {
+                        return@let it.append("<light_purple>[why ${gameInstance.instanceConfig.coopKickWaitTime} minute(s)]".asMini().hoverEvent { HoverEvent.showText(
+                            ("<light_purple>This is done to increase the risk of inviting someone to your co-op," +
+                                    " meaning you must be more careful with those you decide to trust." +
+                                    "\nThey will only be notified once they are kicked.").asMini()
+                        ) as HoverEvent<Any>})
+                    }
+                    it
                 })
                 player.instance.scheduler().scheduleTask({
                     val targetPlayer = gameInstance.instance.getPlayerByUuid(targetUUID)
