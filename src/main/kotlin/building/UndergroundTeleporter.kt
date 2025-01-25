@@ -1,12 +1,10 @@
 package io.github.flyingpig525.building
 
 import cz.lukynka.prettylog.log
-import io.github.flyingpig525.MATTER_SYMBOL
-import io.github.flyingpig525.buildingPosition
-import io.github.flyingpig525.data
+import io.github.flyingpig525.*
+import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.data.player.PlayerData
 import io.github.flyingpig525.dsl.blockDisplay
-import io.github.flyingpig525.playerPosition
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -25,14 +23,16 @@ import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import net.minestom.server.tag.Tag
+import java.util.UUID
+import kotlin.reflect.KProperty1
 
 @Serializable
 class UndergroundTeleporter : Building, Interactable {
     override var count: Int = 0
     override val resourceUse: Int = count * 20
-    override fun place(playerTarget: Point, instance: Instance) {
-        instance.setBlock(playerTarget.buildingPosition, block)
-        spawn(playerTarget.buildingPosition, instance, )
+    override fun place(playerTarget: Point, instance: Instance, playerData: PlayerData) {
+        instance.setBlock(playerTarget.buildingPosition, block.building(identifier))
+        spawn(playerTarget.buildingPosition, instance, playerData.uuid.toUUID()!!)
         count++
     }
 
@@ -53,14 +53,11 @@ class UndergroundTeleporter : Building, Interactable {
         return false
     }
 
-    companion object UndergroundTeleporterCompanion : Building.BuildingCompanion, DisplayEntityBlock {
-        override val menuSlot: Int = 6
-        init {
-            Building.BuildingCompanion.registry += this
-            log("${this::class.simpleName} initialized...")
-        }
+    companion object UndergroundTeleporterCompanion : Building.BuildingCompanion, DisplayEntityBlock, Validated {
+        override var menuSlot: Int = 6
         override val block: Block = Block.END_GATEWAY
         override val identifier: String = "underground:teleport"
+        override val playerRef: KProperty1<PlayerData, Building> = PlayerData::undergroundTeleporters
 
         override fun getItem(cost: Int, count: Int): ItemStack {
             return item(Material.COPPER_GRATE) {
@@ -88,13 +85,25 @@ class UndergroundTeleporter : Building, Interactable {
                 it is DisplayEntityBlock && (it.entityMeta as BlockDisplayMeta).blockStateId == Block.COPPER_GRATE
             }
 
-        override fun spawn(point: Point, instance: Instance) {
+        override fun spawn(point: Point, instance: Instance, uuid: UUID) {
             blockDisplay {
                 hasGravity = false
                 scale = Vec(1.01, 1.01, 1.01)
                 translation = Vec(-0.005, -0.005, -0.005)
                 block = Block.COPPER_GRATE
+                entity {
+                    setTag(Tag.UUID("player"), uuid)
+                }
             }.setInstance(instance, point)
+        }
+
+        init {
+            Building.BuildingCompanion.registry += this
+            log("${this::class.simpleName} initialized...")
+        }
+
+        override fun validate(instance: Instance, point: Point): Boolean {
+            return instance.getBlock(point.visiblePosition).defaultState() == Block.WATER || point.isUnderground
         }
     }
 }

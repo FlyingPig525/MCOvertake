@@ -52,7 +52,9 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
     val undergroundTeleporters = UndergroundTeleporter()
     val teleporterCost: Int get() = undergroundTeleporters.count * 1000 + 1000
     val basicResearchStations = BasicResearchGenerator()
-    val basicResearchStationCost get() = PlayerData.genericBuildingCost(basicResearchStations.count, 100)
+    val basicResearchStationCost get() = genericBuildingCost(basicResearchStations.count, 100)
+    val rockMiners = RockMiner()
+    val rockMinerCost get() = 0
     @Transient var claimCooldown = Cooldown(Duration.ofMillis(maxClaimCooldown))
     @Transient var colonyCooldown = Cooldown(Duration.ofSeconds(if (blocks > 0) 15 else 0))
     @Transient var attackCooldown = Cooldown(Duration.ofSeconds(10))
@@ -144,6 +146,7 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
 
     fun playerTick(instance: Instance) {
         matterExtractors.tick(this)
+        rockMiners.tick(this)
         val player = instance.getPlayerByUuid(UUID.fromString(uuid))
         if (player != null) {
             if (playerDisplayName == "") playerDisplayName = player.username

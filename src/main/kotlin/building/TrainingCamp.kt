@@ -3,6 +3,7 @@ package io.github.flyingpig525.building
 import cz.lukynka.prettylog.log
 import io.github.flyingpig525.MATTER_SYMBOL
 import io.github.flyingpig525.POWER_SYMBOL
+import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.player.PlayerData
 import kotlinx.serialization.Serializable
@@ -19,13 +20,14 @@ import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import net.minestom.server.tag.Tag
+import kotlin.reflect.KProperty1
 
 @Serializable
 class TrainingCamp : Building {
     override var count: Int = 0
     override val resourceUse: Int get() = count * 3
-    override fun place(playerTarget: Point, instance: Instance) {
-        instance.setBlock(playerTarget.buildingPosition, block, false)
+    override fun place(playerTarget: Point, instance: Instance, playerData: PlayerData) {
+        instance.setBlock(playerTarget.buildingPosition, block.building(identifier))
         count++
     }
 
@@ -42,9 +44,10 @@ class TrainingCamp : Building {
     }
 
     companion object TrainingCampCompanion : Building.BuildingCompanion {
-        override val menuSlot: Int = 1
+        override var menuSlot: Int = 1
         override val block: Block = Block.POLISHED_BLACKSTONE_BUTTON.withProperty("face", "floor")
         override val identifier: String = "power:generator"
+        override val playerRef: KProperty1<PlayerData, Building> = PlayerData::trainingCamps
 
         override fun getItem(cost: Int, count: Int): ItemStack {
             return item(Material.POLISHED_BLACKSTONE_BUTTON) {

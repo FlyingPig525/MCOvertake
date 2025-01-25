@@ -3,6 +3,7 @@ package io.github.flyingpig525.building
 import cz.lukynka.prettylog.log
 import io.github.flyingpig525.BUILDING_INVENTORY_SLOT
 import io.github.flyingpig525.MECHANICAL_SYMBOL
+import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.player.PlayerData
 import io.github.flyingpig525.data.research.currency.BasicResearch
@@ -20,14 +21,15 @@ import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import net.minestom.server.tag.Tag
+import kotlin.reflect.KProperty1
 
 @Serializable
 class BasicResearchGenerator : Building {
     override var count: Int = 0
     override val resourceUse: Int = 3
 
-    override fun place(playerTarget: Point, instance: Instance) {
-        instance.setBlock(playerTarget.buildingPosition, block)
+    override fun place(playerTarget: Point, instance: Instance, playerData: PlayerData) {
+        instance.setBlock(playerTarget.buildingPosition, block.building(identifier))
         count++
     }
 
@@ -48,9 +50,10 @@ class BasicResearchGenerator : Building {
     }
 
     companion object BasicResearchGeneratorCompanion : Building.BuildingCompanion {
-        override val menuSlot: Int = 7
+        override var menuSlot: Int = 7
         override val block: Block = Block.SCULK_SENSOR
         override val identifier: String = "research:basic_research"
+        override val playerRef: KProperty1<PlayerData, Building> = PlayerData::basicResearchStations
 
         override fun getItem(cost: Int, count: Int): ItemStack {
             return item(Material.SCULK_SENSOR) {

@@ -12,6 +12,7 @@ import io.github.flyingpig525.data.config.InstanceConfig
 import io.github.flyingpig525.data.config.getCommentString
 import io.github.flyingpig525.data.player.DataResolver
 import io.github.flyingpig525.data.player.PlayerData
+import io.github.flyingpig525.data.player.PlayerData.Companion.getDataByBlock
 import io.github.flyingpig525.data.player.PlayerData.Companion.toBlockSortedList
 import io.github.flyingpig525.item.*
 import io.github.flyingpig525.log.MCOvertakeLogType
@@ -302,10 +303,11 @@ class GameInstance(val path: Path, val name: String) {
 
         instance.eventNode().listen<PlayerBlockInteractEvent> { e ->
             val item = e.player.getItemInHand(e.hand)
-            val identifier = Building.getBuildingIdentifier(e.block.defaultState())
+            val building = Building.getBuildingByBlock(e.block)
             var callItemUse = true
-            if (identifier != null) {
-                val ref = dataResolver[e.player.uuid.toString()]?.getBuildingReferenceByIdentifier(identifier)?.get()
+            val data = e.player.data
+            if (building != null && data != null) {
+                val ref = building.playerRef.get(data)
                 if (ref is Interactable) {
                     callItemUse = ref.onInteract(e)
                 }
@@ -492,12 +494,18 @@ class GameInstance(val path: Path, val name: String) {
                         instance.loadChunk(point).thenRunAsync {
                             val playerBlock = instance.getBlock(x, 38, z)
                             if (instance.getBlock(x, 39, z) == Block.WATER && instance.getBlock(x, 38, z) != Block.SAND) {
-                                ClaimWaterItem.spawnPlayerRaft(playerBlock, Vec(x.toDouble(), 40.0, z.toDouble()), instance)
+                                ClaimWaterItem.spawnPlayerRaft(
+                                    playerBlock,
+                                    Vec(x.toDouble(), 40.0, z.toDouble()),
+                                    instance,
+                                    playerData.getDataByBlock(playerBlock)!!.uuid.toUUID()!!
+                                )
                             }
                             onAllBuildingPositions(point) {
+                                val playerData = playerData.getDataByBlock(instance.getBlock(it.playerPosition))
                                 for (building in displayBuildings) {
                                     if ((building as DisplayEntityBlock).checkShouldSpawn(it, instance)) {
-                                        (building as DisplayEntityBlock).spawn(it, instance)
+                                        (building as DisplayEntityBlock).spawn(it, instance, playerData!!.uuid.toUUID()!!)
                                         break
                                     }
                                 }

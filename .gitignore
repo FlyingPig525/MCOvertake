@@ -46,3 +46,4 @@ world.polar
 instances/
 parent-instance-config.json5
 res/permissions.json5
+res/

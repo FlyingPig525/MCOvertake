@@ -54,7 +54,7 @@ object ClaimWaterItem : Actionable {
         // Claim logic
         event.instance.setBlock(target.playerPosition, data.block)
         event.instance.setBlock(target.withY(40.0), Block.LILY_PAD)
-        spawnPlayerRaft(data.block, target.withY(40.0), event.instance)
+        spawnPlayerRaft(data.block, target.withY(40.0), event.instance, data.uuid.toUUID()!!)
         data.blocks++
         data.organicMatter -= actionData.cost
         data.raftCooldown = actionData.cooldown
@@ -67,7 +67,7 @@ object ClaimWaterItem : Actionable {
         return true
     }
 
-    fun spawnPlayerRaft(playerBlock: Block, point: Point, instance: Instance) {
+    fun spawnPlayerRaft(playerBlock: Block, point: Point, instance: Instance, playerUUID: UUID) {
         blockDisplay {
             hasGravity = false
             scale = Vec(0.9, 0.866, 0.9)
@@ -75,6 +75,7 @@ object ClaimWaterItem : Actionable {
             translation = Vec(0.05, -0.15125, 0.05)
             entity {
                 setTag(Tag.Boolean("player_raft"), true)
+                setTag(Tag.UUID("player"), playerUUID)
                 setInstance(instance, point)
             }
         }
@@ -85,6 +86,7 @@ object ClaimWaterItem : Actionable {
             block = playerBlock
             entity {
                 setTag(Tag.Boolean("player_raft"), true)
+                setTag(Tag.UUID("player"), playerUUID)
                 setInstance(instance, point)
             }
         }

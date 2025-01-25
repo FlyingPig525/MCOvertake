@@ -26,7 +26,6 @@ val coopCommand = kommand {
         val playerArg = ArgumentEntity("player").apply {
             onlyPlayers(true)
             singleEntity(true)
-
         }
 
         buildSyntax(playerArg) {
@@ -73,6 +72,7 @@ val coopCommand = kommand {
 
     subkommand {
         name = "accept"
+
 
         val playerArg = ArgumentString("player").apply {
             setSuggestionCallback { sender, ctx, suggestion ->

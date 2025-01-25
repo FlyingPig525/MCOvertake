@@ -104,7 +104,7 @@ fun <T : Building> basicBuildingPlacementInt(
     if (currency < cost) return true
     currencyRef.set(playerData, currency - cost)
     val building = buildingRef.get(playerData)
-    building.place(target, instance)
+    building.place(target, instance, playerData)
     building.select(event.player, costRef.get(playerData))
     playerData.updateBossBars()
     return true
@@ -128,7 +128,7 @@ fun <T : Building> basicBuildingPlacementDouble(
     if (currency < cost) return true
     currencyRef.set(playerData, currency - cost)
     val building = buildingRef.get(playerData)
-    building.place(target, instance)
+    building.place(target, instance, playerData)
     building.select(event.player, costRef.get(playerData))
     playerData.updateBossBars()
     return true

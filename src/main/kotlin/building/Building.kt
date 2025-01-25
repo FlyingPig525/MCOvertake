@@ -7,19 +7,23 @@ import net.minestom.server.entity.Player
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
+import net.minestom.server.network.packet.server.ServerPacket.Play
+import net.minestom.server.tag.Tag
+import kotlin.reflect.KProperty1
 
 interface Building {
     var count: Int
     val resourceUse: Int
-    fun place(playerTarget: Point, instance: Instance)
+    fun place(playerTarget: Point, instance: Instance, data: PlayerData)
 
     fun select(player: Player, cost: Int)
     fun select(player: Player, data: PlayerData)
     fun tick(data: PlayerData) {}
     interface BuildingCompanion {
-        val menuSlot: Int
+        var menuSlot: Int
         val block: Block
         val identifier: String
+        val playerRef: KProperty1<PlayerData, Building>
         fun getItem(cost: Int, count: Int): ItemStack
         fun getItem(playerData: PlayerData): ItemStack
 
@@ -31,18 +35,24 @@ interface Building {
     }
 
     companion object {
+        const val ID_TAG = "building_identifier"
         fun blockIsBuilding(block: Block): Boolean {
+            val tag = block.getTag(Tag.String(ID_TAG)) ?: return false
             for (entry in registry) {
-                if (entry.block == block.defaultState()) return true
+                if (tag == entry.identifier) return true
             }
             return false
         }
 
-        fun getBuildingIdentifier(block: Block): String? {
-            for (entry in registry) {
-                if (entry.block.defaultState() == block.defaultState()) return entry.identifier
-            }
-            return null
+        fun getBuildingByBlock(block: Block): BuildingCompanion? {
+            val tag = block.getTag(Tag.String(ID_TAG))
+            return registry.find { it.identifier == tag }
         }
+
+        fun getBuildingByIdentifier(id: String): BuildingCompanion? = registry.find { it.identifier == id }
+
+        fun getBuildingIdentifier(block: Block): String? = block.getTag(Tag.String(ID_TAG))
+
+        fun Block.building(identifier: String): Block = withTag(Tag.String(ID_TAG), identifier)
     }
 }

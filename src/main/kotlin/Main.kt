@@ -1,17 +1,8 @@
 package io.github.flyingpig525
 
 import cz.lukynka.prettylog.*
-import de.articdive.jnoise.core.api.functions.Interpolation
-import de.articdive.jnoise.core.api.pipeline.NoiseSourceBuilder
-import de.articdive.jnoise.generators.noise_parameters.fade_functions.FadeFunction
-import de.articdive.jnoise.generators.noise_parameters.simplex_variants.Simplex2DVariant
-import de.articdive.jnoise.generators.noisegen.opensimplex.SuperSimplexNoiseGenerator
-import de.articdive.jnoise.generators.noisegen.perlin.PerlinNoiseGenerator
-import de.articdive.jnoise.generators.noisegen.worley.WorleyNoiseGenerator
-import de.articdive.jnoise.modules.octavation.fractal_functions.FractalFunction
-import de.articdive.jnoise.pipeline.JNoise
-import de.articdive.jnoise.pipeline.JNoise.JNoiseBuilder
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
+import io.github.flyingpig525.GameInstance.Companion.gameInstance
 import io.github.flyingpig525.building.*
 import io.github.flyingpig525.command.coopCommand
 import io.github.flyingpig525.console.Command
@@ -91,6 +82,7 @@ import java.io.File
 import java.net.URI
 import java.nio.file.Path
 import java.util.*
+import kotlin.io.path.toPath
 
 
 const val POWER_SYMBOL = "✘"
@@ -168,7 +160,8 @@ fun main() = runBlocking { try {
     var packServer: ResourcePackServer? = null
     var builtResourcePack: BuiltResourcePack? = null
     if (File(config.resourcePackPath).exists()) {
-        val resourcePack = MinecraftResourcePackReader.minecraft().readFromZipFile(File(config.resourcePackPath))
+        val resourcePack = MinecraftResourcePackReader.minecraft().readFromZipFile(
+            this::class.java.getResource("pack.zip")!!.toURI().toPath().toFile())
         builtResourcePack = MinecraftResourcePackWriter.minecraft().build(resourcePack)
         packServer = ResourcePackServer.server()
             .address(config.serverAddress, config.packServerPort)
@@ -189,6 +182,12 @@ fun main() = runBlocking { try {
         }
         setChunkSupplier(::LightingChunk)
     }
+    RockMiner.spawn(Vec(0.0, 11.0, 0.0), lobbyInstance, UUID.randomUUID())
+    lobbyInstance.setBlock(Vec(0.0, 11.0, 0.0),  Block.TRIPWIRE_HOOK.withProperties(mapOf(
+        "attached" to "false",
+        "powered" to "true",
+        "facing" to "north"
+    )))
     log("Created lobby instance...", MCOvertakeLogType.FILESYSTEM)
     for (name in config.instanceNames) {
         instances[name] = GameInstance(Path.of("instances", name), name)
@@ -373,7 +372,7 @@ fun main() = runBlocking { try {
             }
         }
 
-        buildSyntax(ArgumentString("name"), ArgumentBoolean("research"), ArgumentBoolean("op_research")) {
+        buildSyntax(ArgumentString("name"), ArgumentBoolean("research")) {
             condition {
                 permissionManager.hasPermission(player, Permission("instance.creation"))
             }
@@ -381,7 +380,6 @@ fun main() = runBlocking { try {
             executorAsync(Dispatchers.IO) {
                 val name = context.getRaw("name")
                 val research = context.get<Boolean>("research")
-                val opResearch = context.get<Boolean>("op_research")
                 try {
                     player.sendMessage("<green>Attempting to create instance $name".asMini())
                     if (name == "") {
@@ -633,6 +631,7 @@ val Point.isUnderground: Boolean get() {
 }
 
 fun onAllBuildingPositions(point: Point, fn: (point: Point) -> Unit) {
+    fn(point.withY(91.0))
     fn(point.withY(40.0))
     fn(point.withY(31.0))
 }
@@ -659,6 +658,17 @@ fun Point.anyAdjacentBlocksMatch(block: Block, instance: Instance): Boolean {
     return ret
 }
 
+enum class Direction(val str: String, val opposite: String) {
+    NORTH("north", "south"),
+    NORTH_EAST("north_east", "south_west"),
+    EAST("east", "west"),
+    SOUTH_EAST("south_east", "north_west"),
+    SOUTH("south", "north"),
+    SOUTH_WEST("south_west", "north_east"),
+    WEST("west", "east"),
+    NORTH_WEST("north_west", "south_east")
+}
+
 /**
  * Calls [fn] with each adjacent location relative to this [Point] starting from the north-west going clockwise
  */
@@ -674,13 +684,13 @@ inline fun Point.repeatAdjacent(fn: (point: Point) -> Unit) {
 }
 
 /**
- * Calls [fn] with each adjacent location, without the corners, relative to this [Point] starting from north going clockwise
+ * Calls [predicate] with each adjacent location, without the corners, relative to this [Point] starting from north going clockwise
  */
-inline fun Point.repeatDirection(fn: (point: Point) -> Unit) {
-    fn(add(0.0, 0.0, -1.0))
-    fn(add(1.0, 0.0, 0.0))
-    fn(add(0.0, 0.0, 1.0))
-    fn(add(-1.0, 0.0, 0.0))
+inline fun Point.repeatDirection(predicate: (point: Point, dir: Direction) -> Boolean): Boolean {
+    if (predicate(add(0.0, 0.0, -1.0), Direction.NORTH)) return true
+    if (predicate(add(1.0, 0.0, 0.0), Direction.EAST)) return true
+    if (predicate(add(0.0, 0.0, 1.0), Direction.SOUTH)) return true
+    return predicate(add(-1.0, 0.0, 0.0), Direction.WEST)
 }
 
 val Cooldown.ticks: Int get() = (duration.toMillis() / 50).toInt()
@@ -722,15 +732,18 @@ fun initItems() {
     ResearchUpgradeItem
     PlayerConfigItem
     BasicResearchGeneratorItem
+    RockMinerItem
 }
 
 fun initBuildingCompanions() {
-    Barrack.BarrackCompanion
-    MatterCompressionPlant.MatterCompressionPlantCompanion
-    MatterContainer.MatterContainerCompanion
-    MatterExtractor.MatterExtractorCompanion
-    UndergroundTeleporter.UndergroundTeleporterCompanion
-    BasicResearchGenerator.BasicResearchGeneratorCompanion
+    TrainingCamp.also { it.menuSlot = 0 }
+    Barrack.also { it.menuSlot = 1 }
+    MatterContainer.also { it.menuSlot = 2 }
+    MatterExtractor.also { it.menuSlot = 3 }
+    MatterCompressionPlant.also { it.menuSlot = 4 }
+    BasicResearchGenerator.also { it.menuSlot = 5 }
+    UndergroundTeleporter.also { it.menuSlot = 6 }
+    RockMiner.also { it.menuSlot = 7 }
 }
 
 fun initConsoleCommands() {

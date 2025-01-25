@@ -3,6 +3,7 @@ package io.github.flyingpig525.building
 import cz.lukynka.prettylog.log
 import io.github.flyingpig525.BUILDING_INVENTORY_SLOT
 import io.github.flyingpig525.MATTER_SYMBOL
+import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.player.PlayerData
 import io.github.flyingpig525.data.research.action.ActionData
@@ -20,13 +21,14 @@ import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import net.minestom.server.tag.Tag
+import kotlin.reflect.KProperty1
 
 @Serializable
 class MatterExtractor : Building {
     override var count: Int = 0
     override val resourceUse: Int get() = count * 3
-    override fun place(playerTarget: Point, instance: Instance) {
-        instance.setBlock(playerTarget.buildingPosition, block, false)
+    override fun place(playerTarget: Point, instance: Instance, playerData: PlayerData) {
+        instance.setBlock(playerTarget.buildingPosition, block.building(identifier))
         count++
     }
 
@@ -48,9 +50,10 @@ class MatterExtractor : Building {
     }
 
     companion object MatterExtractorCompanion : Building.BuildingCompanion {
-        override val menuSlot: Int = 0
+        override var menuSlot: Int = 0
         override val block: Block = Block.BREWING_STAND
         override val identifier: String = "matter:generator"
+        override val playerRef: KProperty1<PlayerData, Building> = PlayerData::matterExtractors
 
         override fun getItem(cost: Int, count: Int): ItemStack {
             return item(Material.BREWING_STAND) {

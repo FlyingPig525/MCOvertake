@@ -73,7 +73,7 @@ object SelectBuildingItem : Actionable {
                 close = true
             } else if (res.clickedItem.hasTag(Tag.String("identifier"))) {
                 val identifier = res.clickedItem.getTag(Tag.String("identifier"))
-                val ref = playerData.getBuildingReferenceByIdentifier(identifier)?.get() ?: return@addInventoryCondition
+                val ref = Building.getBuildingByIdentifier(identifier)!!.playerRef.get(playerData)
                 ref.select(player, playerData)
                 close = true
             }
