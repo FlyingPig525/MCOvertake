@@ -7,6 +7,7 @@ import io.github.flyingpig525.MECHANICAL_SYMBOL
 import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.player.PlayerData
+import io.github.flyingpig525.ksp.BuildingCompanion
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -48,6 +49,7 @@ class MatterCompressionPlant : Building {
         }
     }
 
+    @BuildingCompanion("MatterContainer")
     companion object MatterCompressionPlantCompanion : Building.BuildingCompanion {
         override var menuSlot: Int = 4
         override val block: Block = Block.HEAVY_CORE
@@ -74,12 +76,5 @@ class MatterCompressionPlant : Building {
         }
 
         override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 2
-
-
-        init {
-            menuSlot = ++Building.currSlot
-            Building.BuildingCompanion.registry += this
-            log("${this::class.simpleName} initialized...")
-        }
     }
 }

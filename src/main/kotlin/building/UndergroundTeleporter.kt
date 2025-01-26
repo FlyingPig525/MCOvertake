@@ -5,6 +5,7 @@ import io.github.flyingpig525.*
 import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.data.player.PlayerData
 import io.github.flyingpig525.dsl.blockDisplay
+import io.github.flyingpig525.ksp.BuildingCompanion
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -53,6 +54,7 @@ class UndergroundTeleporter : Building, Interactable {
         return false
     }
 
+    @BuildingCompanion("BasicResearchGenerator")
     companion object UndergroundTeleporterCompanion : Building.BuildingCompanion, DisplayEntityBlock, Validated {
         override var menuSlot: Int = 6
         override val block: Block = Block.END_GATEWAY
@@ -95,12 +97,6 @@ class UndergroundTeleporter : Building, Interactable {
                     setTag(Tag.UUID("player"), uuid)
                 }
             }.setInstance(instance, point)
-        }
-
-        init {
-            menuSlot = ++Building.currSlot
-            Building.BuildingCompanion.registry += this
-            log("${this::class.simpleName} initialized...")
         }
 
         override fun validate(instance: Instance, point: Point): Boolean {

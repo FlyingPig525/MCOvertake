@@ -18,6 +18,8 @@ import io.github.flyingpig525.data.player.config.PlayerConfig
 import io.github.flyingpig525.data.player.permission.Permission
 import io.github.flyingpig525.data.player.permission.PermissionManager
 import io.github.flyingpig525.item.*
+import io.github.flyingpig525.ksp.BuildingCompanion
+import io.github.flyingpig525.ksp.initBuildingCompanions
 import io.github.flyingpig525.ksp.initItems
 import io.github.flyingpig525.log.MCOvertakeLogType
 import kotlinx.coroutines.Dispatchers
@@ -85,6 +87,7 @@ import java.net.URI
 import java.nio.file.Path
 import java.util.*
 import kotlin.io.path.toPath
+import kotlin.reflect.KProperty1
 
 
 const val POWER_SYMBOL = "✘"
@@ -710,17 +713,6 @@ fun Player.removeBossBars() {
     for (bar in bars) {
         hideBossBar(bar)
     }
-}
-
-fun initBuildingCompanions() {
-    TrainingCamp.TrainingCampCompanion
-    Barrack.BarrackCompanion
-    MatterContainer.MatterContainerCompanion
-    MatterExtractor.MatterExtractorCompanion
-    MatterCompressionPlant.MatterCompressionPlantCompanion
-    BasicResearchGenerator.BasicResearchGeneratorCompanion
-    UndergroundTeleporter.UndergroundTeleporterCompanion
-    RockMiner.RockMinerCompanion
 }
 
 fun initConsoleCommands() {

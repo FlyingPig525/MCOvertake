@@ -7,6 +7,7 @@ import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.player.PlayerData
 import io.github.flyingpig525.data.research.currency.BasicResearch
+import io.github.flyingpig525.ksp.BuildingCompanion
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -50,6 +51,7 @@ class BasicResearchGenerator : Building {
         }
     }
 
+    @BuildingCompanion(orderAfter = "MatterCompressionPlant")
     companion object BasicResearchGeneratorCompanion : Building.BuildingCompanion {
         override var menuSlot: Int = 7
         override val block: Block = Block.SCULK_SENSOR
@@ -75,10 +77,5 @@ class BasicResearchGenerator : Building {
         }
 
         override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 3
-        init {
-            menuSlot = ++Building.currSlot
-            Building.BuildingCompanion.registry += this
-            log("${this::class.simpleName} initialized...")
-        }
     }
 }

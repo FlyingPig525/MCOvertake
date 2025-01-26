@@ -5,6 +5,7 @@ import io.github.flyingpig525.*
 import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.data.player.PlayerData
 import io.github.flyingpig525.dsl.blockDisplay
+import io.github.flyingpig525.ksp.BuildingCompanion
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -56,6 +57,7 @@ class RockMiner : Building {
         data.organicMatter += 4 * count
     }
 
+    @BuildingCompanion("UndergroundTeleporter")
     companion object RockMinerCompanion : Building.BuildingCompanion, DisplayEntityBlock, Validated {
         override var menuSlot: Int = 0
         override val block: Block = Block.TRIPWIRE_HOOK
@@ -99,12 +101,5 @@ class RockMiner : Building {
                 true
             } else false
         }
-
-        init {
-            menuSlot = ++Building.currSlot
-            Building.BuildingCompanion.registry += RockMinerCompanion
-            log("${this::class.simpleName} initialized...")
-        }
-
     }
 }

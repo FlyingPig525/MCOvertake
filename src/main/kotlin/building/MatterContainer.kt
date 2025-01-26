@@ -6,6 +6,7 @@ import io.github.flyingpig525.MATTER_SYMBOL
 import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.player.PlayerData
+import io.github.flyingpig525.ksp.BuildingCompanion
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -39,6 +40,7 @@ class MatterContainer : Building {
         player.inventory[BUILDING_INVENTORY_SLOT] = getItem(data)
     }
 
+    @BuildingCompanion("MatterExtractor")
     companion object MatterContainerCompanion : Building.BuildingCompanion {
         override var menuSlot: Int = 2
         override val block: Block = Block.LANTERN
@@ -64,11 +66,5 @@ class MatterContainer : Building {
         }
 
         override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 2
-
-        init {
-            menuSlot = ++Building.currSlot
-            Building.BuildingCompanion.registry += this
-            log("${this::class.simpleName} initialized...")
-        }
     }
 }

@@ -24,7 +24,7 @@ import java.time.Duration
 import java.time.Instant
 import java.util.*
 
-@Item
+@Item(persistent = true)
 object WallItem : Actionable {
     override val identifier: String = "building:wall"
     override val itemMaterial: Material = Material.IRON_BARS

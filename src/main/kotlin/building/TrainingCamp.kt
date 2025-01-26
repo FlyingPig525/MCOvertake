@@ -6,6 +6,7 @@ import io.github.flyingpig525.POWER_SYMBOL
 import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.player.PlayerData
+import io.github.flyingpig525.ksp.BuildingCompanion
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -43,6 +44,7 @@ class TrainingCamp : Building {
         data.power += count * 0.5 + 0.5
     }
 
+    @BuildingCompanion("first")
     companion object TrainingCampCompanion : Building.BuildingCompanion {
         override var menuSlot: Int = 1
         override val block: Block = Block.POLISHED_BLACKSTONE_BUTTON.withProperty("face", "floor")
@@ -68,11 +70,5 @@ class TrainingCamp : Building {
         }
 
         override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 3
-
-        init {
-            menuSlot = ++Building.currSlot
-            Building.BuildingCompanion.registry += this
-            log("${this::class.simpleName} initialized...")
-        }
     }
 }

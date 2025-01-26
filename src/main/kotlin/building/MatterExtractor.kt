@@ -7,6 +7,7 @@ import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.player.PlayerData
 import io.github.flyingpig525.data.research.action.ActionData
+import io.github.flyingpig525.ksp.BuildingCompanion
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -49,6 +50,7 @@ class MatterExtractor : Building {
         data.organicMatter += action.increase
     }
 
+    @BuildingCompanion("Barrack")
     companion object MatterExtractorCompanion : Building.BuildingCompanion {
         override var menuSlot: Int = 0
         override val block: Block = Block.BREWING_STAND
@@ -73,11 +75,5 @@ class MatterExtractor : Building {
         }
 
         override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 3
-
-        init {
-            menuSlot = ++Building.currSlot
-            Building.BuildingCompanion.registry += this
-            log("${this::class.simpleName} initialized...")
-        }
     }
 }
