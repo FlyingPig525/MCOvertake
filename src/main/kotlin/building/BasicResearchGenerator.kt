@@ -42,10 +42,11 @@ class BasicResearchGenerator : Building {
     }
 
     override fun tick(data: PlayerData) {
-        if (data.power >= 2 && data.mechanicalParts >= 3) {
-            data.power -= 2
-            data.mechanicalParts -= 3
-            data.research.basicResearch.count++
+        if (!data.playerConfig.doResearch.value) return
+        if (data.power >= 2 * count && data.mechanicalParts >= 3 * count) {
+            data.power -= 2 * count
+            data.mechanicalParts -= 3 * count
+            data.research.basicResearch.count += count
         }
     }
 
@@ -75,6 +76,7 @@ class BasicResearchGenerator : Building {
 
         override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 3
         init {
+            menuSlot = ++Building.currSlot
             Building.BuildingCompanion.registry += this
             log("${this::class.simpleName} initialized...")
         }

@@ -55,9 +55,9 @@ object BreakBuildingItem : Actionable {
         if (identifier == null) {
             if (!blockIsWall(buildingBlock)) return true
         } else {
-            val ref = data.getBuildingReferenceByIdentifier(identifier) ?: return true
-            ref.get().count--
-            ref.get().select(event.player, data)
+            val ref = Building.getBuildingByIdentifier(identifier)?.playerRef?.get(data) ?: return true
+            ref.count--
+            ref.select(event.player, data)
             ActionData.DestroyBuilding(data, instance, event.player).apply {
                 building = ref
                 wallLevel = buildingBlock.wallLevel

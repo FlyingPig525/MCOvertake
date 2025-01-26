@@ -66,6 +66,7 @@ class MatterContainer : Building {
         override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 2
 
         init {
+            menuSlot = ++Building.currSlot
             Building.BuildingCompanion.registry += this
             log("${this::class.simpleName} initialized...")
         }

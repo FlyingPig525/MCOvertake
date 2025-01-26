@@ -75,6 +75,7 @@ class MatterExtractor : Building {
         override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 3
 
         init {
+            menuSlot = ++Building.currSlot
             Building.BuildingCompanion.registry += this
             log("${this::class.simpleName} initialized...")
         }

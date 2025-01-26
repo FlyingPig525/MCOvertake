@@ -98,6 +98,7 @@ class UndergroundTeleporter : Building, Interactable {
         }
 
         init {
+            menuSlot = ++Building.currSlot
             Building.BuildingCompanion.registry += this
             log("${this::class.simpleName} initialized...")
         }

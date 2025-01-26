@@ -67,6 +67,7 @@ class Barrack : Building {
 
 
         init {
+            menuSlot = ++Building.currSlot
             Building.BuildingCompanion.registry += this
             log("${this::class.simpleName} initialized...")
         }

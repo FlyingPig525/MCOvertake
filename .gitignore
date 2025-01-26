@@ -37,7 +37,7 @@ bin/
 .DS_Store
 
 world
-player-data.json5
+block-data.json5
 /.idea/
 config.json5
 log.log

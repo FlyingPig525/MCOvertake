@@ -73,8 +73,8 @@ class GameInstance(val path: Path, val name: String) {
         private set
 
     val playerData: MutableMap<String, PlayerData> = Json.decodeFromString<MutableMap<String, PlayerData>>(
-        if (path.resolve("player-data.json5").toFile().exists())
-            path.resolve("player-data.json5").toFile().readText()
+        if (path.resolve("block-data.json5").toFile().exists())
+            path.resolve("block-data.json5").toFile().readText()
         else "{}"
     )
 
@@ -116,7 +116,7 @@ class GameInstance(val path: Path, val name: String) {
             icFile.createNewFile()
             icFile.writeText(getCommentString(instanceConfig))
         }
-        val pdFile = path.resolve("player-data.json5").toFile()
+        val pdFile = path.resolve("block-data.json5").toFile()
         if (!pdFile.exists()) {
             pdFile.createNewFile()
             pdFile.writeText("{}")
@@ -150,7 +150,7 @@ class GameInstance(val path: Path, val name: String) {
             }
             // `json` is formatted, `Json` is not
             icFile.writeText(getCommentString(instanceConfig))
-            val pdFile = path.resolve("player-data.json5").toFile()
+            val pdFile = path.resolve("block-data.json5").toFile()
             if (!pdFile.exists()) {
                 pdFile.createNewFile()
             }
@@ -170,6 +170,7 @@ class GameInstance(val path: Path, val name: String) {
     fun registerTickEvent() {
         instance.eventNode().listen<PlayerTickEvent> { e ->
             val playerData = e.player.data ?: return@listen
+            playerData.actionBar(e.player)
             if (uuidParents[e.player.uuid.toString()] == e.player.uuid.toString()) {
                 playerData.tick(e)
             }
@@ -323,7 +324,7 @@ class GameInstance(val path: Path, val name: String) {
 
 
         instance.eventNode().listen<PlayerDisconnectEvent> { e ->
-            val file = path.resolve("player-data.json5").toFile()
+            val file = path.resolve("block-data.json5").toFile()
             if (!file.exists()) {
                 file.createNewFile()
             }
@@ -382,7 +383,6 @@ class GameInstance(val path: Path, val name: String) {
                     data.researchTick()
                 }
             } catch (e: Exception) {
-                log("AAA")
                 log(e)
             }
         }, TaskSchedule.tick(400), TaskSchedule.tick(400))

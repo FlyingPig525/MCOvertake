@@ -1,9 +1,8 @@
 package io.github.flyingpig525.building
 
+import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
-import io.github.flyingpig525.building.Barrack.BarrackCompanion
 import io.github.flyingpig525.building.Building.Companion.building
-import io.github.flyingpig525.building.UndergroundTeleporter.UndergroundTeleporterCompanion
 import io.github.flyingpig525.data.player.PlayerData
 import io.github.flyingpig525.dsl.blockDisplay
 import kotlinx.serialization.Serializable
@@ -14,7 +13,6 @@ import net.bladehunt.kotstom.extension.adventure.asMini
 import net.bladehunt.kotstom.extension.adventure.noItalic
 import net.bladehunt.kotstom.extension.set
 import net.minestom.server.coordinate.Point
-import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.Player
 import net.minestom.server.entity.metadata.display.BlockDisplayMeta
 import net.minestom.server.instance.Instance
@@ -30,7 +28,7 @@ class RockMiner : Building {
     override var count: Int = 0
     override val resourceUse: Int = 4
 
-    override fun place(playerTarget: Point, instance: Instance, playerData: PlayerData) {
+    override fun place(playerTarget: Point, instance: Instance, data: PlayerData) {
         playerTarget.buildingPosition.repeatDirection { point, dir ->
             if (instance.getBlock(point).defaultState() == Block.DEEPSLATE) {
                 instance.setBlock(playerTarget.buildingPosition, block.building(identifier).withProperties(mapOf(
@@ -42,7 +40,7 @@ class RockMiner : Building {
             }
             false
         }
-        spawn(playerTarget.buildingPosition, instance, playerData.uuid.toUUID()!!)
+        spawn(playerTarget.buildingPosition, instance, data.uuid.toUUID()!!)
         count++
     }
 
@@ -59,7 +57,7 @@ class RockMiner : Building {
     }
 
     companion object RockMinerCompanion : Building.BuildingCompanion, DisplayEntityBlock, Validated {
-        override var menuSlot: Int = 8
+        override var menuSlot: Int = 0
         override val block: Block = Block.TRIPWIRE_HOOK
         override val identifier: String = "matter:rock_miner"
         override val playerRef: KProperty1<PlayerData, Building> = PlayerData::rockMiners
@@ -103,7 +101,9 @@ class RockMiner : Building {
         }
 
         init {
+            menuSlot = ++Building.currSlot
             Building.BuildingCompanion.registry += RockMinerCompanion
+            log("${this::class.simpleName} initialized...")
         }
 
     }

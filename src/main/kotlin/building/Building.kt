@@ -35,6 +35,7 @@ interface Building {
     }
 
     companion object {
+        var currSlot = 0
         const val ID_TAG = "building_identifier"
         fun blockIsBuilding(block: Block): Boolean {
             val tag = block.getTag(Tag.String(ID_TAG)) ?: return false

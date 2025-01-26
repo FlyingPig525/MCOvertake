@@ -28,8 +28,8 @@ object RockMinerItem : Actionable {
         val instance = event.instance
         val target = event.player.getTrueTarget(20) ?: return true
         val data = event.player.data ?: return true
-        if (!RockMiner.validate(instance, target))
-            if (!checkBlockAvailable(data, target, instance)) return true
+        if (!RockMiner.validate(instance, target)) return true
+        if (!checkBlockAvailable(data, target, instance)) return true
         if (data.organicMatter < data.rockMinerCost) return true
         data.organicMatter -= data.rockMinerCost
         data.rockMiners.place(target.buildingPosition, instance, data)

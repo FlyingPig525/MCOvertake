@@ -31,7 +31,7 @@ import kotlin.reflect.KProperty0
 @Serializable
 class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val block: Block, var playerDisplayName: String) {
     @Transient var gameInstance: GameInstance? = null
-    val playerConfig = PlayerConfig()
+    var playerConfig = PlayerConfig()
     var blocks: Int = 0
     val trainingCamps = TrainingCamp()
     val trainingCampCost: Int get() = genericBuildingCost(trainingCamps.count, 25)
@@ -50,7 +50,7 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
     val colonyCost: Int get() = claimCost * 10
     val raftCost: Int get() = (blocks.floorDiv(10000) * 500) + 500
     val undergroundTeleporters = UndergroundTeleporter()
-    val teleporterCost: Int get() = undergroundTeleporters.count * 1000 + 1000
+    val teleporterCost: Int get() = undergroundTeleporters.count * 750 + 750
     val basicResearchStations = BasicResearchGenerator()
     val basicResearchStationCost get() = genericBuildingCost(basicResearchStations.count, 100)
     val rockMiners = RockMiner()
@@ -127,7 +127,6 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
     @Transient var bulkWallQueueFirstPosJustReset = false
 
     fun tick(e: PlayerTickEvent) {
-        actionBar()
         if (wallUpgradeQueue.isNotEmpty() && wallUpgradeCooldown.isReady(Instant.now().toEpochMilli())) run {
             val (wallPos, targetLevel) = wallUpgradeQueue.first()
             val wall = e.instance.getBlock(wallPos)
@@ -177,15 +176,15 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
 
     }
 
-    fun actionBar() {
+    fun actionBar(player: Player) {
         var str = "".asMini()
         fun AAA() { str = str.append(" <reset><dark_gray>| ".asMini()) }
-        if (mechanicalParts != 0) {
+        if (matterCompressors.count > 0) {
             str = str.append("<white>$MECHANICAL_SYMBOL <bold>$mechanicalParts".asMini())
             AAA()
         }
         // for each intermediary resource run AAA() before appending it
-        sendPacket(ActionBarPacket(str.replaceText("| ", "".asMini())))
+        player.sendPacket(ActionBarPacket(str.replaceText("| ", "".asMini())))
     }
 
     private fun showBossBars(player: Player) {

@@ -77,7 +77,7 @@ sealed class ActionData(val playerData: PlayerData, val instance: Instance?, val
         player
     ) {
         var wallLevel: Int = 0
-        var building: KProperty0<Building>? = null
+        var building: Building? = null
     }
 
     class MatterBuildingTick(playerData: PlayerData) : ActionData(playerData, null, null) {

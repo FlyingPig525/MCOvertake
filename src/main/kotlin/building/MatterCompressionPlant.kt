@@ -41,7 +41,8 @@ class MatterCompressionPlant : Building {
     }
 
     override fun tick(data: PlayerData) {
-        if (data.organicMatter - 5 * count >= 0) {
+        if (!data.playerConfig.doIntermediary.value) return
+        if (data.organicMatter >= 5 * count) {
             data.organicMatter -= 5 * count
             data.mechanicalParts += count
         }
@@ -76,6 +77,7 @@ class MatterCompressionPlant : Building {
 
 
         init {
+            menuSlot = ++Building.currSlot
             Building.BuildingCompanion.registry += this
             log("${this::class.simpleName} initialized...")
         }

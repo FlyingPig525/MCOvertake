@@ -13,6 +13,7 @@ import io.github.flyingpig525.data.config.Config
 import io.github.flyingpig525.data.config.InstanceConfig
 import io.github.flyingpig525.data.config.getCommentString
 import io.github.flyingpig525.data.player.PlayerData
+import io.github.flyingpig525.data.player.config.PlayerConfig
 import io.github.flyingpig525.data.player.permission.Permission
 import io.github.flyingpig525.data.player.permission.PermissionManager
 import io.github.flyingpig525.item.*
@@ -74,7 +75,6 @@ import net.minestom.server.item.Material
 import net.minestom.server.tag.Tag
 import net.minestom.server.timer.TaskSchedule
 import net.minestom.server.utils.time.Cooldown
-import team.unnamed.creative.BuiltResourcePack
 import team.unnamed.creative.serialize.minecraft.MinecraftResourcePackReader
 import team.unnamed.creative.serialize.minecraft.MinecraftResourcePackWriter
 import team.unnamed.creative.server.ResourcePackServer
@@ -157,18 +157,16 @@ fun main() = runBlocking { try {
         log(e)
     }
 
-    var packServer: ResourcePackServer? = null
-    var builtResourcePack: BuiltResourcePack? = null
-    if (File(config.resourcePackPath).exists()) {
-        val resourcePack = MinecraftResourcePackReader.minecraft().readFromZipFile(
-            this::class.java.getResource("pack.zip")!!.toURI().toPath().toFile())
-        builtResourcePack = MinecraftResourcePackWriter.minecraft().build(resourcePack)
-        packServer = ResourcePackServer.server()
-            .address(config.serverAddress, config.packServerPort)
-            .pack(builtResourcePack)
-            .build()
-        log("Resource pack loaded...", MCOvertakeLogType.FILESYSTEM)
-    }
+
+    val resourcePack = MinecraftResourcePackReader.minecraft().readFromZipFile(
+        object {}.javaClass.getResource("pack.zip")!!.toURI().toPath().toFile()
+    )
+    val builtResourcePack = MinecraftResourcePackWriter.minecraft().build(resourcePack)
+    val packServer = ResourcePackServer.server()
+        .address(config.serverAddress, config.packServerPort)
+        .pack(builtResourcePack)
+        .build()
+    log("Resource pack loaded...", MCOvertakeLogType.FILESYSTEM)
 
     val permissionsFile = File(config.permissionFilePath)
     if (!permissionsFile.exists()) {
@@ -182,12 +180,6 @@ fun main() = runBlocking { try {
         }
         setChunkSupplier(::LightingChunk)
     }
-    RockMiner.spawn(Vec(0.0, 11.0, 0.0), lobbyInstance, UUID.randomUUID())
-    lobbyInstance.setBlock(Vec(0.0, 11.0, 0.0),  Block.TRIPWIRE_HOOK.withProperties(mapOf(
-        "attached" to "false",
-        "powered" to "true",
-        "facing" to "north"
-    )))
     log("Created lobby instance...", MCOvertakeLogType.FILESYSTEM)
     for (name in config.instanceNames) {
         instances[name] = GameInstance(Path.of("instances", name), name)
@@ -233,18 +225,15 @@ fun main() = runBlocking { try {
             permissionManager.addPermission(player, Permission("*"))
         }
         player.respawnPoint = Pos(8.0, 11.0, 8.0)
-
-        if (builtResourcePack != null) {
-            val info = ResourcePackInfo.resourcePackInfo()
-                .hash(builtResourcePack.hash())
-                .uri(URI("http://${config.serverAddress}:${config.packServerPort}/${builtResourcePack.hash()}.zip"))
-                .build()
-            player.sendResourcePacks(ResourcePackRequest.resourcePackRequest()
-                .packs(info)
-                .prompt("<green>This resource pack provides \"crucial\" visual changes that allow for a better and more <i>smooth</i> experience.".asMini())
-                .build()
-            )
-        }
+        val info = ResourcePackInfo.resourcePackInfo()
+            .hash(builtResourcePack.hash())
+            .uri(URI("http://${config.serverAddress}:${config.packServerPort}/${builtResourcePack.hash()}.zip"))
+            .build()
+        player.sendResourcePacks(ResourcePackRequest.resourcePackRequest()
+            .packs(info)
+            .prompt("<green>This resource pack provides \"crucial\" visual changes that allow for a better and more <i>smooth</i> experience.".asMini())
+            .build()
+        )
     }
 
     lobbyInstance.eventNode().listen<PlayerSpawnEvent> { e ->
@@ -491,7 +480,24 @@ fun main() = runBlocking { try {
             }
         }
     }
-    CommandManager.register(createInstanceCommand, lobbyCommand, tickCommand, deleteInstanceCommand, gcCommand, validateResearchCommand, coopCommand)
+    val refreshConfig = kommand {
+        name = "refreshConfig"
+
+        defaultExecutor {
+            val game = player.gameInstance
+            if (game == null) {
+                player.sendMessage("<red><bold>You must be in a game instance to run this command!".asMini())
+                return@defaultExecutor
+            }
+            val data = player.data
+            if (data == null /* || game.uuidParents[player.uuid.toString()] != player.uuid.toString() */) {
+                player.sendMessage("<red><bold>You must own a block to run this command!".asMini())
+                return@defaultExecutor
+            }
+            data.playerConfig = PlayerConfig()
+        }
+    }
+    CommandManager.register(createInstanceCommand, lobbyCommand, tickCommand, deleteInstanceCommand, gcCommand, validateResearchCommand, coopCommand, refreshConfig)
 
     // Save loop
     SchedulerManager.scheduleTask({
@@ -736,14 +742,14 @@ fun initItems() {
 }
 
 fun initBuildingCompanions() {
-    TrainingCamp.also { it.menuSlot = 0 }
-    Barrack.also { it.menuSlot = 1 }
-    MatterContainer.also { it.menuSlot = 2 }
-    MatterExtractor.also { it.menuSlot = 3 }
-    MatterCompressionPlant.also { it.menuSlot = 4 }
-    BasicResearchGenerator.also { it.menuSlot = 5 }
-    UndergroundTeleporter.also { it.menuSlot = 6 }
-    RockMiner.also { it.menuSlot = 7 }
+    TrainingCamp.TrainingCampCompanion
+    Barrack.BarrackCompanion
+    MatterContainer.MatterContainerCompanion
+    MatterExtractor.MatterExtractorCompanion
+    MatterCompressionPlant.MatterCompressionPlantCompanion
+    BasicResearchGenerator.BasicResearchGeneratorCompanion
+    UndergroundTeleporter.UndergroundTeleporterCompanion
+    RockMiner.RockMinerCompanion
 }
 
 fun initConsoleCommands() {

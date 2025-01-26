@@ -32,7 +32,7 @@ object UndergroundTeleporterItem : Actionable {
         val instance = event.instance
         val target = event.player.getTrueTarget(20) ?: return true
         val data = event.player.data ?: return true
-        if (!UndergroundTeleporter.validate(instance, target))
+        if (!UndergroundTeleporter.validate(instance, target)) return true
         if (!checkBlockAvailable(data, target, instance)) return true
         if (data.organicMatter < data.teleporterCost) return true
         data.organicMatter -= data.teleporterCost
