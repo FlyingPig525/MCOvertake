@@ -6,6 +6,7 @@ import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.data.player.PlayerData
 import io.github.flyingpig525.data.research.action.ActionData
 import io.github.flyingpig525.dsl.blockDisplay
+import io.github.flyingpig525.ksp.Item
 import io.github.flyingpig525.wall.*
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -41,14 +42,8 @@ import java.util.*
 import kotlin.math.max
 import kotlin.math.min
 
+@Item
 object UpgradeWallItem : Actionable {
-
-    init {
-        Actionable.registry += this
-        log("${this::class.simpleName} initialized...")
-
-    }
-
     override val identifier: String = "building:upgrade_wall"
     override val itemMaterial: Material = Material.IRON_AXE
 

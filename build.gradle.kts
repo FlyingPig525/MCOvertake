@@ -2,23 +2,11 @@ plugins {
     kotlin("jvm") version "2.0.0"
     id("com.gradleup.shadow") version "8.3.0"
     kotlin("plugin.serialization") version "2.0.0"
+    id("com.google.devtools.ksp") version "2.0.0-1.0.24"
 }
 
 group = "io.github.flyingpig525"
 version = "0.4"
-
-repositories {
-    mavenCentral()
-    repositories {
-        maven("https://repo.unnamed.team/repository/unnamed-public/")
-        mavenCentral()
-        maven("https://mvn.bladehunt.net/releases")
-        maven {
-            name = "devOS"
-            url = uri("https://mvn.devos.one/releases")
-        }
-    }
-}
 
 dependencies {
     // Kotlinx
@@ -41,6 +29,10 @@ dependencies {
 
     // Logging
     implementation("cz.lukynka:pretty-log:1.4")
+
+    // ksp
+    implementation(project(":ksp"))
+    ksp(project(":ksp"))
 }
 
 tasks.test {

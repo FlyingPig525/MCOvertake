@@ -6,6 +6,7 @@ import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.data
 import io.github.flyingpig525.data.block.Head.Companion.withHead
 import io.github.flyingpig525.instances
+import io.github.flyingpig525.ksp.Item
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.extension.adventure.asMini
@@ -18,13 +19,8 @@ import net.minestom.server.item.Material
 import net.minestom.server.tag.Tag
 import java.util.*
 
+@Item
 object TeleportBackItem : Actionable {
-    init {
-        Actionable.registry += this
-        log("${this::class.simpleName} initialized...")
-
-    }
-
     override val identifier: String = "underground:back"
     override val itemMaterial: Material = Material.PLAYER_HEAD
 

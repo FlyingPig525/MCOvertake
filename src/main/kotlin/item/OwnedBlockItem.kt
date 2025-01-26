@@ -4,6 +4,7 @@ import cz.lukynka.prettylog.log
 import io.github.flyingpig525.GameInstance
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.instances
+import io.github.flyingpig525.ksp.Item
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.extension.adventure.asMini
@@ -14,13 +15,8 @@ import net.minestom.server.item.Material
 import net.minestom.server.tag.Tag
 import java.util.*
 
+@Item
 object OwnedBlockItem : Actionable {
-
-    init {
-        Actionable.registry += this
-        log("${this::class.simpleName} initialized...")
-
-    }
 
     override val identifier: String = "block:owned"
     override val itemMaterial: Material = Material.LIME_DYE

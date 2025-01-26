@@ -4,6 +4,7 @@ import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.data.research.action.ActionData
+import io.github.flyingpig525.ksp.Item
 import net.bladehunt.kotstom.dsl.item.amount
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -23,15 +24,8 @@ import java.time.Duration
 import java.time.Instant
 import java.util.*
 
+@Item
 object WallItem : Actionable {
-
-    init {
-        Actionable.registry += this
-        Actionable.persistentRegistry += this
-        log("${this::class.simpleName} initialized...")
-
-    }
-
     override val identifier: String = "building:wall"
     override val itemMaterial: Material = Material.IRON_BARS
 

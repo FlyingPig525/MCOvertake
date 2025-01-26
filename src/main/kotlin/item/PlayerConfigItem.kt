@@ -7,6 +7,7 @@ import io.github.flyingpig525.data
 import io.github.flyingpig525.data.player.config.BlockConfig
 import io.github.flyingpig525.data.player.config.ConfigElement
 import io.github.flyingpig525.data.player.config.PlayerConfig
+import io.github.flyingpig525.ksp.Item
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.dsl.item.lore
@@ -22,11 +23,8 @@ import net.minestom.server.item.Material
 import net.minestom.server.tag.Tag
 import java.util.*
 
+@Item(persistent = true)
 object PlayerConfigItem : Actionable {
-    init {
-        Actionable.registry += this
-        Actionable.persistentRegistry += this
-    }
 
     override val identifier: String = "player:config"
     override val itemMaterial: Material = Material.FLOWER_BANNER_PATTERN

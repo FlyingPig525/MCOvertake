@@ -7,6 +7,7 @@ import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.building.Building
 import io.github.flyingpig525.data
 import io.github.flyingpig525.instances
+import io.github.flyingpig525.ksp.Item
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.extension.adventure.asMini
@@ -21,14 +22,8 @@ import net.minestom.server.item.Material
 import net.minestom.server.tag.Tag
 import java.util.*
 
+@Item(persistent = true)
 object SelectBuildingItem : Actionable {
-
-    init {
-        Actionable.registry += this
-        Actionable.persistentRegistry += this
-        log("${this::class.simpleName} initialized...")
-
-    }
 
     override val identifier: String = "item:select_building"
     override val itemMaterial: Material = Material.BRICK

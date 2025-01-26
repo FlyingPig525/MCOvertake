@@ -18,6 +18,7 @@ import io.github.flyingpig525.data.player.config.PlayerConfig
 import io.github.flyingpig525.data.player.permission.Permission
 import io.github.flyingpig525.data.player.permission.PermissionManager
 import io.github.flyingpig525.item.*
+import io.github.flyingpig525.ksp.initItems
 import io.github.flyingpig525.log.MCOvertakeLogType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -709,30 +710,6 @@ fun Player.removeBossBars() {
     for (bar in bars) {
         hideBossBar(bar)
     }
-}
-
-fun initItems() {
-    AttackItem
-    BarracksItem
-    ClaimItem
-    ColonyItem
-    MatterContainerItem
-    MatterExtractorItem
-    OwnedBlockItem
-    SelectBlockItem
-    SelectBuildingItem
-    TrainingCampItem
-    WallItem
-    UpgradeWallItem
-    BreakBuildingItem
-    ClaimWaterItem
-    MatterCompressorItem
-    UndergroundTeleporterItem
-    TeleportBackItem
-    ResearchUpgradeItem
-    PlayerConfigItem
-    BasicResearchGeneratorItem
-    RockMinerItem
 }
 
 fun initBuildingCompanions() {

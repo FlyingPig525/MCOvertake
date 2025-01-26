@@ -5,20 +5,15 @@ import io.github.flyingpig525.GameInstance
 import io.github.flyingpig525.building.TrainingCamp
 import io.github.flyingpig525.data
 import io.github.flyingpig525.data.player.PlayerData
+import io.github.flyingpig525.ksp.Item
 import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerUseItemEvent
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import java.util.*
 
+@Item
 object TrainingCampItem : Actionable {
-
-    init {
-        Actionable.registry += this
-        log("${this::class.simpleName} initialized...")
-
-    }
-
     override val identifier: String = "power:generator"
     override val itemMaterial: Material = TrainingCamp.getItem(1, 1).material()
 

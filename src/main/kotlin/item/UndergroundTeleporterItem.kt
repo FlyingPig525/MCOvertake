@@ -3,6 +3,7 @@ package io.github.flyingpig525.item
 import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
 import io.github.flyingpig525.building.UndergroundTeleporter
+import io.github.flyingpig525.ksp.Item
 import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerUseItemEvent
 import net.minestom.server.instance.block.Block
@@ -10,12 +11,8 @@ import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import java.util.*
 
+@Item
 object UndergroundTeleporterItem : Actionable {
-    init {
-        Actionable.registry += this
-        log("${this::class.simpleName} initialized...")
-    }
-
     override val identifier: String = "underground:teleport"
     override val itemMaterial: Material = Material.COPPER_GRATE
 

@@ -11,6 +11,7 @@ import io.github.flyingpig525.data.inventory.InventoryConditionArguments
 import io.github.flyingpig525.data.player.PlayerData
 import io.github.flyingpig525.data.player.PlayerData.Companion.toBlockList
 import io.github.flyingpig525.instances
+import io.github.flyingpig525.ksp.Item
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.dsl.item.lore
@@ -29,16 +30,11 @@ import net.minestom.server.tag.Tag
 import java.util.*
 import kotlin.enums.EnumEntries
 
-
+// man fuck this class
+// if it is annotated it causes a stack overflow crash in build
+// I CANT EVEN SEE WHAT THE PROBLEM IS BECAUSE IT CRASHES IN BUILD
+//@Item(persistent = true)
 object SelectBlockItem : Actionable {
-
-    init {
-        Actionable.registry += this
-        Actionable.persistentRegistry += this
-        log("${this::class.simpleName} initialized...")
-
-    }
-
     override val identifier: String = "item:select_block"
     override val itemMaterial: Material = Material.STRUCTURE_VOID
     val item = item(itemMaterial) {

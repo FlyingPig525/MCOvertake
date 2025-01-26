@@ -4,16 +4,15 @@ import io.github.flyingpig525.GameInstance
 import io.github.flyingpig525.building.BasicResearchGenerator
 import io.github.flyingpig525.data
 import io.github.flyingpig525.data.player.PlayerData
+import io.github.flyingpig525.ksp.Item
 import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerUseItemEvent
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import java.util.*
 
+@Item
 object BasicResearchGeneratorItem : Actionable {
-    init {
-        Actionable.registry += this
-    }
 
     override val identifier: String = "research:basic_research"
     override val itemMaterial: Material = Material.SCULK_SENSOR

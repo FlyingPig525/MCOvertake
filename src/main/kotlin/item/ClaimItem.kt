@@ -4,6 +4,7 @@ import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.data.research.action.ActionData
+import io.github.flyingpig525.ksp.Item
 import net.bladehunt.kotstom.dsl.item.amount
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -19,13 +20,8 @@ import net.minestom.server.tag.Tag
 import java.time.Instant
 import java.util.*
 
+@Item
 object ClaimItem : Actionable {
-
-    init {
-        Actionable.registry += this
-        log("${this::class.simpleName} initialized...")
-
-    }
 
     override val identifier: String = "block:claim"
     override val itemMaterial: Material = Material.WOODEN_HOE

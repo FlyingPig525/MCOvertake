@@ -7,6 +7,7 @@ import io.github.flyingpig525.building.*
 import io.github.flyingpig525.data.player.PlayerData
 import io.github.flyingpig525.data.player.PlayerData.Companion.getDataByPoint
 import io.github.flyingpig525.data.research.action.ActionData
+import io.github.flyingpig525.ksp.Item
 import io.github.flyingpig525.wall.getWallAttackCost
 import io.github.flyingpig525.wall.lastWall
 import io.github.flyingpig525.wall.wallLevel
@@ -26,12 +27,8 @@ import java.time.Duration
 import java.time.Instant
 import java.util.*
 
+@Item
 object AttackItem : Actionable {
-
-    init {
-        Actionable.registry += this
-        log("${this::class.simpleName} initialized...")
-    }
 
     override val identifier: String = "block:attack"
     override val itemMaterial: Material = Material.DIAMOND_SWORD

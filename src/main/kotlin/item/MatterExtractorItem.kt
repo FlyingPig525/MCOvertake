@@ -5,19 +5,15 @@ import io.github.flyingpig525.GameInstance
 import io.github.flyingpig525.building.MatterExtractor
 import io.github.flyingpig525.data
 import io.github.flyingpig525.data.player.PlayerData
+import io.github.flyingpig525.ksp.Item
 import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerUseItemEvent
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import java.util.*
 
+@Item
 object MatterExtractorItem : Actionable {
-
-    init {
-        Actionable.registry += this
-        log("${this::class.simpleName} initialized...")
-
-    }
     override val identifier: String = "matter:generator"
     override val itemMaterial: Material = MatterExtractor.getItem(1, 1).material()
 

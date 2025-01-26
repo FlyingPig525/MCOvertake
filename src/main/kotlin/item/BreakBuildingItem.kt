@@ -5,6 +5,7 @@ import io.github.flyingpig525.*
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.building.Building
 import io.github.flyingpig525.data.research.action.ActionData
+import io.github.flyingpig525.ksp.Item
 import io.github.flyingpig525.wall.blockIsWall
 import io.github.flyingpig525.wall.wallLevel
 import net.bladehunt.kotstom.dsl.item.amount
@@ -20,14 +21,8 @@ import net.minestom.server.item.Material
 import net.minestom.server.tag.Tag
 import java.util.*
 
+@Item(persistent = true)
 object BreakBuildingItem : Actionable {
-
-    init {
-        Actionable.registry += this
-        Actionable.persistentRegistry += this
-        log("${this::class.simpleName} initialized...")
-
-    }
 
     override val identifier: String = "building:destroy"
     override val itemMaterial: Material = Material.IRON_PICKAXE

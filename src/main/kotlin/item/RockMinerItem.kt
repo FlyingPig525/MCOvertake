@@ -3,6 +3,7 @@ package io.github.flyingpig525.item
 import io.github.flyingpig525.*
 import io.github.flyingpig525.building.RockMiner
 import io.github.flyingpig525.building.UndergroundTeleporter
+import io.github.flyingpig525.ksp.Item
 import net.bladehunt.kotstom.extension.set
 import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerUseItemEvent
@@ -10,10 +11,8 @@ import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import java.util.*
 
+@Item
 object RockMinerItem : Actionable {
-    init {
-        Actionable.registry += this
-    }
 
     override val identifier: String = "matter:rock_miner"
     override val itemMaterial: Material = Material.TRIPWIRE_HOOK
