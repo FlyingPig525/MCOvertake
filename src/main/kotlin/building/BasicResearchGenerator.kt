@@ -42,7 +42,7 @@ class BasicResearchGenerator : Building {
     }
 
     override fun tick(data: PlayerData) {
-        if (!data.playerConfig.doResearch.value) return
+        if (!data.blockConfig.doResearch.value) return
         if (data.power >= 2 * count && data.mechanicalParts >= 3 * count) {
             data.power -= 2 * count
             data.mechanicalParts -= 3 * count

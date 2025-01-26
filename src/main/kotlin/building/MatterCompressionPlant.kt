@@ -41,7 +41,7 @@ class MatterCompressionPlant : Building {
     }
 
     override fun tick(data: PlayerData) {
-        if (!data.playerConfig.doIntermediary.value) return
+        if (!data.blockConfig.doIntermediary.value) return
         if (data.organicMatter >= 5 * count) {
             data.organicMatter -= 5 * count
             data.mechanicalParts += count

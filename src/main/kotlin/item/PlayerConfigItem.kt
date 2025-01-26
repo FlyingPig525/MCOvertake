@@ -2,7 +2,11 @@ package io.github.flyingpig525.item
 
 import io.github.flyingpig525.GameInstance
 import io.github.flyingpig525.GameInstance.Companion.gameInstance
+import io.github.flyingpig525.config
 import io.github.flyingpig525.data
+import io.github.flyingpig525.data.player.config.BlockConfig
+import io.github.flyingpig525.data.player.config.ConfigElement
+import io.github.flyingpig525.data.player.config.PlayerConfig
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.dsl.item.lore
@@ -29,7 +33,7 @@ object PlayerConfigItem : Actionable {
 
     override fun getItem(uuid: UUID, instance: GameInstance): ItemStack {
         return item(itemMaterial) {
-            itemName = "Player Settings".asMini()
+            itemName = "Player Config".asMini()
             lore {
                 +"<dark_gray>Contains configurable settings to tweak".asMini().noItalic()
                 +"<dark_gray>the MCOvertake experience.".asMini().noItalic()
@@ -39,26 +43,82 @@ object PlayerConfigItem : Actionable {
     }
 
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
-        val data = event.player.data ?: return true
-
-        val inventory = Inventory(InventoryType.CHEST_5_ROW, "Player Settings")
+        val inventory = Inventory(InventoryType.CHEST_5_ROW, "Player Config")
         val black = item(Material.BLACK_STAINED_GLASS_PANE) { itemName = "".asMini() }
         for (i in 0..(8 + 9 * 4)) {
             inventory[i] = black
         }
-        for ((i, el) in data.playerConfig.map().entries.withIndex()) {
-            inventory[i*2] = el.value.get().iconWithValue.withTag(Tag.String("name"), el.key)
+
+        if (event.player.config == null) {
+            event.instance.gameInstance!!.playerConfigs[event.player.uuid.toString()] = PlayerConfig()
         }
+        val config = event.player.config!!
+
+        var i = 0
+        for (el in config.map()) {
+            val value = el.value.get(config)
+            if (value !is ConfigElement) continue
+            inventory[i*2] = value.iconWithValue.withTag(Tag.String("name"), el.key)
+            i++
+        }
+        if (event.instance.gameInstance!!.uuidParents[event.player.uuid.toString()] == event.player.uuid.toString()) {
+            inventory[4, 4] = item(Material.WHITE_STAINED_GLASS_PANE) {
+                itemName = "Block Config".asMini()
+                setTag(Tag.Boolean("block_config"), true)
+            }
+        }
+
         inventory.addInventoryCondition { player, slot, type, res ->
             res.isCancel = true
+            if (res.clickedItem.hasTag(Tag.Boolean("block_config"))) {
+                player.closeInventory()
+                blockConfig(event)
+                return@addInventoryCondition
+            }
             val name = res.clickedItem.getTag(Tag.String("name")) ?: return@addInventoryCondition
-            val ref = data.playerConfig.map()[name]?.get() ?: return@addInventoryCondition
+            val ref = config.map()[name]?.get(config) as ConfigElement? ?: return@addInventoryCondition
             ref.value = !ref.value
             player.openInventory!![slot] = ref.iconWithValue.withTag(Tag.String("name"), name)
         }
         event.player.openInventory(inventory)
-
         return true
+    }
+
+    fun blockConfig(event: PlayerUseItemEvent) {
+        val data = event.player.data ?: return
+
+        val inventory = Inventory(InventoryType.CHEST_5_ROW, "Block Config")
+        val black = item(Material.BLACK_STAINED_GLASS_PANE) { itemName = "".asMini() }
+        for (i in 0..(8 + 9 * 4)) {
+            inventory[i] = black
+        }
+
+        var i = 0
+        for (el in data.blockConfig.map()) {
+            val value = el.value.get(data.blockConfig)
+            if (value !is ConfigElement) continue
+            inventory[i*2] = value.iconWithValue.withTag(Tag.String("name"), el.key)
+            i++
+        }
+
+        inventory[4, 4] = item(Material.WHITE_STAINED_GLASS_PANE) {
+            itemName = "Player Config".asMini()
+            setTag(Tag.Boolean("player_config"), true)
+        }
+
+        inventory.addInventoryCondition { player, slot, type, res ->
+            res.isCancel = true
+            if (res.clickedItem.hasTag(Tag.Boolean("player_config"))) {
+                player.closeInventory()
+                onInteract(event)
+                return@addInventoryCondition
+            }
+            val name = res.clickedItem.getTag(Tag.String("name")) ?: return@addInventoryCondition
+            val ref = data.blockConfig.map()[name]?.get(data.blockConfig) as ConfigElement? ?: return@addInventoryCondition
+            ref.value = !ref.value
+            player.openInventory!![slot] = ref.iconWithValue.withTag(Tag.String("name"), name)
+        }
+        event.player.openInventory(inventory)
     }
 
     override fun setItemSlot(player: Player) {

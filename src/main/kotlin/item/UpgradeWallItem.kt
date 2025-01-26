@@ -3,6 +3,7 @@ package io.github.flyingpig525.item
 import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
+import io.github.flyingpig525.data.player.PlayerData
 import io.github.flyingpig525.data.research.action.ActionData
 import io.github.flyingpig525.dsl.blockDisplay
 import io.github.flyingpig525.wall.*
@@ -138,14 +139,13 @@ object UpgradeWallItem : Actionable {
         }
         val block = instance.getBlock(target).defaultState()
         if (!block.canUpgradeWall) return true
-        upgradeWall(block, target, event.player, instance)
+        upgradeWall(block, target, data, instance)
         return true
     }
 
-    fun upgradeWall(block: Block, position: Point, player: Player, instance: Instance): Boolean {
+    fun upgradeWall(block: Block, position: Point, data: PlayerData, instance: Instance): Boolean {
         val cost = getWallUpgradeCost(block) ?: return false
-        val data = player.data ?: return false
-        val actionData = ActionData.UpgradeWall(data, instance, player).apply {
+        val actionData = ActionData.UpgradeWall(data, instance).apply {
             this.cost = cost
             this.cooldown = Cooldown(Duration.ofSeconds(1))
         }.also { data.research.onUpgradeWall(it) }

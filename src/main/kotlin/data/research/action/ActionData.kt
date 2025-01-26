@@ -65,9 +65,9 @@ sealed class ActionData(val playerData: PlayerData, val instance: Instance?, val
         var targetData: PlayerData = PlayerData.NONE
     }
 
-    class UpgradeWall(playerData: PlayerData, instance: Instance, player: Player) : ActionData(
+    class UpgradeWall(playerData: PlayerData, instance: Instance) : ActionData(
         playerData, instance,
-        player
+        null
     ) {
         var cost: Int = 0
         var cooldown: Cooldown = Cooldown(Duration.ZERO)

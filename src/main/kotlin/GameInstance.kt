@@ -14,6 +14,7 @@ import io.github.flyingpig525.data.player.DataResolver
 import io.github.flyingpig525.data.player.PlayerData
 import io.github.flyingpig525.data.player.PlayerData.Companion.getDataByBlock
 import io.github.flyingpig525.data.player.PlayerData.Companion.toBlockSortedList
+import io.github.flyingpig525.data.player.config.PlayerConfig
 import io.github.flyingpig525.item.*
 import io.github.flyingpig525.log.MCOvertakeLogType
 import io.github.flyingpig525.wall.blockIsWall
@@ -38,6 +39,7 @@ import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.Entity
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
+import net.minestom.server.event.instance.InstanceTickEvent
 import net.minestom.server.event.player.*
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.InstanceContainer
@@ -59,7 +61,11 @@ import kotlin.io.path.deleteRecursively
 import kotlin.io.path.exists
 
 
-class GameInstance(val path: Path, val name: String) {
+class GameInstance(
+    val path: Path,
+    val name: String,
+    instanceConfig: InstanceConfig = parentInstanceConfig.copy(noiseSeed = (Long.MIN_VALUE..Long.MAX_VALUE).random())
+) {
     lateinit var instance: InstanceContainer
 
     var instanceConfig: InstanceConfig = run {
@@ -67,7 +73,7 @@ class GameInstance(val path: Path, val name: String) {
         if (file.exists()) {
             return@run json.decodeFromString(file.readText())
         } else {
-            return@run parentInstanceConfig.copy(noiseSeed = (Long.MIN_VALUE..Long.MAX_VALUE).random())
+            return@run instanceConfig
         }
     }
         private set
@@ -75,6 +81,11 @@ class GameInstance(val path: Path, val name: String) {
     val blockData: MutableMap<String, PlayerData> = Json.decodeFromString<MutableMap<String, PlayerData>>(
         if (path.resolve("block-data.json5").toFile().exists())
             path.resolve("block-data.json5").toFile().readText()
+        else "{}"
+    )
+    val playerConfigs: MutableMap<String, PlayerConfig> = Json.decodeFromString(
+        if (path.resolve("player-configs.json5").toFile().exists())
+            path.resolve("player-configs.json5").toFile().readText()
         else "{}"
     )
 
@@ -160,6 +171,11 @@ class GameInstance(val path: Path, val name: String) {
                 uuidFile.createNewFile()
             }
             uuidFile.writeText(Json.encodeToString(uuidParents))
+            val pCFile = path.resolve("player-configs.json5").toFile()
+            if (!pCFile.exists()) {
+                pCFile.createNewFile()
+            }
+            pCFile.writeText(Json.encodeToString(playerConfigs))
             instance.saveChunksToStorage()
             instance.saveInstance()
         } catch (e: Exception) {
@@ -167,13 +183,10 @@ class GameInstance(val path: Path, val name: String) {
         }
     }
 
-    fun registerTickEvent() {
+    fun registerTickEvents() {
         instance.eventNode().listen<PlayerTickEvent> { e ->
             val playerData = e.player.data ?: return@listen
             playerData.actionBar(e.player)
-            if (uuidParents[e.player.uuid.toString()] == e.player.uuid.toString()) {
-                playerData.tick(e)
-            }
             if (playerData.matterCompressors.count > 0 || playerData.mechanicalParts > 0 || playerData.research.basicResearch.count > 0) {
                 playerData.researchTickProgress.name("<white>Research Tick <gray>-<white> ${tick % 400uL}/400".asMini())
                 val perc = ((tick % 400uL).toFloat() / 400f).coerceIn(0f..1f)
@@ -267,6 +280,12 @@ class GameInstance(val path: Path, val name: String) {
                 e.player.sendPackets(targetParticles)
             } else {
                 e.player.inventory.idle()
+            }
+        }
+
+        instance.eventNode().listen<InstanceTickEvent> { e ->
+            for ((uuid, data) in blockData) {
+                data.tick(e)
             }
         }
     }
@@ -530,7 +549,7 @@ class GameInstance(val path: Path, val name: String) {
         player?.sendMessage("<green>Instance events registered".asMini())
         registerTasks()
         player?.sendMessage("<green>Instance tasks registered".asMini())
-        registerTickEvent()
+        registerTickEvents()
         player?.sendMessage("<green>Instance player tick handler registered".asMini())
     }
 

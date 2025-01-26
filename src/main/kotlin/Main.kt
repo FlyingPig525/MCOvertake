@@ -13,6 +13,7 @@ import io.github.flyingpig525.data.config.Config
 import io.github.flyingpig525.data.config.InstanceConfig
 import io.github.flyingpig525.data.config.getCommentString
 import io.github.flyingpig525.data.player.PlayerData
+import io.github.flyingpig525.data.player.config.BlockConfig
 import io.github.flyingpig525.data.player.config.PlayerConfig
 import io.github.flyingpig525.data.player.permission.Permission
 import io.github.flyingpig525.data.player.permission.PermissionManager
@@ -379,15 +380,7 @@ fun main() = runBlocking { try {
                         player.sendMessage("<red><bold>Instance \"$name\" already exists!".asMini())
                         return@executorAsync
                     }
-                    instances[name] = GameInstance(Path.of("instances", name), name).apply {
-                        totalInit(player)
-                        val instanceC = path.resolve("instance-config.json5").toFile()
-                        if (!instanceC.exists()) {
-                            instanceC.createNewFile()
-                        }
-                        instanceC.writeText(getCommentString(instanceConfig.copy(allowResearch = research)))
-                        updateConfig()
-                    }
+                    instances[name] = GameInstance(Path.of("instances", name), name, parentInstanceConfig.copy(noiseSeed = (Long.MIN_VALUE..Long.MAX_VALUE).random(), allowResearch = research))
                     config.instanceNames += name
                     configFile.writeText(getCommentString(config))
                     player.sendMessage("<green><bold>Created instance \"$name\" successfully!".asMini())
@@ -494,7 +487,7 @@ fun main() = runBlocking { try {
                 player.sendMessage("<red><bold>You must own a block to run this command!".asMini())
                 return@defaultExecutor
             }
-            data.playerConfig = PlayerConfig()
+            data.blockConfig = BlockConfig()
         }
     }
     CommandManager.register(createInstanceCommand, lobbyCommand, tickCommand, deleteInstanceCommand, gcCommand, validateResearchCommand, coopCommand, refreshConfig)
@@ -512,7 +505,7 @@ fun main() = runBlocking { try {
     instances.values.onEach { it.registerTasks() }
     log("Game loops scheduled...")
 
-    instances.values.onEach { it.registerTickEvent() }
+    instances.values.onEach { it.registerTickEvents() }
     log("Player loop started...")
 
 
@@ -704,6 +697,7 @@ val Cooldown.ticks: Int get() = (duration.toMillis() / 50).toInt()
 val Material.cooldownIdentifier: String get() = key().value()
 
 val Player.data: PlayerData? get() = instances.fromInstance(instance)?.dataResolver?.get(uuid.toString())
+val Player.config: PlayerConfig? get() = instance.gameInstance?.playerConfigs?.get(uuid.toString())
 
 fun InventoryClickEvent.cancel() {
     inventory[slot] = clickedItem

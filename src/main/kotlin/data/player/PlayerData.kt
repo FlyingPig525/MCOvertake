@@ -2,7 +2,7 @@ package io.github.flyingpig525.data.player
 
 import io.github.flyingpig525.*
 import io.github.flyingpig525.building.*
-import io.github.flyingpig525.data.player.config.PlayerConfig
+import io.github.flyingpig525.data.player.config.BlockConfig
 import io.github.flyingpig525.data.research.ResearchContainer
 import io.github.flyingpig525.item.*
 import io.github.flyingpig525.serialization.BlockSerializer
@@ -14,7 +14,7 @@ import net.bladehunt.kotstom.extension.adventure.asMini
 import net.kyori.adventure.bossbar.BossBar
 import net.minestom.server.coordinate.Point
 import net.minestom.server.entity.Player
-import net.minestom.server.event.player.PlayerTickEvent
+import net.minestom.server.event.instance.InstanceTickEvent
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.item.Material
@@ -31,7 +31,7 @@ import kotlin.reflect.KProperty0
 @Serializable
 class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val block: Block, var playerDisplayName: String) {
     @Transient var gameInstance: GameInstance? = null
-    var playerConfig = PlayerConfig()
+    var blockConfig = BlockConfig()
     var blocks: Int = 0
     val trainingCamps = TrainingCamp()
     val trainingCampCost: Int get() = genericBuildingCost(trainingCamps.count, 25)
@@ -126,7 +126,7 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
     @Transient var bulkWallQueueFirstPos: Point? = null
     @Transient var bulkWallQueueFirstPosJustReset = false
 
-    fun tick(e: PlayerTickEvent) {
+    fun tick(e: InstanceTickEvent) {
         if (wallUpgradeQueue.isNotEmpty() && wallUpgradeCooldown.isReady(Instant.now().toEpochMilli())) run {
             val (wallPos, targetLevel) = wallUpgradeQueue.first()
             val wall = e.instance.getBlock(wallPos)
@@ -136,7 +136,7 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
                 e.instance.getNearbyEntities(wallPos, 0.2).onEach { it.remove() }
                 return@run
             }
-            if (UpgradeWallItem.upgradeWall(wall, wallPos, e.player, e.instance) && currentLevel + 1 == targetLevel) {
+            if (UpgradeWallItem.upgradeWall(wall, wallPos, this, e.instance) && currentLevel + 1 == targetLevel) {
                 wallUpgradeQueue.removeFirst()
                 e.instance.getNearbyEntities(wallPos, 0.2).onEach { if (it.hasTag(Tag.Boolean("wallUpgrade"))) it.remove() }
             }
