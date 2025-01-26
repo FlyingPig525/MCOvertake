@@ -108,7 +108,7 @@ val coopCommand = kommand {
                 instance.outgoingCoopInvites[targetUUID.first]!! -= player.uuid to player.username
                 val data = player.data
                 instance.uuidParents[player.uuid.toString()] = targetUUID.first.toString()
-                instance.playerData.remove(player.uuid.toString())
+                instance.blockData.remove(player.uuid.toString())
                 if (data != null) {
                     instance.clearBlock(data.block)
                     player.removeBossBars()

@@ -84,7 +84,7 @@ object SelectBlockItem : Actionable {
                 val item = item(cBlock.material) {
                     itemName = "<gray>- <gold><bold>${cBlock.name.replace('_', ' ')} <reset><gray>-".asMini()
                     lore {
-                        if (cBlock.block !in instance.playerData.toBlockList()) {
+                        if (cBlock.block !in instance.blockData.toBlockList()) {
                             +"<gray>-| <green><bold><i>Click to Select<reset> <gray>|-".asMini().noItalic()
                         } else {
                             +"<gray>-| <red><bold><i>Block already in use<reset> <gray>|-".asMini().noItalic()
@@ -99,7 +99,7 @@ object SelectBlockItem : Actionable {
             res.isCancel = true
             val isOwnBlock = e.player.uuid.toString() == instance.uuidParents[e.player.uuid.toString()]
             if (res.clickedItem.material() == Material.AIR
-                || res.clickedItem.material().block() in instance.playerData.toBlockList()) return@addInventoryCondition
+                || res.clickedItem.material().block() in instance.blockData.toBlockList()) return@addInventoryCondition
             if (e.player.data != null && isOwnBlock) {
                 val data = e.player.data!!
                 instance.clearBlock(data.block)

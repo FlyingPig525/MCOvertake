@@ -72,7 +72,7 @@ class GameInstance(val path: Path, val name: String) {
     }
         private set
 
-    val playerData: MutableMap<String, PlayerData> = Json.decodeFromString<MutableMap<String, PlayerData>>(
+    val blockData: MutableMap<String, PlayerData> = Json.decodeFromString<MutableMap<String, PlayerData>>(
         if (path.resolve("block-data.json5").toFile().exists())
             path.resolve("block-data.json5").toFile().readText()
         else "{}"
@@ -133,7 +133,7 @@ class GameInstance(val path: Path, val name: String) {
 
     private fun processParents(): MutableMap<String, String> {
         val ret = mutableMapOf<String, String>()
-        playerData.keys.forEach {
+        blockData.keys.forEach {
             ret[it] = it
         }
         return ret
@@ -154,7 +154,7 @@ class GameInstance(val path: Path, val name: String) {
             if (!pdFile.exists()) {
                 pdFile.createNewFile()
             }
-            pdFile.writeText(Json.encodeToString(playerData))
+            pdFile.writeText(Json.encodeToString(blockData))
             val uuidFile = path.resolve("coop-uuids.json5").toFile()
             if (!uuidFile.exists()) {
                 uuidFile.createNewFile()
@@ -328,7 +328,7 @@ class GameInstance(val path: Path, val name: String) {
             if (!file.exists()) {
                 file.createNewFile()
             }
-            file.writeText(Json.encodeToString(playerData))
+            file.writeText(Json.encodeToString(blockData))
             instance.saveChunksToStorage()
         }
 
@@ -351,8 +351,8 @@ class GameInstance(val path: Path, val name: String) {
         // General player tick/extractor tick
         instance.scheduler().scheduleTask({
             try {
-                for (uuid in playerData.keys) {
-                    val data = playerData[uuid]!!
+                for (uuid in blockData.keys) {
+                    val data = blockData[uuid]!!
                     data.playerTick(instance)
                 }
             } catch (e: Exception) {
@@ -364,8 +364,8 @@ class GameInstance(val path: Path, val name: String) {
         // Camp tick
         instance.scheduler().scheduleTask({
             try {
-                for (uuid in playerData.keys) {
-                    val data = playerData[uuid]!!
+                for (uuid in blockData.keys) {
+                    val data = blockData[uuid]!!
                     data.powerTick()
                     data.updateBossBars()
                 }
@@ -378,8 +378,8 @@ class GameInstance(val path: Path, val name: String) {
         // Mechanical part tick
         instance.scheduler().scheduleTask({
             try {
-                for (uuid in playerData.keys) {
-                    val data = playerData[uuid]!!
+                for (uuid in blockData.keys) {
+                    val data = blockData[uuid]!!
                     data.researchTick()
                 }
             } catch (e: Exception) {
@@ -394,7 +394,7 @@ class GameInstance(val path: Path, val name: String) {
         // Every tick
         SchedulerManager.scheduleTask({
             kbar("<gradient:green:gold:$scoreboardTitleProgress><bold>MCOvertake - $SERVER_VERSION".asMini()) {
-                for ((i, player) in playerData.toBlockSortedList().withIndex()) {
+                for ((i, player) in blockData.toBlockSortedList().withIndex()) {
                     if (player.playerDisplayName == "") player.playerDisplayName =
                         instance.getPlayerByUuid(player.uuid.toUUID())?.username ?: continue
                     if (player.blocks == 0) continue
@@ -498,11 +498,11 @@ class GameInstance(val path: Path, val name: String) {
                                     playerBlock,
                                     Vec(x.toDouble(), 40.0, z.toDouble()),
                                     instance,
-                                    playerData.getDataByBlock(playerBlock)!!.uuid.toUUID()!!
+                                    blockData.getDataByBlock(playerBlock)!!.uuid.toUUID()!!
                                 )
                             }
                             onAllBuildingPositions(point) {
-                                val playerData = playerData.getDataByBlock(instance.getBlock(it.playerPosition))
+                                val playerData = blockData.getDataByBlock(instance.getBlock(it.playerPosition))
                                 for (building in displayBuildings) {
                                     if ((building as DisplayEntityBlock).checkShouldSpawn(it, instance)) {
                                         (building as DisplayEntityBlock).spawn(it, instance, playerData!!.uuid.toUUID()!!)
