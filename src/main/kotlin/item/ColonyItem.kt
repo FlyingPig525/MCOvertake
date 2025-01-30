@@ -43,7 +43,10 @@ object ColonyItem : Actionable {
             cost = data.colonyCost
             cooldown = Cooldown(Duration.ofSeconds(15))
         }.also { data.research.onPlaceColony(it) }
-        if (data.power - actionData.cost < 0) return true
+        if (data.power < actionData.cost) {
+            event.player.sendMessage("<red><bold>Not enough Power </bold>(${data.power}/${actionData.cost})".asMini())
+            return true
+        }
         val target = event.player.getTrueTarget(20)?.playerPosition ?: return true
         if (event.instance.getBlock(target) == Block.GRASS_BLOCK) {
             claimWithParticle(event.player, target, Block.GRASS_BLOCK, data.block, gameInstance.instance)

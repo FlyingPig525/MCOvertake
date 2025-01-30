@@ -30,6 +30,7 @@ object BarracksItem : Actionable {
             Barrack,
             PlayerData::barracks,
             PlayerData::organicMatter,
+            "Organic Matter",
             PlayerData::barracksCost
         )
     }

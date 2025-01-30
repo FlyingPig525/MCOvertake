@@ -60,7 +60,7 @@ class BasicResearchGenerator : Building {
 
         override fun getItem(cost: Int, count: Int): ItemStack {
             return item(Material.SCULK_SENSOR) {
-                itemName = "<${BasicResearch.color}>${BasicResearch.symbol} Basic Research Station <gray>-</gray><green> $MECHANICAL_SYMBOL $cost".asMini()
+                itemName = "<${BasicResearch.color}>${BasicResearch.symbol} Basic Research Station <gray>-</gray><white> $MECHANICAL_SYMBOL $cost".asMini()
                 lore {
                     +"<dark_gray>Employs scientists to aid development of new tech".asMini()
                     +"<dark_gray>using mechanical parts"

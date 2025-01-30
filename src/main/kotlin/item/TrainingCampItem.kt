@@ -29,6 +29,7 @@ object TrainingCampItem : Actionable {
             TrainingCamp,
             PlayerData::trainingCamps,
             PlayerData::organicMatter,
+            "Organic Matter",
             PlayerData::trainingCampCost
         )
     }

@@ -21,6 +21,8 @@ data class InstanceConfig(
     // The amount of time a co-op kicked is queued for in minutes
     // Can be lowered to make inviting the wrong people less punishing, but that is not recommended
     val coopKickWaitTime: Long = 60,
+    // Whether sky islands should be generated
+    val generateSkyIslands: Boolean = false
 ) {
     init {
         assert(noiseScale in 0.0..2.0) { "Noise scale must be within 0 and 2" }
@@ -39,7 +41,8 @@ data class InstanceConfig(
                     "// Can be any block, but it is recommended to keep it a block players cant be for visual purposes. Default: \"minecraft:bedrock\"",
             "// Whether to allow research upgrades or not",
             "// The amount of time a co-op kicked is queued for in minutes\n\t" +
-                    "// Can be lowered to make inviting the wrong people less punishing, but that is not recommended"
+                    "// Can be lowered to make inviting the wrong people less punishing, but that is not recommended. Default: 60",
+            "// Whether sky islands should be generated. Default: false"
         )
     }
 }

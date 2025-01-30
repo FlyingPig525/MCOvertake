@@ -91,6 +91,7 @@ fun <T : Building> basicBuildingPlacementInt(
     buildingCompanion: Building.BuildingCompanion,
     buildingRef: KProperty1<PlayerData, T>,
     currencyRef: KMutableProperty1<PlayerData, Int>,
+    currencyName: String,
     costRef: KProperty1<PlayerData, Int>
 ): Boolean {
     if (sneakCheck(event)) return true
@@ -101,7 +102,10 @@ fun <T : Building> basicBuildingPlacementInt(
     if (buildingCompanion.getResourceUse(playerData.disposableResourcesUsed) > playerData.maxDisposableResources) return true
     val cost = costRef.get(playerData)
     val currency = currencyRef.get(playerData)
-    if (currency < cost) return true
+    if (currency < cost) {
+        event.player.sendMessage("<red><bold>Not enough $currencyName </bold>(${currency}/${cost})".asMini())
+        return true
+    }
     currencyRef.set(playerData, currency - cost)
     val building = buildingRef.get(playerData)
     building.place(target, instance, playerData)
@@ -115,6 +119,7 @@ fun <T : Building> basicBuildingPlacementDouble(
     buildingCompanion: Building.BuildingCompanion,
     buildingRef: KProperty1<PlayerData, T>,
     currencyRef: KMutableProperty1<PlayerData, Double>,
+    currencyName: String,
     costRef: KProperty1<PlayerData, Int>
 ): Boolean {
     if (sneakCheck(event)) return true
@@ -122,10 +127,15 @@ fun <T : Building> basicBuildingPlacementDouble(
     val target = event.player.getTrueTarget(20) ?: return true
     val playerData = event.player.data ?: return true
     if (!checkBlockAvailable(playerData, target, instance)) return true
-    if (buildingCompanion.getResourceUse(playerData.disposableResourcesUsed) > playerData.maxDisposableResources) return true
+    if (buildingCompanion.getResourceUse(playerData.disposableResourcesUsed) > playerData.maxDisposableResources) {
+        return true
+    }
     val cost = costRef.get(playerData)
     val currency = currencyRef.get(playerData)
-    if (currency < cost) return true
+    if (currency < cost) {
+        event.player.sendMessage("<red><bold>Not enough $currencyName </bold>(${currency}/${cost})".asMini())
+        return true
+    }
     currencyRef.set(playerData, currency - cost)
     val building = buildingRef.get(playerData)
     building.place(target, instance, playerData)

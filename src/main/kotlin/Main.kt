@@ -46,9 +46,14 @@ import net.kyori.adventure.resource.ResourcePackRequest
 import net.kyori.adventure.text.Component
 import net.minestom.server.MinecraftServer
 import net.minestom.server.collision.ShapeImpl
+import net.minestom.server.command.CommandSender
 import net.minestom.server.command.builder.CommandExecutor
 import net.minestom.server.command.builder.arguments.ArgumentBoolean
 import net.minestom.server.command.builder.arguments.ArgumentString
+import net.minestom.server.command.builder.arguments.minecraft.ArgumentBlockState
+import net.minestom.server.command.builder.arguments.number.ArgumentInteger
+import net.minestom.server.command.builder.arguments.number.ArgumentLong
+import net.minestom.server.command.builder.arguments.relative.ArgumentRelativeVec3
 import net.minestom.server.command.builder.suggestion.SuggestionEntry
 import net.minestom.server.coordinate.Point
 import net.minestom.server.coordinate.Pos
@@ -61,6 +66,7 @@ import net.minestom.server.event.inventory.InventoryClickEvent
 import net.minestom.server.event.inventory.InventoryCloseEvent
 import net.minestom.server.event.inventory.InventoryOpenEvent
 import net.minestom.server.event.item.ItemDropEvent
+import net.minestom.server.event.item.PlayerBeginItemUseEvent
 import net.minestom.server.event.player.*
 import net.minestom.server.event.server.ServerListPingEvent
 import net.minestom.server.extras.MojangAuth
@@ -128,6 +134,7 @@ lateinit var lobbyInstance: InstanceContainer
 lateinit var permissionManager: PermissionManager private set
 
 fun main() = runBlocking { try {
+    System.setProperty("minestom.chunk-view-distance", "32")
     LoggerSettings.saveToFile = true
     LoggerSettings.saveDirectoryPath = "./logs/"
     LoggerSettings.logFileNameFormat = "yyyy-MM-dd-Hms"
@@ -135,7 +142,7 @@ fun main() = runBlocking { try {
     LoggerFileWriter.load()
     // Initialize the servers
     val minecraftServer = MinecraftServer.init()
-    MojangAuth.init()
+//    MojangAuth.init()
     MinecraftServer.setBrandName("MCOvertake")
     MinecraftServer.getExceptionManager().setExceptionHandler {
         log(it as Exception)
@@ -365,15 +372,21 @@ fun main() = runBlocking { try {
                 player.sendMessage("<red><bold>Missing required arguments!".asMini())
             }
         }
+        val nameArg = ArgumentString("name")
+        val researchArg = ArgumentBoolean("research")
+        val skyIslandsArg = ArgumentBoolean("sky_islands")
+        val mapSizeArg = ArgumentInteger("map_size").min(1).max(1000).setDefaultValue(300)
 
-        buildSyntax(ArgumentString("name"), ArgumentBoolean("research")) {
+        buildSyntax(nameArg, researchArg, skyIslandsArg, mapSizeArg) {
             condition {
                 permissionManager.hasPermission(player, Permission("instance.creation"))
             }
             onlyPlayers()
             executorAsync(Dispatchers.IO) {
-                val name = context.getRaw("name")
-                val research = context.get<Boolean>("research")
+                val name = context.get(nameArg)
+                val research = context.get(researchArg)
+                val skyIslands = context.get(skyIslandsArg)
+                val mapSize = context.get(mapSizeArg)
                 try {
                     player.sendMessage("<green>Attempting to create instance $name".asMini())
                     if (name == "") {
@@ -384,7 +397,17 @@ fun main() = runBlocking { try {
                         player.sendMessage("<red><bold>Instance \"$name\" already exists!".asMini())
                         return@executorAsync
                     }
-                    instances[name] = GameInstance(Path.of("instances", name), name, parentInstanceConfig.copy(noiseSeed = (Long.MIN_VALUE..Long.MAX_VALUE).random(), allowResearch = research))
+                    instances[name] = GameInstance(
+                        Path.of("instances", name),
+                        name,
+                        parentInstanceConfig.copy(
+                            noiseSeed = (Long.MIN_VALUE..Long.MAX_VALUE).random(),
+                            allowResearch = research,
+                            generateSkyIslands = skyIslands,
+                            mapSize = mapSize
+                        )).apply {
+                        totalInit(player)
+                    }
                     config.instanceNames += name
                     configFile.writeText(getCommentString(config))
                     player.sendMessage("<green><bold>Created instance \"$name\" successfully!".asMini())
@@ -494,7 +517,86 @@ fun main() = runBlocking { try {
             data.blockConfig = BlockConfig()
         }
     }
-    CommandManager.register(createInstanceCommand, lobbyCommand, tickCommand, deleteInstanceCommand, gcCommand, validateResearchCommand, coopCommand, refreshConfig)
+    val setTimeCommand = kommand {
+        name = "setTime"
+        val tick = ArgumentLong("tick")
+
+        buildSyntax {
+            condition {
+                permissionManager.hasPermission(player, Permission("instance.time"))
+            }
+            executor {  }
+        }
+
+        buildSyntax(tick) {
+            condition {
+                permissionManager.hasPermission(player, Permission("instance.time"))
+            }
+            executor {
+                val tick = context.get(tick)
+                player.instance.time = tick
+            }
+        }
+    }
+    val noOpCommand = kommand {
+        name = "removeOp"
+
+        defaultExecutor {
+            player.data?.research?.basicResearch?.upgradeByName("Test")?.level = 0
+        }
+    }
+    val setGrass = kommand {
+        name = "setGrass"
+
+        val loc = ArgumentRelativeVec3("pos")
+        buildSyntax(loc) {
+            executor {
+                val loc = context.get(loc).fromSender(sender)
+                player.instance.setBlock(loc.playerPosition, Block.GRASS_BLOCK)
+                player.instance.setBlock(loc.visiblePosition, Block.GRASS_BLOCK)
+            }
+        }
+    }
+    val setAllCommand = kommand {
+        name = "setAll"
+
+        val block = ArgumentBlockState("block")
+        buildSyntax(block) {
+            executorAsync {
+                println("called")
+                val block = context.get(block)
+                val instanceConfig = player.gameInstance!!.instanceConfig
+                val instance = player.instance
+                for (x in 0..instanceConfig.mapSize) {
+                    for (z in 0..instanceConfig.mapSize) {
+                        instance.loadChunk(Vec(x.toDouble(), z.toDouble())).thenRun {
+                            onAllBuildingPositions(Vec(x.toDouble(), 1.0, z.toDouble())) {
+                                val visible = instance.getBlock(it.visiblePosition).defaultState()
+                                if (visible != Block.WATER && visible != Block.AIR) {
+                                    instance.setBlock(it.visiblePosition, block)
+                                    instance.setBlock(it.playerPosition, block)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    CommandManager.register(
+        createInstanceCommand,
+        lobbyCommand,
+        tickCommand,
+        deleteInstanceCommand,
+        gcCommand,
+        validateResearchCommand,
+        coopCommand,
+        refreshConfig,
+        setTimeCommand,
+        noOpCommand,
+        setGrass,
+        setAllCommand
+    )
 
     // Save loop
     SchedulerManager.scheduleTask({
@@ -701,7 +803,13 @@ val Cooldown.ticks: Int get() = (duration.toMillis() / 50).toInt()
 val Material.cooldownIdentifier: String get() = key().value()
 
 val Player.data: PlayerData? get() = instances.fromInstance(instance)?.dataResolver?.get(uuid.toString())
-val Player.config: PlayerConfig? get() = instance.gameInstance?.playerConfigs?.get(uuid.toString())
+val Player.config: PlayerConfig? get() {
+    if (instance.gameInstance == null) return null
+    if (instance.gameInstance!!.playerConfigs[uuid.toString()] == null) {
+        instance.gameInstance!!.playerConfigs[uuid.toString()] = PlayerConfig()
+    }
+    return instance.gameInstance?.playerConfigs?.get(uuid.toString())
+}
 
 fun InventoryClickEvent.cancel() {
     inventory[slot] = clickedItem

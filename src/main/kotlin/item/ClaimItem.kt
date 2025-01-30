@@ -43,7 +43,10 @@ object ClaimItem : Actionable {
         if (!data.claimCooldown.isReady(Instant.now().toEpochMilli())) return true
         var claimData = ActionData.ClaimLand(data, event.instance, event.player)
         claimData = data.research.onClaimLand(claimData)
-        if (data.power - claimData.claimCost < 0) return true
+        if (data.power < claimData.claimCost) {
+            event.player.sendMessage("<red><bold>Not enough Power </bold>(${data.power}/${claimData.claimCost})".asMini())
+            return true
+        }
         val target = event.player.getTrueTarget(20)?.playerPosition ?: return true
         if (event.instance.getBlock(target) == Block.GRASS_BLOCK) {
             claimWithParticle(event.player, target, Block.GRASS_BLOCK, data.block, gameInstance.instance)

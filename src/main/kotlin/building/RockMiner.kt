@@ -65,7 +65,7 @@ class RockMiner : Building {
         override val playerRef: KProperty1<PlayerData, Building> = PlayerData::rockMiners
 
         override fun getItem(cost: Int, count: Int): ItemStack = item(Material.TRIPWIRE_HOOK) {
-            itemName = "<green>$MATTER_SYMBOL Rock Miner <gray>-</gray><green> $MATTER_SYMBOL $cost".asMini()
+            itemName = "<green>$MATTER_SYMBOL Rock Miner <gray>-</gray><white> $MECHANICAL_SYMBOL $cost".asMini()
             lore {
                 +"<dark_gray>Breaks down adjacent rock walls".asMini()
                 +"<dark_gray>to create organic matter".asMini()

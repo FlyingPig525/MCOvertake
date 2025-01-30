@@ -28,6 +28,7 @@ object MatterExtractorItem : Actionable {
             MatterExtractor,
             PlayerData::matterExtractors,
             PlayerData::organicMatter,
+            "Organic Matter",
             PlayerData::matterExtractorCost
         )
     }

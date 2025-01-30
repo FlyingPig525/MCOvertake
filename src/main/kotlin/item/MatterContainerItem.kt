@@ -28,6 +28,7 @@ object MatterContainerItem : Actionable {
             MatterContainer,
             PlayerData::matterContainers,
             PlayerData::organicMatter,
+            "Organic Matter",
             PlayerData::matterContainerCost
         )
     }

@@ -33,6 +33,7 @@ object BasicResearchGeneratorItem : Actionable {
             BasicResearchGenerator,
             PlayerData::basicResearchStations,
             PlayerData::mechanicalParts,
+            "Mechanical Parts",
             PlayerData::basicResearchStationCost
         )
     }

@@ -19,8 +19,7 @@ class AdjacentWallBonusPercentageDecrease : ResearchUpgrade() {
     override val name: String = "Wall Fucker Upper"
     override val cost: Long get() = 500L * level + 500L
 
-    override fun item(): ItemStack = item(Material.SCRAPE_POTTERY_SHERD) {
-        itemName = "<gold><bold>$name </bold><gray>-<aqua><bold> Level: $level/$maxLevel".asMini()
+    override fun item(): ItemStack = researchItem(Material.SCRAPE_POTTERY_SHERD, this) {
         lore {
             +"<dark_gray>Decreases the exponential wall attack cost percentage".asMini().noItalic()
             +"<dark_gray>given from adjacent walls when attacking players by 2%".asMini().noItalic()

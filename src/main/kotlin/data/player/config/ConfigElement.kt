@@ -9,13 +9,20 @@ import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 
 @Serializable
-data class ConfigElement(@Serializable(MaterialSerializer::class) val icon: Material, val name: String, var value: Boolean) {
+data class ConfigElement(
+    @Serializable(MaterialSerializer::class) val trueIcon: Material,
+    @Serializable(MaterialSerializer::class) val falseIcon: Material,
+    val name: String,
+    var value: Boolean,
+    val trueText: String = "TRUE",
+    val falseText: String = "FALSE"
+) {
     val iconWithValue: ItemStack
         get() {
         val color = if (value) "green" else "red"
         return getItem().withLore(
-            listOf("<$color><bold>${value.toString().uppercase()}".asMini())
+            listOf("<$color><bold>${if (value) trueText else falseText}".asMini())
         )
     }
-    fun getItem() = item(icon) { itemName = name.asMini() }
+    fun getItem() = item(if (value) trueIcon else falseIcon) { itemName = name.asMini() }
 }

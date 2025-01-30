@@ -3,12 +3,14 @@ package io.github.flyingpig525.item
 import io.github.flyingpig525.*
 import io.github.flyingpig525.building.RockMiner
 import io.github.flyingpig525.building.UndergroundTeleporter
+import io.github.flyingpig525.data.player.PlayerData
 import io.github.flyingpig525.ksp.Item
 import net.bladehunt.kotstom.extension.set
 import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerUseItemEvent
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
+import net.minestom.server.network.packet.server.ServerPacket.Play
 import java.util.*
 
 @Item
@@ -23,16 +25,14 @@ object RockMinerItem : Actionable {
     }
 
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
-        if (sneakCheck(event)) return true
-        val instance = event.instance
-        val target = event.player.getTrueTarget(20) ?: return true
-        val data = event.player.data ?: return true
-        if (!RockMiner.validate(instance, target)) return true
-        if (!checkBlockAvailable(data, target, instance)) return true
-        if (data.organicMatter < data.rockMinerCost) return true
-        data.organicMatter -= data.rockMinerCost
-        data.rockMiners.place(target.buildingPosition, instance, data)
-        return true
+        return basicBuildingPlacementInt(
+            event,
+            RockMiner,
+            PlayerData::rockMiners,
+            PlayerData::mechanicalParts,
+            "Mechanical Parts",
+            PlayerData::rockMinerCost
+        )
     }
 
     override fun setItemSlot(player: Player) {

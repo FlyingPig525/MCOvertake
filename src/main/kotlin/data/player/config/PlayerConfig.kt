@@ -10,6 +10,7 @@ class PlayerConfig {
     @JvmField
     val claimParticles = ConfigElement(
         Material.GRASS_BLOCK,
+        Material.DIRT,
         "Particles on Claim",
         true
     )

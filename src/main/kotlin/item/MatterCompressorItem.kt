@@ -28,6 +28,7 @@ object MatterCompressorItem : Actionable {
             MatterCompressionPlant,
             PlayerData::matterCompressors,
             PlayerData::organicMatter,
+            "Organic Matter",
             PlayerData::matterCompressorCost
         )
     }

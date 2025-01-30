@@ -17,14 +17,25 @@ class BlockConfig {
     @JvmField
     val doResearch = ConfigElement(
         Material.SCULK_SENSOR,
+        Material.SCULK_SENSOR,
         "Enable Research Creation",
         true
     )
     @JvmField
     val doIntermediary = ConfigElement(
         Material.ANVIL,
+        Material.BARRIER,
         "Enable Intermediary Resource Creation",
         true
+    )
+    @JvmField
+    val sunOrMoon = ConfigElement(
+        Material.PEARLESCENT_FROGLIGHT,
+        Material.SCULK,
+        "Use the Induced Glare Upgrade or the Suprise Attack Upgrade",
+        true,
+        "Induced Glare",
+        "Suprise Attack"
     )
     fun map(): Map<String, Field> = this::class.java.declaredFields.associateBy { it.name }
 

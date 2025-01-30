@@ -118,6 +118,8 @@ class GameInstance(
     // Invitee uuid to list of uuids who have sent them invites
     val incomingCoopInvites = mutableMapOf<UUID, MutableList<Pair<UUID, String>>>()
 
+    val removingPlayerBlock: MutableMap<UUID, Boolean> = mutableMapOf()
+
     init {
         if (!path.exists()) {
             path.createDirectories()
@@ -306,6 +308,7 @@ class GameInstance(
         }
 
         instance.eventNode().listen<PlayerUseItemEvent> { e ->
+            e.itemUseTime = 0
             val item = e.player.getItemInHand(e.hand)
             e.isCancelled = true
             for (actionable in Actionable.registry) {
@@ -329,11 +332,9 @@ class GameInstance(
             if (building != null && data != null) {
                 val ref = building.playerRef.get(data)
                 if (ref is Interactable) {
-                    callItemUse = ref.onInteract(e)
+                    ref.onInteract(e)
                 }
             }
-            if (callItemUse)
-                instance.eventNode().call(PlayerUseItemEvent(e.player, e.hand, item, 0))
         }
 //        log("Item use event registered")
 
@@ -445,6 +446,7 @@ class GameInstance(
                     data.sendCooldowns(e.player)
                 }
             }
+            e.player.config
         }
     }
 
@@ -489,9 +491,11 @@ class GameInstance(
                         if (y in 38..39) {
                             return@setAll if (y == 39) Block.WATER else Block.SAND
                         }
-                        if (y in 89..90) {
-                            val skyEval = ((skyNoise.evaluateNoise(x.toDouble(), z.toDouble()) + 1) / 2)
-                            return@setAll if (skyEval > 0.77) Block.GRASS_BLOCK else Block.AIR
+                        if (instanceConfig.generateSkyIslands) {
+                            if (y in 89..90) {
+                                val skyEval = ((skyNoise.evaluateNoise(x.toDouble(), z.toDouble()) + 1) / 2)
+                                return@setAll if (skyEval > 0.77) Block.GRASS_BLOCK else Block.AIR
+                            }
                         }
                     }
                     if (x in -1..instanceConfig.mapSize + 1 && z in -1..instanceConfig.mapSize + 1 && y < 40) {

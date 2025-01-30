@@ -22,10 +22,12 @@ class BasicResearch : ResearchCurrency {
     @Required override val upgrades: MutableList<ResearchUpgrade> = mutableListOf(
         AdjacentWallBonusPercentageIncrease(),
         AdjacentWallBonusPercentageDecrease(),
+        SupriseAttack(),
+        InducedGlare(),
         TestUpgrade(),
         T2(),
         TripleMatter(),
-        UpMax()
+        UpMax(),
     )
     var adjacentWallPercentageDecrease = 0.0
     var adjacentWallPercentageIncrease = 0.0

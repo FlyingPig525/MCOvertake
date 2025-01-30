@@ -41,15 +41,24 @@ object AttackItem : Actionable {
             val data = player.data ?: return ERROR_ITEM
             val targetData = getAttacking(player) ?: return ERROR_ITEM
             val targetName = targetData.playerDisplayName
+            val preAttackData = ActionData.AttackCostCalculation(data, instance.instance, player).apply {
+                wallLevel = buildingBlock.wallLevel
+                this.targetData = targetData
+            }.let { data.research.onPreAttack(it) }
             val attackCost = getAttackCost(
-                targetData,
+                preAttackData.targetData,
                 target.buildingPosition,
                 instance.instance,
-                buildingBlock.wallLevel,
+                preAttackData.wallLevel,
                 data.research.basicResearch.adjacentWallPercentageDecrease
             )
+            val postAttack = ActionData.Attack(data, instance.instance, player).apply {
+                attackCooldown = getAttackCooldown(preAttackData.targetData, preAttackData.wallLevel)
+                this.attackCost = attackCost
+                this.targetData = preAttackData.targetData
+            }.also { data.research.onPostAttack(it) }
 
-            itemName = "<red>$ATTACK_SYMBOL <bold>Attack $targetName</bold> <gray>- <red>$POWER_SYMBOL <bold>$attackCost".asMini().asComponent()
+            itemName = "<red>$ATTACK_SYMBOL <bold>Attack $targetName</bold> <gray>- <red>$POWER_SYMBOL <bold>${postAttack.attackCost}".asMini().asComponent()
         }
     }
 
@@ -119,7 +128,7 @@ object AttackItem : Actionable {
             this.targetData = preAttackData.targetData
         }.also { data.research.onPostAttack(it) }
         if (data.power < postAttack.attackCost) {
-            // TODO: ADD MESSAGE
+            event.player.sendMessage("<red><bold>Not enough Power </bold>(${data.power}/${postAttack.attackCost})".asMini())
             return true
         }
         val targetPlayer = instance.getPlayerByUuid(postAttack.targetData.uuid.toUUID())

@@ -46,7 +46,10 @@ object ClaimWaterItem : Actionable {
             cooldown = Cooldown(Duration.ofSeconds(20))
             cost = data.raftCost
         }.also { data.research.onPlaceRaft(it) }
-        if (data.organicMatter < actionData.cost) return true
+        if (data.organicMatter < actionData.cost) {
+            event.player.sendMessage("<red><bold>Not enough Organic Matter </bold>(${data.organicMatter}/${actionData.cost})".asMini())
+            return true
+        }
         // Claim logic
         event.instance.setBlock(target.playerPosition, data.block)
         event.instance.setBlock(target.withY(40.0), Block.LILY_PAD)

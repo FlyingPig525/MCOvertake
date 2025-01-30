@@ -14,6 +14,7 @@ import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.bladehunt.kotstom.extension.adventure.noItalic
 import net.bladehunt.kotstom.extension.set
+import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerUseItemEvent
@@ -24,6 +25,7 @@ import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import net.minestom.server.item.component.PotionContents
 import net.minestom.server.potion.PotionType
+import net.minestom.server.sound.SoundEvent
 import net.minestom.server.tag.Tag
 import java.util.*
 
@@ -31,7 +33,7 @@ import java.util.*
 object ResearchUpgradeItem : Actionable {
 
     override val identifier: String = "research:upgrades"
-    override val itemMaterial: Material = Material.POTION
+    override val itemMaterial: Material = Material.LINGERING_POTION
 
 
     override fun getItem(uuid: UUID, instance: GameInstance): ItemStack {
@@ -65,7 +67,6 @@ object ResearchUpgradeItem : Actionable {
     }
 
     private fun currencyInventory(e: PlayerUseItemEvent, currency: ResearchCurrency) {
-        e.instance.eventNode().removeChildren("purchase-upgrade-inv${e.player.uuid.mostSignificantBits}")
         val inventory = Inventory(
             InventoryType.CHEST_6_ROW,
             "<${currency.color}>${currency.symbol}</${currency.color}> - ${currency.count}".asMini()
@@ -88,9 +89,24 @@ object ResearchUpgradeItem : Actionable {
             val purchaseState = upgrade.onPurchase(res, currency, player)
             if (purchaseState !is ResearchUpgrade.PurchaseState.Success) {
                 e.player.sendMessage(purchaseState.toString().asMini())
+                e.player.playSound(
+                    Sound.sound(
+                        SoundEvent.ENTITY_VILLAGER_NO.key(),
+                        Sound.Source.PLAYER,
+                        1f,
+                        1f
+                    )
+                )
+                e.player.playSound(
+                    Sound.sound(
+                        SoundEvent.ITEM_SHIELD_BLOCK.key(),
+                        Sound.Source.PLAYER,
+                        1f,
+                        1f
+                    )
+                )
                 return@addInventoryCondition
             }
-            e.instance.eventNode().removeChildren("purchase-upgrade-inv${e.player.uuid.mostSignificantBits}")
             (player.openInventory!! as Inventory).apply {
                 val newItem = upgrade.item().withTag(Tag.String("name"), upgrade.name)
                 val lore = newItem.get(ItemComponent.LORE)!!.map {
@@ -102,6 +118,14 @@ object ResearchUpgradeItem : Actionable {
                 set(slot, newItem.withLore(lore))
                 title = "<${currency.color}>${currency.symbol}</${currency.color}> - ${currency.count}".asMini()
             }
+            e.player.playSound(
+                Sound.sound(
+                    SoundEvent.ENTITY_EXPERIENCE_ORB_PICKUP.key(),
+                    Sound.Source.PLAYER,
+                    1f,
+                    ((95..105).random() / 100f)
+                )
+            )
         }
         e.player.closeInventory()
         e.player.openInventory(inventory)

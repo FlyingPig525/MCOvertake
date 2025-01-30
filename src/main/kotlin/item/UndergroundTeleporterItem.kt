@@ -4,6 +4,7 @@ import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
 import io.github.flyingpig525.building.UndergroundTeleporter
 import io.github.flyingpig525.ksp.Item
+import net.bladehunt.kotstom.extension.adventure.asMini
 import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerUseItemEvent
 import net.minestom.server.instance.block.Block
@@ -31,7 +32,10 @@ object UndergroundTeleporterItem : Actionable {
         val data = event.player.data ?: return true
         if (!UndergroundTeleporter.validate(instance, target)) return true
         if (!checkBlockAvailable(data, target, instance)) return true
-        if (data.organicMatter < data.teleporterCost) return true
+        if (data.organicMatter < data.teleporterCost) {
+            event.player.sendMessage("<red><bold>Not enough Organic Matter </bold>(${data.organicMatter}/${data.teleporterCost})".asMini())
+            return true
+        }
         data.organicMatter -= data.teleporterCost
         data.undergroundTeleporters.place(target.buildingPosition, instance, data)
         return true

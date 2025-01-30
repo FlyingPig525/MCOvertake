@@ -3,9 +3,14 @@ package io.github.flyingpig525.data.research.upgrade
 import io.github.flyingpig525.data.research.action.ActionData.*
 import io.github.flyingpig525.data.research.currency.ResearchCurrency
 import kotlinx.serialization.Serializable
+import net.bladehunt.kotstom.dsl.item.ItemDsl
+import net.bladehunt.kotstom.dsl.item.item
+import net.bladehunt.kotstom.dsl.item.itemName
+import net.bladehunt.kotstom.extension.adventure.asMini
 import net.minestom.server.entity.Player
 import net.minestom.server.inventory.condition.InventoryConditionResult
 import net.minestom.server.item.ItemStack
+import net.minestom.server.item.Material
 
 @Serializable
 // TODO: MAKE COST USE A DIFFERENT CLASS THAT ALLOWS MULTI-CURRENCY COSTS
@@ -147,4 +152,9 @@ sealed class ResearchUpgrade {
             return data
         }
     }
+}
+
+fun researchItem(material: Material, upgrade: ResearchUpgrade, block: @ItemDsl (ItemStack.Builder.() -> Unit)) = item(material) {
+    itemName = "<gold><bold>${upgrade.name} </bold><gray>-<aqua><bold> Level: ${upgrade.level}/${upgrade.maxLevel}".asMini()
+    block()
 }
