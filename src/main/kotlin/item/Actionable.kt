@@ -2,6 +2,7 @@ package io.github.flyingpig525.item
 
 import io.github.flyingpig525.*
 import io.github.flyingpig525.building.Building
+import io.github.flyingpig525.building.Validated
 import io.github.flyingpig525.data.player.PlayerData
 import net.bladehunt.kotstom.dsl.item.ItemDsl
 import net.bladehunt.kotstom.dsl.item.item
@@ -99,6 +100,7 @@ fun <T : Building> basicBuildingPlacementInt(
     val target = event.player.getTrueTarget(20) ?: return true
     val playerData = event.player.data ?: return true
     if (!checkBlockAvailable(playerData, target, instance)) return true
+    if (buildingCompanion is Validated && !buildingCompanion.validate(event.instance, target.buildingPosition)) return true
     if (buildingCompanion.getResourceUse(playerData.disposableResourcesUsed) > playerData.maxDisposableResources) return true
     val cost = costRef.get(playerData)
     val currency = currencyRef.get(playerData)
@@ -127,6 +129,7 @@ fun <T : Building> basicBuildingPlacementDouble(
     val target = event.player.getTrueTarget(20) ?: return true
     val playerData = event.player.data ?: return true
     if (!checkBlockAvailable(playerData, target, instance)) return true
+    if (buildingCompanion is Validated && !buildingCompanion.validate(event.instance, target.buildingPosition)) return true
     if (buildingCompanion.getResourceUse(playerData.disposableResourcesUsed) > playerData.maxDisposableResources) {
         return true
     }
