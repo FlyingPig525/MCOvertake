@@ -264,6 +264,7 @@ fun main() = runBlocking { try {
         }
         e.player.isAllowFlying = true
         e.player.isFlying = true
+        e.player.removeBossBars()
     }
     lobbyInstance.eventNode().listen<PlayerSwapItemEvent> { it.isCancelled = true }
 //    lobbyInstance.eventNode().listen<InventoryPreClickEvent> { it.isCancelled = true }
