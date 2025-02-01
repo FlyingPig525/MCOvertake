@@ -142,7 +142,7 @@ fun main() = runBlocking { try {
     LoggerFileWriter.load()
     // Initialize the servers
     val minecraftServer = MinecraftServer.init()
-//    MojangAuth.init()
+    MojangAuth.init()
     MinecraftServer.setBrandName("MCOvertake")
     MinecraftServer.getExceptionManager().setExceptionHandler {
         log(it as Exception)
@@ -168,10 +168,8 @@ fun main() = runBlocking { try {
         log("Error when loading parent instance config", LogType.ERROR)
         log(e)
     }
-
-
-    val resourcePack = MinecraftResourcePackReader.minecraft().readFromZipFile(
-        object {}.javaClass.getResource("pack.zip")!!.toURI().toPath().toFile()
+    val resourcePack = MinecraftResourcePackReader.minecraft().readFromDirectory(
+        object {}.javaClass.getResource("pack")!!.toURI().toPath().toFile()
     )
     val builtResourcePack = MinecraftResourcePackWriter.minecraft().build(resourcePack)
     val packServer = ResourcePackServer.server()
@@ -192,6 +190,7 @@ fun main() = runBlocking { try {
         }
         setChunkSupplier(::LightingChunk)
     }
+    lobbyInstance.setBlock(Vec(5.0, 5.0, 5.0), Block.CAMPFIRE)
     log("Created lobby instance...", MCOvertakeLogType.FILESYSTEM)
     for (name in config.instanceNames) {
         instances[name] = GameInstance(Path.of("instances", name), name)
@@ -823,6 +822,17 @@ fun Player.removeBossBars() {
     }
 }
 
+fun Instance.anyOnline(vararg uuids: UUID): Boolean {
+    for (uuid in uuids) {
+        if (getPlayerByUuid(uuid) != null) return true
+    }
+    return false
+}
+
+fun Instance.anyOnline(vararg uuids: String): Boolean {
+    val a = uuids.map { it.toUUID()!! }.toTypedArray()
+    return anyOnline(*a)
+}
 fun initConsoleCommands() {
     ConfigCommand
     SaveCommand

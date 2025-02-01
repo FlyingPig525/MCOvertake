@@ -1,8 +1,8 @@
 package io.github.flyingpig525.item
 
-import cz.lukynka.prettylog.log
 import io.github.flyingpig525.GameInstance
-import io.github.flyingpig525.building.Barrack
+import io.github.flyingpig525.building.OilPatch
+import io.github.flyingpig525.building.OilPlant
 import io.github.flyingpig525.data
 import io.github.flyingpig525.data.player.PlayerData
 import io.github.flyingpig525.ksp.Item
@@ -13,29 +13,26 @@ import net.minestom.server.item.Material
 import java.util.*
 
 @Item
-object BarracksItem : Actionable {
-
-    override val identifier: String = "power:container"
-    override val itemMaterial: Material = Barrack.getItem(1, 1).material()
-
+object OilPlantItem : Actionable {
+    override val identifier: String = "oil:plant"
+    override val itemMaterial: Material = Material.CAMPFIRE
 
     override fun getItem(uuid: UUID, instance: GameInstance): ItemStack {
-        val data = instance.dataResolver[uuid.toString()] ?: return ERROR_ITEM
-        return Barrack.getItem(data)
+        val data = instance.dataResolver[uuid] ?: return ERROR_ITEM
+        return OilPlant.getItem(data)
     }
 
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
         return basicBuildingPlacementDouble(
             event,
-            Barrack,
+            OilPlant,
             PlayerData::organicMatter,
             "Organic Matter",
-            PlayerData::barracksCost
+            PlayerData::oilPlantCost
         )
     }
 
     override fun setItemSlot(player: Player) {
-        val data = player.data ?: return
-        data.barracks.select(player, data.barracksCost)
+        player.data?.oilPlants?.select(player, player.data!!.oilPlantCost)
     }
 }

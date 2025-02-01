@@ -27,7 +27,7 @@ import kotlin.reflect.KProperty1
 @Serializable
 class BasicResearchGenerator : Building {
     override var count: Int = 0
-    override val resourceUse: Int = 3
+    override val resourceUse: Int get() = 3 * count
 
     override fun place(playerTarget: Point, instance: Instance, playerData: PlayerData) {
         instance.setBlock(playerTarget.buildingPosition, block.building(identifier))

@@ -26,7 +26,6 @@ object MatterExtractorItem : Actionable {
         return basicBuildingPlacementDouble(
             event,
             MatterExtractor,
-            PlayerData::matterExtractors,
             PlayerData::organicMatter,
             "Organic Matter",
             PlayerData::matterExtractorCost

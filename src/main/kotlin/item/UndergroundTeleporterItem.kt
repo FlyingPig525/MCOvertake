@@ -3,6 +3,7 @@ package io.github.flyingpig525.item
 import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
 import io.github.flyingpig525.building.UndergroundTeleporter
+import io.github.flyingpig525.data.player.PlayerData
 import io.github.flyingpig525.ksp.Item
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.minestom.server.entity.Player
@@ -23,22 +24,13 @@ object UndergroundTeleporterItem : Actionable {
     }
 
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
-        if (event.player.isSneaking) {
-            SelectBuildingItem.onInteract(event)
-            return true
-        }
-        val instance = event.instance
-        val target = event.player.getTrueTarget(20) ?: return true
-        val data = event.player.data ?: return true
-        if (!UndergroundTeleporter.validate(instance, target)) return true
-        if (!checkBlockAvailable(data, target, instance)) return true
-        if (data.organicMatter < data.teleporterCost) {
-            event.player.sendMessage("<red><bold>Not enough Organic Matter </bold>(${data.organicMatter}/${data.teleporterCost})".asMini())
-            return true
-        }
-        data.organicMatter -= data.teleporterCost
-        data.undergroundTeleporters.place(target.buildingPosition, instance, data)
-        return true
+        return basicBuildingPlacementDouble(
+            event,
+            UndergroundTeleporter,
+            PlayerData::organicMatter,
+            "Organic Matter",
+            PlayerData::teleporterCost
+        )
     }
 
     override fun setItemSlot(player: Player) {

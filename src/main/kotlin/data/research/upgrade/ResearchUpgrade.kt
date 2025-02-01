@@ -6,9 +6,12 @@ import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.ItemDsl
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
+import net.bladehunt.kotstom.dsl.item.lore
 import net.bladehunt.kotstom.extension.adventure.asMini
+import net.bladehunt.kotstom.extension.adventure.noItalic
 import net.minestom.server.entity.Player
 import net.minestom.server.inventory.condition.InventoryConditionResult
+import net.minestom.server.item.ItemComponent
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 
@@ -154,7 +157,12 @@ sealed class ResearchUpgrade {
     }
 }
 
-fun researchItem(material: Material, upgrade: ResearchUpgrade, block: @ItemDsl (ItemStack.Builder.() -> Unit)) = item(material) {
-    itemName = "<gold><bold>${upgrade.name} </bold><gray>-<aqua><bold> Level: ${upgrade.level}/${upgrade.maxLevel}".asMini()
-    block()
+fun researchItem(material: Material, upgrade: ResearchUpgrade, block: @ItemDsl (ItemStack.Builder.() -> Unit)): ItemStack {
+    val item = item(material) {
+        itemName =
+            "<gold><bold>${upgrade.name} </bold><gray>-<aqua><bold> Level: ${upgrade.level}/${upgrade.maxLevel}".asMini()
+        block()
+    }
+    val itemLore = item.get(ItemComponent.LORE) ?: mutableListOf()
+    return item.withLore(itemLore.apply { add("<gold>Cost: ${upgrade.cost}".asMini().noItalic()) })
 }

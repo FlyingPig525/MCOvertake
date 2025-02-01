@@ -16,6 +16,11 @@ interface Building {
     val resourceUse: Int
     fun place(playerTarget: Point, instance: Instance, data: PlayerData)
 
+    /**
+     * @return Whether this building should be destroyed or not
+     */
+    fun onDestruction(point: Point, instance: Instance, data: PlayerData): Boolean = true
+
     fun select(player: Player, cost: Int)
     fun select(player: Player, data: PlayerData)
     fun tick(data: PlayerData) {}

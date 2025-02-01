@@ -27,7 +27,7 @@ import kotlin.reflect.KProperty1
 @Serializable
 class RockMiner : Building {
     override var count: Int = 0
-    override val resourceUse: Int = 4
+    override val resourceUse: Int get() = 4 * count
 
     override fun place(playerTarget: Point, instance: Instance, data: PlayerData) {
         playerTarget.buildingPosition.repeatDirection { point, dir ->
@@ -50,7 +50,7 @@ class RockMiner : Building {
     }
 
     override fun select(player: Player, data: PlayerData) {
-        select(player, data.rockMinerCost)
+        player.inventory[BUILDING_INVENTORY_SLOT] = getItem(data)
     }
 
     override fun tick(data: PlayerData) {

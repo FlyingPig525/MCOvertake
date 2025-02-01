@@ -26,7 +26,6 @@ object MatterCompressorItem : Actionable {
         return basicBuildingPlacementDouble(
             event,
             MatterCompressionPlant,
-            PlayerData::matterCompressors,
             PlayerData::organicMatter,
             "Organic Matter",
             PlayerData::matterCompressorCost

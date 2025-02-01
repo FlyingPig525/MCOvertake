@@ -26,7 +26,6 @@ object MatterContainerItem : Actionable {
         return basicBuildingPlacementDouble(
             event,
             MatterContainer,
-            PlayerData::matterContainers,
             PlayerData::organicMatter,
             "Organic Matter",
             PlayerData::matterContainerCost

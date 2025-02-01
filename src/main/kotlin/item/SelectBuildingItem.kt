@@ -90,7 +90,8 @@ object SelectBuildingItem : Actionable {
     fun updatePlayerItem(player: Player) {
         val data = player.data ?: return
         val identifier = player.inventory[4].getTag(Tag.String("identifier"))
-        val ref = data.getBuildingReferenceByIdentifier(identifier)?.get() ?: return
+        val building = Building.getBuildingByIdentifier(identifier)
+        val ref = building?.playerRef?.get(data) ?: return
         ref.select(player, data)
     }
 }

@@ -24,6 +24,7 @@ class BasicResearch : ResearchCurrency {
         AdjacentWallBonusPercentageDecrease(),
         SupriseAttack(),
         InducedGlare(),
+        OnlineAttacking(),
         TestUpgrade(),
         T2(),
         TripleMatter(),

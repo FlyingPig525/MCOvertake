@@ -15,7 +15,6 @@ import java.util.*
 
 @Item
 object RockMinerItem : Actionable {
-
     override val identifier: String = "matter:rock_miner"
     override val itemMaterial: Material = Material.TRIPWIRE_HOOK
 
@@ -28,7 +27,6 @@ object RockMinerItem : Actionable {
         return basicBuildingPlacementInt(
             event,
             RockMiner,
-            PlayerData::rockMiners,
             PlayerData::mechanicalParts,
             "Mechanical Parts",
             PlayerData::rockMinerCost

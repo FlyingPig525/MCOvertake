@@ -19,7 +19,6 @@ class SupriseAttack : ResearchUpgrade() {
         lore {
             +"<dark_gray>Reduces attack cost by 5% when attacking".asMini().noItalic()
             +"<dark_gray>under moonlight".asMini().noItalic()
-            +"<gold>Cost: $cost".asMini().noItalic()
         }
     }
 

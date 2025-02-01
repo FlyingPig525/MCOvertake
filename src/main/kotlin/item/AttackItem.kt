@@ -100,33 +100,34 @@ object AttackItem : Actionable {
 
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
         val instance = event.instance
-        val data = event.player.data ?: return true
-        if (!data.attackCooldown.isReady(Instant.now().toEpochMilli())) return true
+        val data_ = event.player.data ?: return true
+        if (!data_.attackCooldown.isReady(Instant.now().toEpochMilli())) return true
         val target = event.player.getTrueTarget(20) ?: return true
         val buildingPoint = target.buildingPosition
         val playerBlock = instance.getBlock(target.playerPosition)
         val waterBlock = instance.getBlock(target.visiblePosition)
         val buildingBlock = instance.getBlock(buildingPoint)
-        if (playerBlock == Block.GRASS_BLOCK || playerBlock == Block.SAND || playerBlock == data.block) {
+        if (playerBlock == Block.GRASS_BLOCK || playerBlock == Block.SAND || playerBlock == data_.block) {
             return true
         }
         val _targetData = getAttacking(event.player) ?: return true
-        val preAttackData = ActionData.AttackCostCalculation(data, instance, event.player).apply {
+        val preAttackData = ActionData.AttackCostCalculation(data_, instance, event.player).apply {
             wallLevel = buildingBlock.wallLevel
             targetData = _targetData
-        }.let { data.research.onPreAttack(it) }
+        }.let { data_.research.onPreAttack(it) }
         val attackCost = getAttackCost(
             preAttackData.targetData,
             target.buildingPosition,
             instance,
             preAttackData.wallLevel,
-            data.research.basicResearch.adjacentWallPercentageDecrease
+            data_.research.basicResearch.adjacentWallPercentageDecrease
         )
-        val postAttack = ActionData.Attack(data, instance, event.player).apply {
+        val postAttack = ActionData.Attack(data_, instance, event.player).apply {
             attackCooldown = getAttackCooldown(preAttackData.targetData, preAttackData.wallLevel)
             this.attackCost = attackCost
             this.targetData = preAttackData.targetData
-        }.also { data.research.onPostAttack(it) }
+        }.also { data_.research.onPostAttack(it) }
+        val data = postAttack.playerData
         if (data.power < postAttack.attackCost) {
             event.player.sendMessage("<red><bold>Not enough Power </bold>(${data.power}/${postAttack.attackCost})".asMini())
             return true
@@ -143,91 +144,22 @@ object AttackItem : Actionable {
                 instance.setBlock(buildingPoint, Block.AIR)
                 false
             }
-            Barrack.block -> run {
-                targetData.barracks.count--
-                if (waterBlock.defaultState() != Block.WATER) {
-                    data.barracks.count++
-                    return@run true
-                }
-                attackRaft(targetData, target, instance)
-                if (targetPlayer != null) {
-                    SelectBuildingItem.updatePlayerItem(targetPlayer)
-                }
-                false
-            }
-            MatterContainer.block -> run {
-                targetData.matterContainers.count--
-                if (waterBlock.defaultState() != Block.WATER) {
-                    data.matterContainers.count++
-                    return@run true
-                }
-                attackRaft(targetData, target, instance)
-                if (targetPlayer != null) {
-                    SelectBuildingItem.updatePlayerItem(targetPlayer)
-                }
-                false
-            }
-            MatterExtractor.block -> run {
-                targetData.matterExtractors.count--
-                if (waterBlock.defaultState() != Block.WATER) {
-                    data.matterExtractors.count++
-                    return@run true
-                }
-                attackRaft(targetData, target, instance)
-                if (targetPlayer != null) {
-                    SelectBuildingItem.updatePlayerItem(targetPlayer)
-                }
-                false
-            }
-            TrainingCamp.block -> run {
-                targetData.trainingCamps.count--
-                if (waterBlock.defaultState() != Block.WATER) {
-                    data.trainingCamps.count++
-                    return@run true
-                }
-                attackRaft(targetData, target, instance)
-                if (targetPlayer != null) {
-                    SelectBuildingItem.updatePlayerItem(targetPlayer)
-                }
-                false
-            }
-            MatterCompressionPlant.block -> run {
-                targetData.matterCompressors.count--
-                if (waterBlock.defaultState() != Block.WATER) {
-                    data.matterCompressors.count++
-                    return@run true
-                }
-                attackRaft(targetData, target, instance)
-                if (targetPlayer != null) {
-                    SelectBuildingItem.updatePlayerItem(targetPlayer)
-                }
-                false
-            }
-            UndergroundTeleporter.block -> run {
-                targetData.undergroundTeleporters.count--
-                if (waterBlock.defaultState() != Block.WATER) {
-                    data.undergroundTeleporters.count++
-                    return@run true
-                }
-                attackRaft(targetData, target, instance)
-                if (targetPlayer != null) {
-                    SelectBuildingItem.updatePlayerItem(targetPlayer)
-                }
-                false
-            }
-            BasicResearchGenerator.block -> run {
-                targetData.basicResearchStations.count--
-                if (waterBlock.defaultState() != Block.WATER) {
-                    data.basicResearchStations.count++
-                    return@run true
-                }
-                attackRaft(targetData, target, instance)
-                if (targetPlayer != null) {
-                    SelectBuildingItem.updatePlayerItem(targetPlayer)
-                }
-                false
-            }
             else -> run {
+                if (Building.blockIsBuilding(buildingBlock)) {
+                    val building = Building.getBuildingByBlock(buildingBlock)!!
+                    val buildingRef = building.playerRef.get(data)
+                    val targetRef = building.playerRef.get(targetData)
+                    targetRef.count--
+                    if (waterBlock.defaultState() != Block.WATER) {
+                        buildingRef.count++
+                        return@run true
+                    }
+                    attackRaft(targetData, target, instance)
+                    if (targetPlayer != null) {
+                        SelectBuildingItem.updatePlayerItem(targetPlayer)
+                    }
+                    return@run false
+                }
                 // TODO: ADD PARTICLES
                 val wallLevel = buildingBlock.wallLevel
                 if (wallLevel == 0) return@run true

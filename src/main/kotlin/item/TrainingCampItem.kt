@@ -27,7 +27,6 @@ object TrainingCampItem : Actionable {
         return basicBuildingPlacementDouble(
             event,
             TrainingCamp,
-            PlayerData::trainingCamps,
             PlayerData::organicMatter,
             "Organic Matter",
             PlayerData::trainingCampCost

@@ -395,7 +395,7 @@ class GameInstance(
             }
         }, TaskSchedule.tick(70), TaskSchedule.tick(70))
 
-        // Mechanical part tick
+        // Research tick
         instance.scheduler().scheduleTask({
             try {
                 for (uuid in blockData.keys) {

@@ -2,6 +2,7 @@ package io.github.flyingpig525.data.player
 
 import io.github.flyingpig525.*
 import io.github.flyingpig525.building.*
+import io.github.flyingpig525.building.OilPatch
 import io.github.flyingpig525.data.player.config.BlockConfig
 import io.github.flyingpig525.data.research.ResearchContainer
 import io.github.flyingpig525.item.*
@@ -55,6 +56,12 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
     val basicResearchStationCost get() = genericBuildingCost(basicResearchStations.count, 100)
     val rockMiners = RockMiner()
     val rockMinerCost get() = 0
+    val oilPatches = OilPatch()
+    val oilPatchCost get() = 0
+    val oilExtractors = OilExtractor()
+    val oilExtractorCost get() = 0
+    val oilPlants = OilPlant()
+    val oilPlantCost get() = 0
     @Transient var claimCooldown = Cooldown(Duration.ofMillis(maxClaimCooldown))
     @Transient var colonyCooldown = Cooldown(Duration.ofSeconds(if (blocks > 0) 15 else 0))
     @Transient var attackCooldown = Cooldown(Duration.ofSeconds(10))
@@ -160,6 +167,7 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
     fun researchTick() {
         matterCompressors.tick(this)
         basicResearchStations.tick(this)
+        oilPlants.tick(this)
     }
 
     fun updateBossBars(player: Player? = null) {
@@ -179,7 +187,7 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
     fun actionBar(player: Player) {
         var str = "".asMini()
         fun AAA() { str = str.append(" <reset><dark_gray>| ".asMini()) }
-        if (matterCompressors.count > 0) {
+        if (mechanicalParts > 0) {
             str = str.append("<white>$MECHANICAL_SYMBOL <bold>$mechanicalParts".asMini())
             AAA()
         }

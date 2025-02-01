@@ -87,10 +87,9 @@ inline fun gameItem(material: Material, identifier: String, fn: @ItemDsl ItemSta
     setTag(Tag.String("identifier"), identifier)
 }
 
-fun <T : Building> basicBuildingPlacementInt(
+fun basicBuildingPlacementInt(
     event: PlayerUseItemEvent,
     buildingCompanion: Building.BuildingCompanion,
-    buildingRef: KProperty1<PlayerData, T>,
     currencyRef: KMutableProperty1<PlayerData, Int>,
     currencyName: String,
     costRef: KProperty1<PlayerData, Int>
@@ -100,7 +99,10 @@ fun <T : Building> basicBuildingPlacementInt(
     val target = event.player.getTrueTarget(20) ?: return true
     val playerData = event.player.data ?: return true
     if (!checkBlockAvailable(playerData, target, instance)) return true
-    if (buildingCompanion is Validated && !buildingCompanion.validate(event.instance, target.buildingPosition)) return true
+    if (buildingCompanion is Validated && !buildingCompanion.validate(event.instance, target.buildingPosition)) {
+        event.player.sendMessage("<red><bold>Invalid building position".asMini())
+        return true
+    }
     if (buildingCompanion.getResourceUse(playerData.disposableResourcesUsed) > playerData.maxDisposableResources) return true
     val cost = costRef.get(playerData)
     val currency = currencyRef.get(playerData)
@@ -109,17 +111,16 @@ fun <T : Building> basicBuildingPlacementInt(
         return true
     }
     currencyRef.set(playerData, currency - cost)
-    val building = buildingRef.get(playerData)
+    val building = buildingCompanion.playerRef.get(playerData)
     building.place(target, instance, playerData)
     building.select(event.player, costRef.get(playerData))
     playerData.updateBossBars()
     return true
 }
 
-fun <T : Building> basicBuildingPlacementDouble(
+fun basicBuildingPlacementDouble(
     event: PlayerUseItemEvent,
     buildingCompanion: Building.BuildingCompanion,
-    buildingRef: KProperty1<PlayerData, T>,
     currencyRef: KMutableProperty1<PlayerData, Double>,
     currencyName: String,
     costRef: KProperty1<PlayerData, Int>
@@ -129,7 +130,10 @@ fun <T : Building> basicBuildingPlacementDouble(
     val target = event.player.getTrueTarget(20) ?: return true
     val playerData = event.player.data ?: return true
     if (!checkBlockAvailable(playerData, target, instance)) return true
-    if (buildingCompanion is Validated && !buildingCompanion.validate(event.instance, target.buildingPosition)) return true
+    if (buildingCompanion is Validated && !buildingCompanion.validate(event.instance, target.buildingPosition))  {
+        event.player.sendMessage("<red><bold>Invalid building position".asMini())
+        return true
+    }
     if (buildingCompanion.getResourceUse(playerData.disposableResourcesUsed) > playerData.maxDisposableResources) {
         return true
     }
@@ -140,7 +144,7 @@ fun <T : Building> basicBuildingPlacementDouble(
         return true
     }
     currencyRef.set(playerData, currency - cost)
-    val building = buildingRef.get(playerData)
+    val building = buildingCompanion.playerRef.get(playerData)
     building.place(target, instance, playerData)
     building.select(event.player, costRef.get(playerData))
     playerData.updateBossBars()

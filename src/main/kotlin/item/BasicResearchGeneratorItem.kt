@@ -31,7 +31,6 @@ object BasicResearchGeneratorItem : Actionable {
         return basicBuildingPlacementInt(
             event,
             BasicResearchGenerator,
-            PlayerData::basicResearchStations,
             PlayerData::mechanicalParts,
             "Mechanical Parts",
             PlayerData::basicResearchStationCost

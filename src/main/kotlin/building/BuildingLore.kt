@@ -5,15 +5,15 @@ import net.bladehunt.kotstom.dsl.item.ItemLore
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.bladehunt.kotstom.extension.adventure.noItalic
 
-val ItemLore.power: String
+val power: String
     get() = "<red>$POWER_SYMBOL <bold>Power</bold><gray>"
-val ItemLore.organicMatter: String
+val organicMatter: String
     get() = "<green>$MATTER_SYMBOL <bold>Organic Matter</bold><gray>"
-val ItemLore.attack: String
+val attack: String
     get() = "<red>$ATTACK_SYMBOL <bold>Attack</bold><gray>"
-val ItemLore.disposableResources: String
+val disposableResources: String
     get() = "<aqua>$RESOURCE_SYMBOL <bold>Disposable Resource(s)</bold><gray>"
-val ItemLore.mechanicalPart: String
+val mechanicalPart: String
     get() = "<white>$MECHANICAL_SYMBOL <bold>Mechanical Part(s)</bold><gray>"
 
 const val oilColor: String = "<#22252A>"
