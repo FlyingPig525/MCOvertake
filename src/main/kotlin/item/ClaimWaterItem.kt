@@ -1,6 +1,5 @@
 package io.github.flyingpig525.item
 
-import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.data.research.action.ActionData
@@ -92,7 +91,7 @@ object ClaimWaterItem : Actionable {
     }
 
     fun destroyPlayerRaft(point: Point, instance: Instance) =
-        instance.getNearbyEntities(point, 0.2).forEach {
+        instance.getNearbyEntities(point.withY(40.0), 0.2).forEach {
             if (it.hasTag(Tag.String("player_raft"))) it.remove()
         }
 

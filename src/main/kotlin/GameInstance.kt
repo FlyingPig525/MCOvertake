@@ -467,7 +467,7 @@ class GameInstance(
             )
         )
             .octavate(2, 0.1, 1.0, FractalFunction.TURBULENCE, true)
-            .scale(parentInstanceConfig.noiseScale + 0.015)
+            .scale(instanceConfig.noiseScale + 0.015)
             .clamp(-1.0, 1.0)
             .build()
         instance = InstanceManager.createInstanceContainer().apply {
@@ -510,7 +510,6 @@ class GameInstance(
         // Player only exists on first creation through commands
         if (player == null) {
             launch {
-                println("launched")
                 val displayBuildings = Building.BuildingCompanion.registry.filter { it is DisplayEntityBlock }
                 for (x in 0..instanceConfig.mapSize) {
                     for (z in 0..instanceConfig.mapSize) {

@@ -1,6 +1,5 @@
 package io.github.flyingpig525.item
 
-import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.data.player.PlayerData
@@ -83,7 +82,7 @@ object UpgradeWallItem : Actionable {
                 data.bulkWallQueueFirstPosJustReset = true
                 for (x in lowX..maxX) for (z in lowZ..maxZ) {
                     val pos = target.withX(x.toDouble()).withZ(z.toDouble())
-                    if (instance.getBlock(pos).wallLevel != 0) {
+                    if (instance.getBlock(pos).wallLevel != 0 && instance.getBlock(pos.playerPosition) == data.block) {
                         data.wallUpgradeQueue += pos to data.targetWallLevel
                         blockDisplay {
                             this.block = Block.LIME_STAINED_GLASS
@@ -254,8 +253,13 @@ object UpgradeWallItem : Actionable {
                 }
             }
             event.player.openInventory(selectionInventory)
+        } else if (target.buildingPosition in data.wallUpgradeQueue.map { it.first }) {
+            data.wallUpgradeQueue.removeIf { it.first == target.buildingPosition }
+            event.instance.getNearbyEntities(target.buildingPosition, 0.2).onEach {
+                if (it.hasTag(Tag.Boolean("wallUpgrade"))) it.remove()
+            }
         } else if (data.targetWallLevel != 0) {
-            data.wallUpgradeQueue += target.buildingPosition to data.targetWallLevel
+            data.wallUpgradeQueue.addFirst(target.buildingPosition to data.targetWallLevel)
             blockDisplay {
                 this.block = Block.LIME_STAINED_GLASS
                 hasGravity = false

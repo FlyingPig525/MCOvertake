@@ -3,7 +3,6 @@ package io.github.flyingpig525
 import cz.lukynka.prettylog.*
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.GameInstance.Companion.gameInstance
-import io.github.flyingpig525.building.*
 import io.github.flyingpig525.command.coopCommand
 import io.github.flyingpig525.console.Command
 import io.github.flyingpig525.console.ConfigCommand
@@ -17,8 +16,7 @@ import io.github.flyingpig525.data.player.config.BlockConfig
 import io.github.flyingpig525.data.player.config.PlayerConfig
 import io.github.flyingpig525.data.player.permission.Permission
 import io.github.flyingpig525.data.player.permission.PermissionManager
-import io.github.flyingpig525.item.*
-import io.github.flyingpig525.ksp.BuildingCompanion
+import io.github.flyingpig525.item.SelectBlockItem
 import io.github.flyingpig525.ksp.initBuildingCompanions
 import io.github.flyingpig525.ksp.initItems
 import io.github.flyingpig525.log.MCOvertakeLogType
@@ -46,11 +44,11 @@ import net.kyori.adventure.resource.ResourcePackRequest
 import net.kyori.adventure.text.Component
 import net.minestom.server.MinecraftServer
 import net.minestom.server.collision.ShapeImpl
-import net.minestom.server.command.CommandSender
 import net.minestom.server.command.builder.CommandExecutor
 import net.minestom.server.command.builder.arguments.ArgumentBoolean
 import net.minestom.server.command.builder.arguments.ArgumentString
 import net.minestom.server.command.builder.arguments.minecraft.ArgumentBlockState
+import net.minestom.server.command.builder.arguments.minecraft.ArgumentEntity
 import net.minestom.server.command.builder.arguments.number.ArgumentInteger
 import net.minestom.server.command.builder.arguments.number.ArgumentLong
 import net.minestom.server.command.builder.arguments.relative.ArgumentRelativeVec3
@@ -66,7 +64,6 @@ import net.minestom.server.event.inventory.InventoryClickEvent
 import net.minestom.server.event.inventory.InventoryCloseEvent
 import net.minestom.server.event.inventory.InventoryOpenEvent
 import net.minestom.server.event.item.ItemDropEvent
-import net.minestom.server.event.item.PlayerBeginItemUseEvent
 import net.minestom.server.event.player.*
 import net.minestom.server.event.server.ServerListPingEvent
 import net.minestom.server.extras.MojangAuth
@@ -93,7 +90,6 @@ import java.net.URI
 import java.nio.file.Path
 import java.util.*
 import kotlin.io.path.toPath
-import kotlin.reflect.KProperty1
 
 
 const val POWER_SYMBOL = "✘"
@@ -194,13 +190,13 @@ fun main() = runBlocking { try {
     }
     lobbyInstance.setBlock(Vec(5.0, 5.0, 5.0), Block.CAMPFIRE)
     log("Created lobby instance...", MCOvertakeLogType.FILESYSTEM)
+    initBuildingCompanions()
+    log("Building companions initialized...")
     for (name in config.instanceNames) {
         instances[name] = GameInstance(Path.of("instances", name), name)
         instances[name]?.setupInstance()
     }
     log("Created GameInstances")
-    initBuildingCompanions()
-    log("Building companions initialized...")
 
     initItems()
 
@@ -585,6 +581,28 @@ fun main() = runBlocking { try {
             }
         }
     }
+    val tpCommand = kommand {
+        name = "tp"
+        val targetArg = ArgumentEntity("player").apply {
+            onlyPlayers(true)
+            singleEntity(true)
+        }
+
+        buildSyntax(targetArg) {
+            condition {
+                permissionManager.hasPermission(player, Permission("instance.tp"))
+            }
+            executor {
+                val target = context.get(targetArg)
+                val targetPlayer = target.findFirstPlayer(sender)
+                if (targetPlayer == null) {
+                    player.sendMessage("<red><bold>Player ${context.getRaw(targetArg)} does not exist")
+                    return@executor
+                }
+                player.teleport(targetPlayer.position)
+            }
+        }
+    }
     CommandManager.register(
         createInstanceCommand,
         lobbyCommand,
@@ -597,7 +615,8 @@ fun main() = runBlocking { try {
         setTimeCommand,
         noOpCommand,
         setGrass,
-        setAllCommand
+        setAllCommand,
+        tpCommand
     )
 
     // Save loop
@@ -740,9 +759,9 @@ val Point.isUnderground: Boolean get() {
 }
 
 fun onAllBuildingPositions(point: Point, fn: (point: Point) -> Unit) {
-    fn(point.withY(91.0))
-    fn(point.withY(40.0))
-    fn(point.withY(31.0))
+    fn(point.withY(91.0).buildingPosition)
+    fn(point.withY(40.0).buildingPosition)
+    fn(point.withY(31.0).buildingPosition)
 }
 
 fun scheduleImmediately(fn: () -> Unit) =

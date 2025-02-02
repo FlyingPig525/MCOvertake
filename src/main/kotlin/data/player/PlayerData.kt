@@ -2,7 +2,6 @@ package io.github.flyingpig525.data.player
 
 import io.github.flyingpig525.*
 import io.github.flyingpig525.building.*
-import io.github.flyingpig525.building.OilPatch
 import io.github.flyingpig525.data.player.config.BlockConfig
 import io.github.flyingpig525.data.research.ResearchContainer
 import io.github.flyingpig525.item.*
@@ -12,10 +11,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.extension.adventure.asMini
-import net.bladehunt.kotstom.extension.adventure.toMiniMessage
-import net.bladehunt.kotstom.extension.adventure.toPlainText
 import net.kyori.adventure.bossbar.BossBar
-import net.kyori.adventure.text.TextReplacementConfig
 import net.minestom.server.coordinate.Point
 import net.minestom.server.entity.Player
 import net.minestom.server.event.instance.InstanceTickEvent
@@ -58,15 +54,15 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
     val basicResearchStations = BasicResearchGenerator()
     val basicResearchStationCost get() = genericBuildingCost(basicResearchStations.count, 100)
     val rockMiners = RockMiner()
-    val rockMinerCost get() = 0
+    val rockMinerCost get() = genericBuildingCost(rockMiners.count, 40)
     val oilPatches = OilPatch()
-    val oilPatchCost get() = 0
+    val oilPatchCost get() = genericBuildingCost(oilPatches.count, 750)
     val oilExtractors = OilExtractor()
-    val oilExtractorCost get() = 0
+    val oilExtractorCost get() = genericBuildingCost(oilExtractors.count, 300)
     val plasticPlants = PlasticPlant()
-    val plasticPlantCost get() = 0
+    val plasticPlantCost get() = genericBuildingCost(plasticPlants.count, 400)
     val lubricantProcessors = LubricantProcessor()
-    val lubricantProcessorCost get() = 0
+    val lubricantProcessorCost get() = genericBuildingCost(lubricantProcessors.count, 400)
     @Transient var claimCooldown = Cooldown(Duration.ofMillis(maxClaimCooldown))
     @Transient var colonyCooldown = Cooldown(Duration.ofSeconds(if (blocks > 0) 15 else 0))
     @Transient var attackCooldown = Cooldown(Duration.ofSeconds(10))
@@ -113,13 +109,11 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
             if (value != 0) hasUnlockedLubricant = true
         }
     val disposableResourcesUsed: Int get() {
-        val barrack = barracks.resourceUse
-        val matterContainer = matterContainers.resourceUse
-        val matterExtractor = matterExtractors.resourceUse
-        val trainingCamp = trainingCamps.resourceUse
-        val matterCompressor = matterCompressors.resourceUse
-        val teleporter = undergroundTeleporters.resourceUse
-        return barrack + matterExtractor + matterContainer + trainingCamp + matterCompressor + teleporter
+        var acc = 0
+        for (building in Building.BuildingCompanion.registry) {
+                acc += building.playerRef.get(this).resourceUse
+        }
+        return acc
     }
     val maxDisposableResources: Int get() = (blocks / 5) + 30
     @Transient val resourcesBossBar: BossBar = BossBar.bossBar(
@@ -154,10 +148,12 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
     private var hasUnlockedMechanicalParts = false
     private var hasUnlockedPlastic = false
     private var hasUnlockedLubricant = false
+    private val showResearchTick get() = hasUnlockedMechanicalParts || hasUnlockedPlastic || hasUnlockedLubricant
 
     fun tick(e: InstanceTickEvent) {
         if (wallUpgradeQueue.isNotEmpty() && wallUpgradeCooldown.isReady(Instant.now().toEpochMilli())) run {
             val (wallPos, targetLevel) = wallUpgradeQueue.first()
+            if (e.instance.getBlock(wallPos.playerPosition) != block) return@run
             val wall = e.instance.getBlock(wallPos)
             val currentLevel = wall.wallLevel
             if (currentLevel == 0 || currentLevel >= targetLevel) {
@@ -208,7 +204,7 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
     }
 
     fun actionBar(player: Player) {
-        var str = "".asMini()
+        var str = "<dark_gray>| ".asMini()
         fun AAA() { str = str.append(" <reset><dark_gray>| ".asMini()) }
         if (hasUnlockedMechanicalParts) {
             str = str.append("<white>$MECHANICAL_SYMBOL <bold>$mechanicalParts".asMini())
@@ -222,7 +218,6 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
             str = str.append("$lubricantColor$LUBRICANT_SYMBOL <bold>$lubricant".asMini())
             AAA()
         }
-        str = str.toMiniMessage().replaceAfterLast("<reset>", "").asMini()
         // for each intermediary resource run AAA() before appending it
         player.sendPacket(ActionBarPacket(str))
     }
@@ -232,7 +227,7 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
             showBossBar(powerBossBar)
             showBossBar(matterBossBar)
             showBossBar(resourcesBossBar)
-            if (matterCompressors.count > 0 || mechanicalParts > 0 || research.basicResearch.count > 0) {
+            if (showResearchTick) {
                 showBossBar(researchTickProgress)
             } else {
                 hideBossBar(researchTickProgress)

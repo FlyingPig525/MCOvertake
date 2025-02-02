@@ -79,7 +79,7 @@ class TestUpgrade : ResearchUpgrade() {
         if (level == 0) return null
 //        log("Post Attack")
         eventData.attackCost = 0
-        eventData.attackCooldown = Cooldown(Duration.ofMillis(500))
+        eventData.attackCooldown = Cooldown(Duration.ofMillis(10))
         return eventData
     }
 
