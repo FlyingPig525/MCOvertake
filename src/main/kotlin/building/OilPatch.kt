@@ -37,6 +37,12 @@ class OilPatch : Building {
 
     override fun select(player: Player, data: PlayerData) = select(player, data.oilPatchCost)
 
+    override fun onDestruction(point: Point, instance: Instance, data: PlayerData): Boolean {
+        return !point.buildingPosition.repeatDirection { point, dir ->
+            Building.getBuildingByBlock(instance.getBlock(point)) == OilExtractor
+        }
+    }
+
     @BuildingCompanion("RockMiner")
     companion object OilPatchCompanion : Building.BuildingCompanion, Validated {
         override var menuSlot: Int = 0

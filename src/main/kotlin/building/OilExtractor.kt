@@ -38,19 +38,26 @@ class OilExtractor : Building {
         player.inventory[BUILDING_INVENTORY_SLOT] = getItem(data)
     }
 
+    override fun onDestruction(point: Point, instance: Instance, data: PlayerData): Boolean {
+        return !point.buildingPosition.repeatDirection { point, dir ->
+            Building.getBuildingByBlock(instance.getBlock(point)) == PlasticPlant
+        }
+    }
+
     @BuildingCompanion("OilPatch")
     companion object OilExtractorCompanion : Building.BuildingCompanion, Validated {
         override var menuSlot: Int = 0
         override val block: Block = Block.BLACK_CANDLE.withProperty("candles", "4")
         override val identifier: String = "oil:extractor"
         override val playerRef: KProperty1<PlayerData, Building> = PlayerData::oilExtractors
+        val oilExtractorDependents: Set<Building.BuildingCompanion> = setOf(PlasticPlant, LubricantProcessor)
 
         override fun getItem(cost: Int, count: Int): ItemStack = item(Material.BLACK_CANDLE) {
             itemName = "$oilColor$OIL_SYMBOL Oil Extractor <gray>-</gray><green> $MATTER_SYMBOL $cost".asMini()
             lore {
                 +"<dark_gray>Extracts oil from surface rock".asMini()
                 +"<gray>Supplies enough oil to support 2".asMini().noItalic()
-                +"<gray>Oil Plants".asMini().noItalic()
+                +"<gray>dependents".asMini().noItalic()
                 +"<gray>Must be placed directly next to an Oil Patch".asMini().noItalic()
                 resourcesConsumed(3, count)
                 amountOwned(count)

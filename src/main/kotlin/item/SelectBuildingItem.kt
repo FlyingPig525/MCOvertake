@@ -66,6 +66,7 @@ object SelectBuildingItem : Actionable {
             var close = false
             if (res.clickedItem == clearItem) {
                 close = true
+                setItemSlot(player)
             } else if (res.clickedItem.hasTag(Tag.String("identifier"))) {
                 val identifier = res.clickedItem.getTag(Tag.String("identifier"))
                 val ref = Building.getBuildingByIdentifier(identifier)!!.playerRef.get(playerData)

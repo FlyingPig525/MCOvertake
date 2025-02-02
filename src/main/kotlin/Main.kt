@@ -108,6 +108,8 @@ const val WALL_SYMBOL = "\uD83E\uDE93"
 const val PICKAXE_SYMBOL = "⛏"
 const val GLOBAL_RESEARCH_SYMBOL = "\uD83E\uDDEA"
 const val OIL_SYMBOL = "☀"
+const val PLASTIC_SYMBOL = "⏺"
+const val LUBRICANT_SYMBOL = "₴"
 
 const val BUILDING_INVENTORY_SLOT = 4
 
@@ -310,7 +312,9 @@ fun main() = runBlocking { try {
             e.player.openInventory(inventory)
         }
     }
-
+    val bar = kbar("<gradient:green:gold:$scoreboardTitleProgress><bold>MCOvertake - $SERVER_VERSION".asMini()) {
+        lobbyInstance.players.onEach { addViewer(it) }
+    }
     SchedulerManager.scheduleTask({
         tick++
 
@@ -318,9 +322,7 @@ fun main() = runBlocking { try {
         if (scoreboardTitleProgress >= 1.0) {
             scoreboardTitleProgress = -1.0
         }
-        kbar("<gradient:green:gold:$scoreboardTitleProgress><bold>MCOvertake - $SERVER_VERSION".asMini()) {
-            lobbyInstance.players.onEach { addViewer(it) }
-        }
+        bar.setTitle("<gradient:green:gold:$scoreboardTitleProgress><bold>MCOvertake - $SERVER_VERSION".asMini())
     }, TaskSchedule.tick(1), TaskSchedule.tick(1))
 
     SchedulerManager.scheduleTask({ System.gc() }, TaskSchedule.seconds(30), TaskSchedule.seconds(30))
@@ -600,11 +602,13 @@ fun main() = runBlocking { try {
 
     // Save loop
     SchedulerManager.scheduleTask({
-        instances.values.onEach {
-            it.save()
-        }
-        if (config.printSaveMessages) {
-            log("Game data saved")
+        launch {
+            instances.values.onEach {
+                it.save()
+            }
+            if (config.printSaveMessages) {
+                log("Game data saved")
+            }
         }
     }, TaskSchedule.minutes(1), TaskSchedule.minutes(1))
 

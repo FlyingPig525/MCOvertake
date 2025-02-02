@@ -2,7 +2,6 @@ package io.github.flyingpig525.building
 
 import io.github.flyingpig525.*
 import io.github.flyingpig525.building.Building.Companion.building
-import io.github.flyingpig525.building.OilExtractor.OilExtractorCompanion
 import io.github.flyingpig525.data.player.PlayerData
 import io.github.flyingpig525.ksp.BuildingCompanion
 import kotlinx.serialization.Serializable
@@ -22,9 +21,9 @@ import net.minestom.server.tag.Tag
 import kotlin.reflect.KProperty1
 
 @Serializable
-class OilPlant : Building {
+class LubricantProcessor : Building {
     override var count: Int = 0
-    override val resourceUse: Int get() = 3 * count
+    override val resourceUse: Int = 3
 
     override fun place(playerTarget: Point, instance: Instance, data: PlayerData) {
         instance.setBlock(playerTarget.buildingPosition, block.building(identifier))
@@ -40,22 +39,22 @@ class OilPlant : Building {
     }
 
     override fun tick(data: PlayerData) {
-        data.mechanicalParts += 20 * count
+        data.lubricant += 5 * count
     }
 
-    @BuildingCompanion("OilExtractor")
-    companion object OilPlantCompanion : Building.BuildingCompanion, Validated {
+    @BuildingCompanion("PlasticPlant")
+    companion object LubricantProcessorCompanion : Building.BuildingCompanion, Validated {
         override var menuSlot: Int = 0
-        override val block: Block = Block.CAMPFIRE
-        override val identifier: String = "oil:plant"
-        override val playerRef: KProperty1<PlayerData, Building> = PlayerData::oilPlants
+        override val block: Block = Block.SOUL_CAMPFIRE
+        override val identifier: String = "oil:lubricant_processor"
+        override val playerRef: KProperty1<PlayerData, Building> = PlayerData::lubricantProcessors
 
-        override fun getItem(cost: Int, count: Int): ItemStack = item(Material.CAMPFIRE) {
-            itemName = "$oilColor$OIL_SYMBOL Oil Plant <gray>-</gray><green> $MATTER_SYMBOL $cost".asMini()
+        override fun getItem(cost: Int, count: Int): ItemStack = item(Material.SOUL_CAMPFIRE) {
+            itemName = "$lubricantColor$LUBRICANT_SYMBOL Lubricant Processor <gray>-</gray><green> $MATTER_SYMBOL $cost".asMini()
             lore {
                 +"<dark_gray>Processes oil provided by Oil Extractors".asMini()
-                +"<dark_gray>to create Mechanical Parts"
-                +"<gray>Generates 20 $mechanicalPart".asMini().noItalic()
+                +"<dark_gray>to create Lubricant"
+                +"<gray>Generates 5 $lubricant".asMini().noItalic()
                 +"<gray>Must be placed directly next to an Oil Extractor".asMini().noItalic()
                 resourcesConsumed(3, count)
                 amountOwned(count)
@@ -63,7 +62,8 @@ class OilPlant : Building {
             set(Tag.String("identifier"), identifier)
         }
 
-        override fun getItem(playerData: PlayerData): ItemStack = getItem(playerData.oilPlantCost, playerData.oilPlants.count)
+        override fun getItem(playerData: PlayerData): ItemStack =
+            getItem(playerData.lubricantProcessorCost, playerData.lubricantProcessors.count)
 
         override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 3
 
@@ -73,12 +73,12 @@ class OilPlant : Building {
             var i = 0
             point.repeatDirection { point, _ ->
                 count[i] = 0
-                if (Building.getBuildingByBlock(instance.getBlock(point)) == OilExtractor) {
+                if (Building.getBuildingByBlock(instance.getBlock(point)) == OilExtractor && OilExtractor.validate(instance, point)) {
                     point.repeatDirection { point, _ ->
-                        if (Building.getBuildingByBlock(instance.getBlock(point)) == OilPlant) count[i]++
+                        if (Building.getBuildingByBlock(instance.getBlock(point)) in OilExtractor.oilExtractorDependents) count[i]++
                         false
                     }
-                }
+                } else count[i] = 2
                 i++
                 false
             }

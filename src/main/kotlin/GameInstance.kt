@@ -499,7 +499,7 @@ class GameInstance(
                         }
                     }
                     if (x in -1..instanceConfig.mapSize + 1 && z in -1..instanceConfig.mapSize + 1 && y < 40) {
-                        return@setAll if (y in 30..36) Block.DEEPSLATE else Block.DIAMOND_BLOCK
+                        return@setAll if (y in 30..36) Block.DEEPSLATE else if (y > 25) Block.DIAMOND_BLOCK else Block.AIR
                     }
                     Block.AIR
                 }
@@ -510,11 +510,12 @@ class GameInstance(
         // Player only exists on first creation through commands
         if (player == null) {
             launch {
+                println("launched")
                 val displayBuildings = Building.BuildingCompanion.registry.filter { it is DisplayEntityBlock }
                 for (x in 0..instanceConfig.mapSize) {
                     for (z in 0..instanceConfig.mapSize) {
                         val point = Vec(x.toDouble(), 39.0, z.toDouble())
-                        instance.loadChunk(point).thenRunAsync {
+                        instance.loadChunk(point).thenRun {
                             val playerBlock = instance.getBlock(x, 38, z)
                             if (instance.getBlock(x, 39, z) == Block.WATER && instance.getBlock(x, 38, z) != Block.SAND) {
                                 ClaimWaterItem.spawnPlayerRaft(

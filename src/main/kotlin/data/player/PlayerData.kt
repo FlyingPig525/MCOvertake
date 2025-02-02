@@ -12,7 +12,10 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.extension.adventure.asMini
+import net.bladehunt.kotstom.extension.adventure.toMiniMessage
+import net.bladehunt.kotstom.extension.adventure.toPlainText
 import net.kyori.adventure.bossbar.BossBar
+import net.kyori.adventure.text.TextReplacementConfig
 import net.minestom.server.coordinate.Point
 import net.minestom.server.entity.Player
 import net.minestom.server.event.instance.InstanceTickEvent
@@ -60,8 +63,10 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
     val oilPatchCost get() = 0
     val oilExtractors = OilExtractor()
     val oilExtractorCost get() = 0
-    val oilPlants = OilPlant()
-    val oilPlantCost get() = 0
+    val plasticPlants = PlasticPlant()
+    val plasticPlantCost get() = 0
+    val lubricantProcessors = LubricantProcessor()
+    val lubricantProcessorCost get() = 0
     @Transient var claimCooldown = Cooldown(Duration.ofMillis(maxClaimCooldown))
     @Transient var colonyCooldown = Cooldown(Duration.ofSeconds(if (blocks > 0) 15 else 0))
     @Transient var attackCooldown = Cooldown(Duration.ofSeconds(10))
@@ -93,6 +98,20 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
                 BossBar.Overlay.PROGRESS
             )
     var mechanicalParts: Int = 0
+        set(value) {
+            field = value
+            if (value != 0) hasUnlockedMechanicalParts = true
+        }
+    var plastic: Int = 0
+        set(value) {
+            field = value
+            if (value != 0) hasUnlockedPlastic = true
+        }
+    var lubricant: Int = 0
+        set(value) {
+            field = value
+            if (value != 0) hasUnlockedLubricant = true
+        }
     val disposableResourcesUsed: Int get() {
         val barrack = barracks.resourceUse
         val matterContainer = matterContainers.resourceUse
@@ -132,6 +151,9 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
     @Transient var handAnimationWasDrop = false
     @Transient var bulkWallQueueFirstPos: Point? = null
     @Transient var bulkWallQueueFirstPosJustReset = false
+    private var hasUnlockedMechanicalParts = false
+    private var hasUnlockedPlastic = false
+    private var hasUnlockedLubricant = false
 
     fun tick(e: InstanceTickEvent) {
         if (wallUpgradeQueue.isNotEmpty() && wallUpgradeCooldown.isReady(Instant.now().toEpochMilli())) run {
@@ -167,7 +189,8 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
     fun researchTick() {
         matterCompressors.tick(this)
         basicResearchStations.tick(this)
-        oilPlants.tick(this)
+        plasticPlants.tick(this)
+        lubricantProcessors.tick(this)
     }
 
     fun updateBossBars(player: Player? = null) {
@@ -187,12 +210,21 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
     fun actionBar(player: Player) {
         var str = "".asMini()
         fun AAA() { str = str.append(" <reset><dark_gray>| ".asMini()) }
-        if (mechanicalParts > 0) {
+        if (hasUnlockedMechanicalParts) {
             str = str.append("<white>$MECHANICAL_SYMBOL <bold>$mechanicalParts".asMini())
             AAA()
         }
+        if (hasUnlockedPlastic) {
+            str = str.append("$plasticColor$PLASTIC_SYMBOL <bold>$plastic".asMini())
+            AAA()
+        }
+        if (hasUnlockedLubricant) {
+            str = str.append("$lubricantColor$LUBRICANT_SYMBOL <bold>$lubricant".asMini())
+            AAA()
+        }
+        str = str.toMiniMessage().replaceAfterLast("<reset>", "").asMini()
         // for each intermediary resource run AAA() before appending it
-        player.sendPacket(ActionBarPacket(str.replaceText("| ", "".asMini())))
+        player.sendPacket(ActionBarPacket(str))
     }
 
     private fun showBossBars(player: Player) {
