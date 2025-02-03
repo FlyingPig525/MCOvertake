@@ -1,8 +1,11 @@
 package io.github.flyingpig525.building
 
-import io.github.flyingpig525.*
+import io.github.flyingpig525.BUILDING_INVENTORY_SLOT
+import io.github.flyingpig525.LUBRICANT_SYMBOL
+import io.github.flyingpig525.MATTER_SYMBOL
 import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.building.Building.Companion.genericBuildingCost
+import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.ksp.BuildingCompanion
 import io.github.flyingpig525.ksp.PlayerBuildings
@@ -67,23 +70,7 @@ class LubricantProcessor : Building {
 
         override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 3
 
-        override fun validate(instance: Instance, point: Point): Boolean {
-            if (!point.isUnderground) return false
-            val count = mutableListOf(2, 2, 2, 2)
-            var i = 0
-            point.repeatDirection { point, _ ->
-                count[i] = 0
-                if (Building.getBuildingByBlock(instance.getBlock(point)) == OilExtractor && OilExtractor.validate(instance, point)) {
-                    point.repeatDirection { point, _ ->
-                        if (Building.getBuildingByBlock(instance.getBlock(point)) in OilExtractor.oilExtractorDependents) count[i]++
-                        false
-                    }
-                } else count[i] = 2
-                i++
-                false
-            }
-            return count.any { it < 2 }
-        }
+        override fun validate(instance: Instance, point: Point): Boolean = PlasticPlant.validate(instance, point)
 
     }
 }
