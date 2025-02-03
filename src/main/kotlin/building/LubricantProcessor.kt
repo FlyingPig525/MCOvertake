@@ -28,7 +28,7 @@ import kotlin.reflect.KProperty1
 @Serializable
 class LubricantProcessor : Building {
     override var count: Int = 0
-    override val resourceUse: Int = 3
+    override val resourceUse: Int = 3 * count
     override val cost: Int
         get() = genericBuildingCost(count, 400)
 

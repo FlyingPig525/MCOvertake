@@ -10,10 +10,10 @@ import io.github.flyingpig525.building.DisplayEntityBlock
 import io.github.flyingpig525.building.Interactable
 import io.github.flyingpig525.data.config.InstanceConfig
 import io.github.flyingpig525.data.config.getCommentString
-import io.github.flyingpig525.data.player.DataResolver
 import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.data.player.BlockData.Companion.getDataByBlock
 import io.github.flyingpig525.data.player.BlockData.Companion.toBlockSortedList
+import io.github.flyingpig525.data.player.DataResolver
 import io.github.flyingpig525.data.player.config.PlayerConfig
 import io.github.flyingpig525.item.*
 import io.github.flyingpig525.log.MCOvertakeLogType
@@ -402,11 +402,6 @@ class GameInstance(
                 log(e)
             }
         }, TaskSchedule.tick(70), TaskSchedule.tick(70))
-
-        // Research tick
-        instance.scheduler().scheduleTask({
-
-        }, TaskSchedule.tick(400), TaskSchedule.tick(400))
     }
 
     fun setupScoreboard() {

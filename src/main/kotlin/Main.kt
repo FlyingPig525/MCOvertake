@@ -621,13 +621,11 @@ fun main() = runBlocking { try {
 
     // Save loop
     SchedulerManager.scheduleTask({
-        launch {
-            instances.values.onEach {
-                it.save()
-            }
-            if (config.printSaveMessages) {
-                log("Game data saved")
-            }
+        instances.values.onEach {
+            it.save()
+        }
+        if (config.printSaveMessages) {
+            log("Game data saved")
         }
     }, TaskSchedule.minutes(1), TaskSchedule.minutes(1))
 

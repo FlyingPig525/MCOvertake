@@ -74,20 +74,27 @@ class PlasticPlant : Building {
             val positions: MutableSet<Point> = mutableSetOf()
             point.repeatDirection { point, _ ->
                 if (Building.getBuildingByBlock(instance.getBlock(point)) == OilExtractor && OilExtractor.validate(instance, point)) {
-                    extractors += point
                     point.repeatDirection { point, _ ->
+                        val block = instance.getBlock(point)
                         if (Building.getBuildingByBlock(instance.getBlock(point)) in OilExtractor.oilExtractorDependents
                             && point !in positions
                         ) {
                             count++
                             positions += point
+                        } else if (Building.getBuildingByBlock(block) == OilPatch) {
+                            point.repeatDirection { point, dir ->
+                                if (Building.getBuildingByBlock(instance.getBlock(point)) == OilExtractor) {
+                                    extractors += point
+                                }
+                                false
+                            }
                         }
                         false
                     }
                 }
                 false
             }
-            return count < extractors.size
+            return count < (extractors.size * 2)
         }
     }
 }
