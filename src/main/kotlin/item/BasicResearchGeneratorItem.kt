@@ -3,7 +3,7 @@ package io.github.flyingpig525.item
 import io.github.flyingpig525.GameInstance
 import io.github.flyingpig525.building.BasicResearchGenerator
 import io.github.flyingpig525.data
-import io.github.flyingpig525.data.player.PlayerData
+import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.ksp.Item
 import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerUseItemEvent
@@ -31,7 +31,7 @@ object BasicResearchGeneratorItem : Actionable {
         return basicBuildingPlacementInt(
             event,
             BasicResearchGenerator,
-            PlayerData::mechanicalParts,
+            BlockData::mechanicalParts,
             "Mechanical Parts"
         )
     }

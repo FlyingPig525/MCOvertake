@@ -1,23 +1,22 @@
 package io.github.flyingpig525.data.research.action
 
 import io.github.flyingpig525.building.Building
-import io.github.flyingpig525.data.player.PlayerData
+import io.github.flyingpig525.data.player.BlockData
 import net.minestom.server.entity.Player
 import net.minestom.server.instance.Instance
 import net.minestom.server.utils.time.Cooldown
 import java.time.Duration
-import kotlin.reflect.KProperty0
 
-sealed class ActionData(val playerData: PlayerData, val instance: Instance?, val player: Player?) {
-    class Attacked(playerData: PlayerData, instance: Instance, player: Player?) : ActionData(
+sealed class ActionData(val playerData: BlockData, val instance: Instance?, val player: Player?) {
+    class Attacked(playerData: BlockData, instance: Instance, player: Player?) : ActionData(
         playerData, instance,
         player
     ) {
-        var attackerData: PlayerData = PlayerData.NONE
+        var attackerData: BlockData = BlockData.NONE
         var attackerPlayer: Player? = null
     }
 
-    class BuildWall(playerData: PlayerData, instance: Instance, player: Player) : ActionData(
+    class BuildWall(playerData: BlockData, instance: Instance, player: Player) : ActionData(
         playerData, instance,
         player
     ) {
@@ -25,7 +24,7 @@ sealed class ActionData(val playerData: PlayerData, val instance: Instance?, val
         var cooldown: Cooldown = Cooldown(Duration.ZERO)
     }
 
-    class ClaimLand(playerData: PlayerData, instance: Instance, player: Player) : ActionData(
+    class ClaimLand(playerData: BlockData, instance: Instance, player: Player) : ActionData(
         playerData, instance,
         player
     ) {
@@ -33,7 +32,7 @@ sealed class ActionData(val playerData: PlayerData, val instance: Instance?, val
         var claimCooldown: Cooldown = Cooldown(Duration.ofMillis(playerData.maxClaimCooldown))
     }
 
-    class PlaceColony(playerData: PlayerData, instance: Instance, player: Player) : ActionData(
+    class PlaceColony(playerData: BlockData, instance: Instance, player: Player) : ActionData(
         playerData, instance,
         player
     ) {
@@ -41,7 +40,7 @@ sealed class ActionData(val playerData: PlayerData, val instance: Instance?, val
         var cooldown = Cooldown(Duration.ZERO)
     }
 
-    class PlaceRaft(playerData: PlayerData, instance: Instance, player: Player) : ActionData(
+    class PlaceRaft(playerData: BlockData, instance: Instance, player: Player) : ActionData(
         playerData, instance,
         player
     ) {
@@ -49,23 +48,23 @@ sealed class ActionData(val playerData: PlayerData, val instance: Instance?, val
         var cooldown: Cooldown = Cooldown(Duration.ZERO)
     }
 
-    class Attack(playerData: PlayerData, instance: Instance, player: Player) : ActionData(
+    class Attack(playerData: BlockData, instance: Instance, player: Player) : ActionData(
         playerData, instance,
         player
     ) {
         var attackCost: Int = 0
         var attackCooldown: Cooldown = Cooldown(Duration.ZERO)
-        var targetData: PlayerData = PlayerData.NONE
+        var targetData: BlockData = BlockData.NONE
     }
 
-    class AttackCostCalculation(playerData: PlayerData, instance: Instance, player: Player) : ActionData(
+    class AttackCostCalculation(playerData: BlockData, instance: Instance, player: Player) : ActionData(
         playerData, instance, player
     ) {
         var wallLevel = 0
-        var targetData: PlayerData = PlayerData.NONE
+        var targetData: BlockData = BlockData.NONE
     }
 
-    class UpgradeWall(playerData: PlayerData, instance: Instance) : ActionData(
+    class UpgradeWall(playerData: BlockData, instance: Instance) : ActionData(
         playerData, instance,
         null
     ) {
@@ -73,14 +72,14 @@ sealed class ActionData(val playerData: PlayerData, val instance: Instance?, val
         var cooldown: Cooldown = Cooldown(Duration.ZERO)
     }
 
-    class DestroyBuilding(playerData: PlayerData, instance: Instance, player: Player) : ActionData(playerData, instance,
+    class DestroyBuilding(playerData: BlockData, instance: Instance, player: Player) : ActionData(playerData, instance,
         player
     ) {
         var wallLevel: Int = 0
         var building: Building? = null
     }
 
-    class MatterBuildingTick(playerData: PlayerData) : ActionData(playerData, null, null) {
+    class MatterBuildingTick(playerData: BlockData) : ActionData(playerData, null, null) {
         var increase: Double = 0.0
     }
 }

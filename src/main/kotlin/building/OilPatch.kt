@@ -3,7 +3,7 @@ package io.github.flyingpig525.building
 import io.github.flyingpig525.*
 import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.building.Building.Companion.genericBuildingCost
-import io.github.flyingpig525.data.player.PlayerData
+import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.ksp.BuildingCompanion
 import io.github.flyingpig525.ksp.PlayerBuildings
 import kotlinx.serialization.Serializable
@@ -29,7 +29,7 @@ class OilPatch : Building {
     override val cost: Int
         get() = genericBuildingCost(count, 750)
 
-    override fun place(playerTarget: Point, instance: Instance, data: PlayerData) {
+    override fun place(playerTarget: Point, instance: Instance, data: BlockData) {
         instance.setBlock(playerTarget.buildingPosition, block.building(identifier))
         count++
     }
@@ -37,7 +37,7 @@ class OilPatch : Building {
     override fun select(player: Player) {
         player.inventory[BUILDING_INVENTORY_SLOT] = getItem(cost, count)
     }
-    override fun onDestruction(point: Point, instance: Instance, data: PlayerData): Boolean {
+    override fun onDestruction(point: Point, instance: Instance, data: BlockData): Boolean {
         return !point.buildingPosition.repeatDirection { point, dir ->
             Building.getBuildingByBlock(instance.getBlock(point)) == OilExtractor
         }
@@ -63,7 +63,7 @@ class OilPatch : Building {
             set(Tag.String("identifier"), identifier)
         }
 
-        override fun getItem(playerData: PlayerData): ItemStack =
+        override fun getItem(playerData: BlockData): ItemStack =
             getItem(playerData.buildings.oilPatches.cost, playerData.buildings.oilPatches.count)
 
         override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 2

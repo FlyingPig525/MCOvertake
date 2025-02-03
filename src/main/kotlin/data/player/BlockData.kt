@@ -31,7 +31,7 @@ import java.time.Instant
 import java.util.*
 
 @Serializable
-class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val block: Block, var playerDisplayName: String) {
+class BlockData(val uuid: String, @Serializable(BlockSerializer::class) val block: Block, var playerDisplayName: String) {
     @Transient var gameInstance: GameInstance? = null
     var blockConfig = BlockConfig()
     var blocks: Int = 0
@@ -262,18 +262,18 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
     val research = ResearchContainer()
 
     companion object {
-        val NONE = PlayerData("", Block.AIR, "")
-        fun Map<String, PlayerData>.getDataByBlock(block: Block): PlayerData? {
+        val NONE = BlockData("", Block.AIR, "")
+        fun Map<String, BlockData>.getDataByBlock(block: Block): BlockData? {
             return values.find { it.block == block }
         }
-        fun Map<String, PlayerData>.getDataByPoint(point: Point, instance: Instance): PlayerData? {
+        fun Map<String, BlockData>.getDataByPoint(point: Point, instance: Instance): BlockData? {
             val block = instance.getBlock(point.playerPosition)
             return values.find { it.block == block}
         }
-        fun Map<String, PlayerData>.toBlockSortedList(): List<PlayerData> {
+        fun Map<String, BlockData>.toBlockSortedList(): List<BlockData> {
             return values.sortedByDescending { it.blocks }
         }
-        fun Map<String, PlayerData>.toBlockList(): List<Block> {
+        fun Map<String, BlockData>.toBlockList(): List<Block> {
             return values.map { it.block }
         }
     }

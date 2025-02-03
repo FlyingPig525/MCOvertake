@@ -5,7 +5,7 @@ import io.github.flyingpig525.MATTER_SYMBOL
 import io.github.flyingpig525.MECHANICAL_SYMBOL
 import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.buildingPosition
-import io.github.flyingpig525.data.player.PlayerData
+import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.ksp.BuildingCompanion
 import io.github.flyingpig525.ksp.PlayerBuildings
 import kotlinx.serialization.Serializable
@@ -31,7 +31,7 @@ class MatterCompressionPlant : Building {
     override val cost: Int
         get() = (count * 50) + 50
 
-    override fun place(playerTarget: Point, instance: Instance, playerData: PlayerData) {
+    override fun place(playerTarget: Point, instance: Instance, playerData: BlockData) {
         instance.setBlock(playerTarget.buildingPosition, block.building(identifier))
         count++
     }
@@ -40,7 +40,7 @@ class MatterCompressionPlant : Building {
         player.inventory[BUILDING_INVENTORY_SLOT] = getItem(cost, count)
     }
 
-    override fun tick(data: PlayerData) {
+    override fun tick(data: BlockData) {
         if (!data.blockConfig.doIntermediary.value) return
         if (data.organicMatter >= 5 * count) {
             data.organicMatter -= 5 * count
@@ -70,7 +70,7 @@ class MatterCompressionPlant : Building {
             }
         }
 
-        override fun getItem(playerData: PlayerData): ItemStack {
+        override fun getItem(playerData: BlockData): ItemStack {
             return getItem(playerData.buildings.matterCompressors.cost, playerData.buildings.matterCompressors.count)
         }
 

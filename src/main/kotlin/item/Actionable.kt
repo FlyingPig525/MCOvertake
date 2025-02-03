@@ -3,7 +3,7 @@ package io.github.flyingpig525.item
 import io.github.flyingpig525.*
 import io.github.flyingpig525.building.Building
 import io.github.flyingpig525.building.Validated
-import io.github.flyingpig525.data.player.PlayerData
+import io.github.flyingpig525.data.player.BlockData
 import net.bladehunt.kotstom.dsl.item.ItemDsl
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -67,7 +67,7 @@ fun claimWithParticle(player: Player, target: Point, targetBlock: Block, resultB
     }
 }
 
-fun checkBlockAvailable(data: PlayerData, target: Point, instance: Instance): Boolean {
+fun checkBlockAvailable(data: BlockData, target: Point, instance: Instance): Boolean {
     val playerBlock = instance.getBlock(target.playerPosition).defaultState()
     val buildingBlock = instance.getBlock(target.buildingPosition).defaultState()
     return playerBlock == data.block && (buildingBlock == Block.AIR || buildingBlock == Block.LILY_PAD)
@@ -89,7 +89,7 @@ inline fun gameItem(material: Material, identifier: String, fn: @ItemDsl ItemSta
 fun basicBuildingPlacementInt(
     event: PlayerUseItemEvent,
     buildingCompanion: Building.BuildingCompanion,
-    currencyRef: KMutableProperty1<PlayerData, Int>,
+    currencyRef: KMutableProperty1<BlockData, Int>,
     currencyName: String
 ): Boolean {
     if (sneakCheck(event)) return true
@@ -119,7 +119,7 @@ fun basicBuildingPlacementInt(
 fun basicBuildingPlacementDouble(
     event: PlayerUseItemEvent,
     buildingCompanion: Building.BuildingCompanion,
-    currencyRef: KMutableProperty1<PlayerData, Double>,
+    currencyRef: KMutableProperty1<BlockData, Double>,
     currencyName: String
 ): Boolean {
     if (sneakCheck(event)) return true

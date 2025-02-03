@@ -3,7 +3,7 @@ package io.github.flyingpig525.building
 import io.github.flyingpig525.*
 import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.building.Building.Companion.genericBuildingCost
-import io.github.flyingpig525.data.player.PlayerData
+import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.dsl.blockDisplay
 import io.github.flyingpig525.ksp.BuildingCompanion
 import io.github.flyingpig525.ksp.PlayerBuildings
@@ -35,7 +35,7 @@ class UndergroundTeleporter : Building, Interactable {
     override val cost: Int
         get() = genericBuildingCost(count, 750)
 
-    override fun place(playerTarget: Point, instance: Instance, playerData: PlayerData) {
+    override fun place(playerTarget: Point, instance: Instance, playerData: BlockData) {
         instance.setBlock(playerTarget.buildingPosition, block.building(identifier))
         spawn(playerTarget.buildingPosition, instance, playerData.uuid.toUUID()!!)
         count++
@@ -73,7 +73,7 @@ class UndergroundTeleporter : Building, Interactable {
             }.withTag(Tag.String("identifier"), identifier)
         }
 
-        override fun getItem(playerData: PlayerData): ItemStack =
+        override fun getItem(playerData: BlockData): ItemStack =
             getItem(playerData.buildings.undergroundTeleporters.cost, playerData.buildings.undergroundTeleporters.count)
 
         override fun getResourceUse(currentDisposableResources: Int): Int {

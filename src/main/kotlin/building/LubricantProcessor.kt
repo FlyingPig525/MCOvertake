@@ -3,7 +3,7 @@ package io.github.flyingpig525.building
 import io.github.flyingpig525.*
 import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.building.Building.Companion.genericBuildingCost
-import io.github.flyingpig525.data.player.PlayerData
+import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.ksp.BuildingCompanion
 import io.github.flyingpig525.ksp.PlayerBuildings
 import kotlinx.serialization.Serializable
@@ -29,7 +29,7 @@ class LubricantProcessor : Building {
     override val cost: Int
         get() = genericBuildingCost(count, 400)
 
-    override fun place(playerTarget: Point, instance: Instance, data: PlayerData) {
+    override fun place(playerTarget: Point, instance: Instance, data: BlockData) {
         instance.setBlock(playerTarget.buildingPosition, block.building(identifier))
         count++
     }
@@ -38,7 +38,7 @@ class LubricantProcessor : Building {
         player.inventory[BUILDING_INVENTORY_SLOT] = getItem(cost, count)
     }
 
-    override fun tick(data: PlayerData) {
+    override fun tick(data: BlockData) {
         data.lubricant += 5 * count
     }
 
@@ -62,7 +62,7 @@ class LubricantProcessor : Building {
             set(Tag.String("identifier"), identifier)
         }
 
-        override fun getItem(playerData: PlayerData): ItemStack =
+        override fun getItem(playerData: BlockData): ItemStack =
             getItem(playerData.buildings.lubricantProcessors.cost, playerData.buildings.lubricantProcessors.count)
 
         override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 3

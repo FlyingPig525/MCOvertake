@@ -3,7 +3,7 @@ package io.github.flyingpig525.building
 import io.github.flyingpig525.*
 import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.building.Building.Companion.genericBuildingCost
-import io.github.flyingpig525.data.player.PlayerData
+import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.dsl.blockDisplay
 import io.github.flyingpig525.ksp.BuildingCompanion
 import io.github.flyingpig525.ksp.PlayerBuildings
@@ -32,7 +32,7 @@ class RockMiner : Building {
     override val cost: Int
         get() = genericBuildingCost(count, 40)
 
-    override fun place(playerTarget: Point, instance: Instance, data: PlayerData) {
+    override fun place(playerTarget: Point, instance: Instance, data: BlockData) {
         playerTarget.buildingPosition.repeatDirection { point, dir ->
             if (instance.getBlock(point).defaultState() == Block.DEEPSLATE) {
                 instance.setBlock(playerTarget.buildingPosition, block.building(identifier).withProperties(mapOf(
@@ -52,7 +52,7 @@ class RockMiner : Building {
         player.inventory[BUILDING_INVENTORY_SLOT] = getItem(cost, count)
     }
 
-    override fun tick(data: PlayerData) {
+    override fun tick(data: BlockData) {
         data.organicMatter += 4 * count
     }
 
@@ -75,7 +75,7 @@ class RockMiner : Building {
             set(Tag.String("identifier"), identifier)
         }
 
-        override fun getItem(playerData: PlayerData): ItemStack =
+        override fun getItem(playerData: BlockData): ItemStack =
             getItem(playerData.buildings.rockMiners.cost, playerData.buildings.rockMiners.count)
 
         override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 4

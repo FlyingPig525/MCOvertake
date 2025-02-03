@@ -5,7 +5,7 @@ import io.github.flyingpig525.POWER_SYMBOL
 import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.building.Building.Companion.genericBuildingCost
 import io.github.flyingpig525.buildingPosition
-import io.github.flyingpig525.data.player.PlayerData
+import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.ksp.BuildingCompanion
 import io.github.flyingpig525.ksp.PlayerBuildings
 import kotlinx.serialization.Serializable
@@ -31,7 +31,7 @@ class TrainingCamp : Building {
     override val cost: Int
         get() = genericBuildingCost(count, 25)
 
-    override fun place(playerTarget: Point, instance: Instance, playerData: PlayerData) {
+    override fun place(playerTarget: Point, instance: Instance, playerData: BlockData) {
         instance.setBlock(playerTarget.buildingPosition, block.building(identifier))
         count++
     }
@@ -40,7 +40,7 @@ class TrainingCamp : Building {
         player.inventory[4] = getItem(cost, count)
     }
 
-    override fun tick(data: PlayerData) {
+    override fun tick(data: BlockData) {
         data.power += count * 0.5 + 0.5
     }
 
@@ -65,7 +65,7 @@ class TrainingCamp : Building {
             }
         }
 
-        override fun getItem(playerData: PlayerData): ItemStack {
+        override fun getItem(playerData: BlockData): ItemStack {
             return getItem(playerData.buildings.trainingCamps.cost, playerData.buildings.trainingCamps.count)
         }
 

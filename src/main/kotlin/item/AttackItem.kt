@@ -3,8 +3,8 @@ package io.github.flyingpig525.item
 import io.github.flyingpig525.*
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.building.Building
-import io.github.flyingpig525.data.player.PlayerData
-import io.github.flyingpig525.data.player.PlayerData.Companion.getDataByPoint
+import io.github.flyingpig525.data.player.BlockData
+import io.github.flyingpig525.data.player.BlockData.Companion.getDataByPoint
 import io.github.flyingpig525.data.research.action.ActionData
 import io.github.flyingpig525.ksp.Item
 import io.github.flyingpig525.wall.getWallAttackCost
@@ -61,13 +61,13 @@ object AttackItem : Actionable {
         }
     }
 
-    private fun getAttacking(player: Player): PlayerData? {
+    private fun getAttacking(player: Player): BlockData? {
         val players = instances.fromInstance(player.instance)!!.blockData
         val target = player.getTrueTarget(20)!!
         return players.getDataByPoint(target.playerPosition, player.instance)
     }
 
-    private fun getAttackCost(targetData: PlayerData, wall: Point, instance: Instance, wallLevel: Int, percentageDecrease: Double): Int {
+    private fun getAttackCost(targetData: BlockData, wall: Point, instance: Instance, wallLevel: Int, percentageDecrease: Double): Int {
         var additiveModifier = 0
         additiveModifier += getWallAttackCost(
             wall,
@@ -79,7 +79,7 @@ object AttackItem : Actionable {
         return (targetData.baseAttackCost) + additiveModifier
     }
 
-    private fun getAttackCooldown(targetData: PlayerData, wallLevel: Int): Cooldown {
+    private fun getAttackCooldown(targetData: BlockData, wallLevel: Int): Cooldown {
         var cooldownTicks = 20L
         if (wallLevel <= 10) {
             cooldownTicks += 3 * wallLevel
@@ -89,7 +89,7 @@ object AttackItem : Actionable {
         return Cooldown(Duration.ofMillis(cooldownTicks*50))
     }
 
-    private fun attackRaft(targetData: PlayerData, point: Point, instance: Instance) {
+    private fun attackRaft(targetData: BlockData, point: Point, instance: Instance) {
         ClaimWaterItem.destroyPlayerRaft(point.withY(40.0), instance)
         targetData.blocks--
         instance.setBlock(point.withY(38.0), Block.SAND)

@@ -2,7 +2,7 @@ package io.github.flyingpig525.item
 
 import io.github.flyingpig525.*
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
-import io.github.flyingpig525.data.player.PlayerData
+import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.data.research.action.ActionData
 import io.github.flyingpig525.dsl.blockDisplay
 import io.github.flyingpig525.ksp.Item
@@ -137,7 +137,7 @@ object UpgradeWallItem : Actionable {
         return true
     }
 
-    fun upgradeWall(block: Block, position: Point, data: PlayerData, instance: Instance): Boolean {
+    fun upgradeWall(block: Block, position: Point, data: BlockData, instance: Instance): Boolean {
         val cost = getWallUpgradeCost(block) ?: return false
         val actionData = ActionData.UpgradeWall(data, instance).apply {
             this.cost = cost

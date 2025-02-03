@@ -11,9 +11,9 @@ import io.github.flyingpig525.building.Interactable
 import io.github.flyingpig525.data.config.InstanceConfig
 import io.github.flyingpig525.data.config.getCommentString
 import io.github.flyingpig525.data.player.DataResolver
-import io.github.flyingpig525.data.player.PlayerData
-import io.github.flyingpig525.data.player.PlayerData.Companion.getDataByBlock
-import io.github.flyingpig525.data.player.PlayerData.Companion.toBlockSortedList
+import io.github.flyingpig525.data.player.BlockData
+import io.github.flyingpig525.data.player.BlockData.Companion.getDataByBlock
+import io.github.flyingpig525.data.player.BlockData.Companion.toBlockSortedList
 import io.github.flyingpig525.data.player.config.PlayerConfig
 import io.github.flyingpig525.item.*
 import io.github.flyingpig525.log.MCOvertakeLogType
@@ -78,7 +78,7 @@ class GameInstance(
     }
         private set
 
-    val blockData: MutableMap<String, PlayerData> = Json.decodeFromString<MutableMap<String, PlayerData>>(
+    val blockData: MutableMap<String, BlockData> = Json.decodeFromString<MutableMap<String, BlockData>>(
         if (path.resolve("block-data.json5").toFile().exists())
             path.resolve("block-data.json5").toFile().readText()
         else "{}"

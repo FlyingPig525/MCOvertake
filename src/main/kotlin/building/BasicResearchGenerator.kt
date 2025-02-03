@@ -5,7 +5,7 @@ import io.github.flyingpig525.MECHANICAL_SYMBOL
 import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.building.Building.Companion.genericBuildingCost
 import io.github.flyingpig525.buildingPosition
-import io.github.flyingpig525.data.player.PlayerData
+import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.data.research.currency.BasicResearch
 import io.github.flyingpig525.ksp.BuildingCompanion
 import io.github.flyingpig525.ksp.PlayerBuildings
@@ -31,7 +31,7 @@ class BasicResearchGenerator : Building {
     override val resourceUse: Int get() = 3 * count
     override val cost: Int
         get() = genericBuildingCost(count, 100)
-    override fun place(playerTarget: Point, instance: Instance, playerData: PlayerData) {
+    override fun place(playerTarget: Point, instance: Instance, playerData: BlockData) {
         instance.setBlock(playerTarget.buildingPosition, block.building(identifier))
         count++
     }
@@ -40,7 +40,7 @@ class BasicResearchGenerator : Building {
         player.inventory[BUILDING_INVENTORY_SLOT] = getItem(cost, count)
     }
 
-    override fun tick(data: PlayerData) {
+    override fun tick(data: BlockData) {
         if (!data.blockConfig.doResearch.value) return
         if (data.power >= 2 * count && data.mechanicalParts >= 3 * count) {
             data.power -= 2 * count
@@ -70,7 +70,7 @@ class BasicResearchGenerator : Building {
             }
         }
 
-        override fun getItem(playerData: PlayerData): ItemStack {
+        override fun getItem(playerData: BlockData): ItemStack {
             return getItem(playerData.buildings.basicResearchStations.cost, playerData.buildings.basicResearchStations.count)
         }
 

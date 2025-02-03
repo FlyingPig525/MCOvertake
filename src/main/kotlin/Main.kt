@@ -11,7 +11,7 @@ import io.github.flyingpig525.console.SaveCommand
 import io.github.flyingpig525.data.config.Config
 import io.github.flyingpig525.data.config.InstanceConfig
 import io.github.flyingpig525.data.config.getCommentString
-import io.github.flyingpig525.data.player.PlayerData
+import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.data.player.config.BlockConfig
 import io.github.flyingpig525.data.player.config.PlayerConfig
 import io.github.flyingpig525.data.player.permission.Permission
@@ -825,7 +825,7 @@ val Cooldown.ticks: Int get() = (duration.toMillis() / 50).toInt()
 
 val Material.cooldownIdentifier: String get() = key().value()
 
-val Player.data: PlayerData? get() = instances.fromInstance(instance)?.dataResolver?.get(uuid.toString())
+val Player.data: BlockData? get() = instances.fromInstance(instance)?.dataResolver?.get(uuid.toString())
 val Player.config: PlayerConfig? get() {
     if (instance.gameInstance == null) return null
     if (instance.gameInstance!!.playerConfigs[uuid.toString()] == null) {

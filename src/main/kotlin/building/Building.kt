@@ -1,7 +1,7 @@
 package io.github.flyingpig525.building
 
 import io.github.flyingpig525.building.Building.BuildingCompanion.Companion.registry
-import io.github.flyingpig525.data.player.PlayerData
+import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.ksp.PlayerBuildings
 import net.minestom.server.coordinate.Point
 import net.minestom.server.entity.Player
@@ -16,14 +16,14 @@ interface Building {
     val resourceUse: Int
     val cost: Int
 
-    fun place(playerTarget: Point, instance: Instance, data: PlayerData)
+    fun place(playerTarget: Point, instance: Instance, data: BlockData)
 
     /**
      * @return Whether this building should be destroyed or not
      */
-    fun onDestruction(point: Point, instance: Instance, data: PlayerData): Boolean = true
+    fun onDestruction(point: Point, instance: Instance, data: BlockData): Boolean = true
     fun select(player: Player)
-    fun tick(data: PlayerData) {}
+    fun tick(data: BlockData) {}
 
     interface BuildingCompanion {
         var menuSlot: Int
@@ -32,7 +32,7 @@ interface Building {
         val playerRef: KProperty1<PlayerBuildings, Building>
 
         fun getItem(cost: Int, count: Int): ItemStack
-        fun getItem(playerData: PlayerData): ItemStack
+        fun getItem(playerData: BlockData): ItemStack
 
         fun getResourceUse(currentDisposableResources: Int): Int
 

@@ -5,8 +5,8 @@ import io.github.flyingpig525.*
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.data.block.*
 import io.github.flyingpig525.data.inventory.InventoryConditionArguments
-import io.github.flyingpig525.data.player.PlayerData
-import io.github.flyingpig525.data.player.PlayerData.Companion.toBlockList
+import io.github.flyingpig525.data.player.BlockData
+import io.github.flyingpig525.data.player.BlockData.Companion.toBlockList
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.dsl.item.lore
@@ -98,7 +98,7 @@ object SelectBlockItem : Actionable {
             }
             instance.uuidParents[e.player.uuid.toString()] = e.player.uuid.toString()
             instance.dataResolver[e.player.uuid.toString()] =
-                PlayerData(e.player.uuid.toString(), res.clickedItem.material().block()!!, e.player.username)
+                BlockData(e.player.uuid.toString(), res.clickedItem.material().block()!!, e.player.username)
             e.player.closeInventory()
             for (i in 0..8) {
                 e.player.inventory[i] = ItemStack.AIR
