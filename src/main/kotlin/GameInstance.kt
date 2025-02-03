@@ -189,7 +189,7 @@ class GameInstance(
         instance.eventNode().listen<PlayerTickEvent> { e ->
             val playerData = e.player.data ?: return@listen
             playerData.actionBar(e.player)
-            if (playerData.matterCompressors.count > 0 || playerData.mechanicalParts > 0 || playerData.research.basicResearch.count > 0) {
+            if (playerData.showResearchTick) {
                 playerData.researchTickProgress.name("<white>Research Tick <gray>-<white> ${tick % 400uL}/400".asMini())
                 val perc = ((tick % 400uL).toFloat() / 400f).coerceIn(0f..1f)
                 playerData.researchTickProgress.progress(perc)
@@ -286,8 +286,16 @@ class GameInstance(
         }
 
         instance.eventNode().listen<InstanceTickEvent> { e ->
+            val research = tick % 400u == 0uL
             for ((uuid, data) in blockData) {
                 data.tick(e)
+                if (research) {
+                    try {
+                        data.researchTick()
+                    } catch (e: Exception) {
+                        log(e)
+                    }
+                }
             }
         }
     }
@@ -330,7 +338,7 @@ class GameInstance(
             var callItemUse = true
             val data = e.player.data
             if (building != null && data != null) {
-                val ref = building.playerRef.get(data)
+                val ref = building.playerRef.get(data.buildings)
                 if (ref is Interactable) {
                     ref.onInteract(e)
                 }
@@ -397,17 +405,8 @@ class GameInstance(
 
         // Research tick
         instance.scheduler().scheduleTask({
-            try {
-                for (uuid in blockData.keys) {
-                    val data = blockData[uuid]!!
-                    data.researchTick()
-                }
-            } catch (e: Exception) {
-                log(e)
-            }
+
         }, TaskSchedule.tick(400), TaskSchedule.tick(400))
-
-
     }
 
     fun setupScoreboard() {

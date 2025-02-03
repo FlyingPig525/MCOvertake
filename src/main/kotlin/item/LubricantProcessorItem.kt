@@ -25,12 +25,11 @@ object LubricantProcessorItem : Actionable {
             event,
             LubricantProcessor,
             PlayerData::organicMatter,
-            "Organic Matter",
-            PlayerData::lubricantProcessorCost
+            "Organic Matter"
         )
     }
 
     override fun setItemSlot(player: Player) {
-        player.data?.lubricantProcessors?.select(player, player.data ?: return)
+        player.data?.buildings?.lubricantProcessors?.select(player)
     }
 }

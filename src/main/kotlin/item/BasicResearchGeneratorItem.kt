@@ -24,7 +24,7 @@ object BasicResearchGeneratorItem : Actionable {
 
     override fun setItemSlot(player: Player) {
         val data = player.data ?: return
-        data.basicResearchStations.select(player, data)
+        data.buildings.basicResearchStations.select(player)
     }
 
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
@@ -32,8 +32,7 @@ object BasicResearchGeneratorItem : Actionable {
             event,
             BasicResearchGenerator,
             PlayerData::mechanicalParts,
-            "Mechanical Parts",
-            PlayerData::basicResearchStationCost
+            "Mechanical Parts"
         )
     }
 }

@@ -1,11 +1,12 @@
 package io.github.flyingpig525.building
 
-import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
 import io.github.flyingpig525.building.Building.Companion.building
+import io.github.flyingpig525.building.Building.Companion.genericBuildingCost
 import io.github.flyingpig525.data.player.PlayerData
 import io.github.flyingpig525.dsl.blockDisplay
 import io.github.flyingpig525.ksp.BuildingCompanion
+import io.github.flyingpig525.ksp.PlayerBuildings
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -24,25 +25,24 @@ import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import net.minestom.server.tag.Tag
-import java.util.UUID
+import java.util.*
 import kotlin.reflect.KProperty1
 
 @Serializable
 class UndergroundTeleporter : Building, Interactable {
     override var count: Int = 0
     override val resourceUse: Int = count * 20
+    override val cost: Int
+        get() = genericBuildingCost(count, 750)
+
     override fun place(playerTarget: Point, instance: Instance, playerData: PlayerData) {
         instance.setBlock(playerTarget.buildingPosition, block.building(identifier))
         spawn(playerTarget.buildingPosition, instance, playerData.uuid.toUUID()!!)
         count++
     }
 
-    override fun select(player: Player, cost: Int) {
+    override fun select(player: Player) {
         player.inventory[4] = getItem(cost, count)
-    }
-
-    override fun select(player: Player, data: PlayerData) {
-        select(player, data.teleporterCost)
     }
 
     override fun onInteract(e: PlayerBlockInteractEvent): Boolean {
@@ -59,7 +59,7 @@ class UndergroundTeleporter : Building, Interactable {
         override var menuSlot: Int = 6
         override val block: Block = Block.END_GATEWAY
         override val identifier: String = "underground:teleport"
-        override val playerRef: KProperty1<PlayerData, Building> = PlayerData::undergroundTeleporters
+        override val playerRef: KProperty1<PlayerBuildings, Building> = PlayerBuildings::undergroundTeleporters
 
         override fun getItem(cost: Int, count: Int): ItemStack {
             return item(Material.COPPER_GRATE) {
@@ -73,9 +73,8 @@ class UndergroundTeleporter : Building, Interactable {
             }.withTag(Tag.String("identifier"), identifier)
         }
 
-        override fun getItem(playerData: PlayerData): ItemStack {
-            return getItem(playerData.teleporterCost, playerData.undergroundTeleporters.count)
-        }
+        override fun getItem(playerData: PlayerData): ItemStack =
+            getItem(playerData.buildings.undergroundTeleporters.cost, playerData.buildings.undergroundTeleporters.count)
 
         override fun getResourceUse(currentDisposableResources: Int): Int {
             return currentDisposableResources + 20

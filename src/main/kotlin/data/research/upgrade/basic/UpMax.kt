@@ -33,8 +33,8 @@ class UpMax : ResearchUpgrade() {
     override fun onPurchase(clickEvent: InventoryConditionResult, currency: ResearchCurrency, player: Player): PurchaseState {
         val ret = super.onPurchase(clickEvent, currency, player)
         if (ret.success) {
-            player.data!!.barracks.count += 1000
-            player.data!!.matterContainers.count += 1000
+            player.data!!.buildings.barracks.count += 1000
+            player.data!!.buildings.matterContainers.count += 1000
             player.data!!.blocks += 1000 * 5 * 50
         }
         return ret

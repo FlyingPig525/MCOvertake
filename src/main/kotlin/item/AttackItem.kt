@@ -1,9 +1,8 @@
 package io.github.flyingpig525.item
 
-import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
-import io.github.flyingpig525.building.*
+import io.github.flyingpig525.building.Building
 import io.github.flyingpig525.data.player.PlayerData
 import io.github.flyingpig525.data.player.PlayerData.Companion.getDataByPoint
 import io.github.flyingpig525.data.research.action.ActionData
@@ -147,8 +146,8 @@ object AttackItem : Actionable {
             else -> run {
                 if (Building.blockIsBuilding(buildingBlock)) {
                     val building = Building.getBuildingByBlock(buildingBlock)!!
-                    val buildingRef = building.playerRef.get(data)
-                    val targetRef = building.playerRef.get(targetData)
+                    val buildingRef = building.playerRef.get(data.buildings)
+                    val targetRef = building.playerRef.get(targetData.buildings)
                     targetRef.count--
                     if (waterBlock.defaultState() != Block.WATER) {
                         buildingRef.count++

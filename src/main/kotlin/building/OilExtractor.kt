@@ -2,8 +2,10 @@ package io.github.flyingpig525.building
 
 import io.github.flyingpig525.*
 import io.github.flyingpig525.building.Building.Companion.building
+import io.github.flyingpig525.building.Building.Companion.genericBuildingCost
 import io.github.flyingpig525.data.player.PlayerData
 import io.github.flyingpig525.ksp.BuildingCompanion
+import io.github.flyingpig525.ksp.PlayerBuildings
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -24,18 +26,16 @@ import kotlin.reflect.KProperty1
 class OilExtractor : Building {
     override var count: Int = 0
     override val resourceUse: Int get() = 3 * count
+    override val cost: Int
+        get() = genericBuildingCost(count, 300)
 
     override fun place(playerTarget: Point, instance: Instance, data: PlayerData) {
         instance.setBlock(playerTarget.buildingPosition, block.building(identifier))
         count++
     }
 
-    override fun select(player: Player, cost: Int) {
+    override fun select(player: Player) {
         player.inventory[BUILDING_INVENTORY_SLOT] = getItem(cost, count)
-    }
-
-    override fun select(player: Player, data: PlayerData) {
-        player.inventory[BUILDING_INVENTORY_SLOT] = getItem(data)
     }
 
     override fun onDestruction(point: Point, instance: Instance, data: PlayerData): Boolean {
@@ -49,7 +49,7 @@ class OilExtractor : Building {
         override var menuSlot: Int = 0
         override val block: Block = Block.BLACK_CANDLE.withProperty("candles", "4")
         override val identifier: String = "oil:extractor"
-        override val playerRef: KProperty1<PlayerData, Building> = PlayerData::oilExtractors
+        override val playerRef: KProperty1<PlayerBuildings, Building> = PlayerBuildings::oilExtractors
         val oilExtractorDependents: Set<Building.BuildingCompanion> = setOf(PlasticPlant, LubricantProcessor)
 
         override fun getItem(cost: Int, count: Int): ItemStack = item(Material.BLACK_CANDLE) {
@@ -66,7 +66,7 @@ class OilExtractor : Building {
         }
 
         override fun getItem(playerData: PlayerData): ItemStack =
-            getItem(playerData.oilExtractorCost, playerData.oilExtractors.count)
+            getItem(playerData.buildings.oilExtractors.cost, playerData.buildings.oilExtractors.count)
 
         override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 3
 

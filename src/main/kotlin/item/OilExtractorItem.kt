@@ -2,7 +2,6 @@ package io.github.flyingpig525.item
 
 import io.github.flyingpig525.GameInstance
 import io.github.flyingpig525.building.OilExtractor
-import io.github.flyingpig525.building.OilPatch
 import io.github.flyingpig525.data
 import io.github.flyingpig525.data.player.PlayerData
 import io.github.flyingpig525.ksp.Item
@@ -27,12 +26,11 @@ object OilExtractorItem : Actionable {
             event,
             OilExtractor,
             PlayerData::organicMatter,
-            "Organic Matter",
-            PlayerData::oilExtractorCost
+            "Organic Matter"
         )
     }
 
     override fun setItemSlot(player: Player) {
-        player.data?.oilExtractors?.select(player, player.data!!.oilExtractorCost)
+        player.data?.buildings?.oilExtractors?.select(player)
     }
 }

@@ -1,6 +1,5 @@
 package io.github.flyingpig525.item
 
-import cz.lukynka.prettylog.log
 import io.github.flyingpig525.GameInstance
 import io.github.flyingpig525.building.TrainingCamp
 import io.github.flyingpig525.data
@@ -28,13 +27,12 @@ object TrainingCampItem : Actionable {
             event,
             TrainingCamp,
             PlayerData::organicMatter,
-            "Organic Matter",
-            PlayerData::trainingCampCost
+            "Organic Matter"
         )
     }
 
     override fun setItemSlot(player: Player) {
         val data = player.data ?: return
-        data.trainingCamps.select(player, data.trainingCampCost)
+        data.buildings.trainingCamps.select(player)
     }
 }

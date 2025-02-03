@@ -26,12 +26,11 @@ object PlasticPlantItem : Actionable {
             event,
             PlasticPlant,
             PlayerData::organicMatter,
-            "Organic Matter",
-            PlayerData::plasticPlantCost
+            "Organic Matter"
         )
     }
 
     override fun setItemSlot(player: Player) {
-        player.data?.plasticPlants?.select(player, player.data!!.plasticPlantCost)
+        player.data?.buildings?.plasticPlants?.select(player)
     }
 }

@@ -26,12 +26,11 @@ object OilPatchItem : Actionable {
             event,
             OilPatch,
             PlayerData::organicMatter,
-            "Organic Matter",
-            PlayerData::oilPatchCost
+            "Organic Matter"
         )
     }
 
     override fun setItemSlot(player: Player) {
-        player.data?.oilPatches?.select(player, player.data!!.oilPatchCost)
+        player.data?.buildings?.oilPatches?.select(player)
     }
 }

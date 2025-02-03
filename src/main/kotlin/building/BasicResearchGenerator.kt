@@ -1,13 +1,14 @@
 package io.github.flyingpig525.building
 
-import cz.lukynka.prettylog.log
 import io.github.flyingpig525.BUILDING_INVENTORY_SLOT
 import io.github.flyingpig525.MECHANICAL_SYMBOL
 import io.github.flyingpig525.building.Building.Companion.building
+import io.github.flyingpig525.building.Building.Companion.genericBuildingCost
 import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.player.PlayerData
 import io.github.flyingpig525.data.research.currency.BasicResearch
 import io.github.flyingpig525.ksp.BuildingCompanion
+import io.github.flyingpig525.ksp.PlayerBuildings
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -28,18 +29,15 @@ import kotlin.reflect.KProperty1
 class BasicResearchGenerator : Building {
     override var count: Int = 0
     override val resourceUse: Int get() = 3 * count
-
+    override val cost: Int
+        get() = genericBuildingCost(count, 100)
     override fun place(playerTarget: Point, instance: Instance, playerData: PlayerData) {
         instance.setBlock(playerTarget.buildingPosition, block.building(identifier))
         count++
     }
 
-    override fun select(player: Player, cost: Int) {
+    override fun select(player: Player) {
         player.inventory[BUILDING_INVENTORY_SLOT] = getItem(cost, count)
-    }
-
-    override fun select(player: Player, data: PlayerData) {
-        select(player, data.basicResearchStationCost)
     }
 
     override fun tick(data: PlayerData) {
@@ -51,12 +49,12 @@ class BasicResearchGenerator : Building {
         }
     }
 
-    @BuildingCompanion(orderAfter = "MatterCompressionPlant")
+    @BuildingCompanion(orderAfter = "MatterCompressionPlant", "basicResearchStations")
     companion object BasicResearchGeneratorCompanion : Building.BuildingCompanion {
         override var menuSlot: Int = 7
         override val block: Block = Block.SCULK_SENSOR
         override val identifier: String = "research:basic_research"
-        override val playerRef: KProperty1<PlayerData, Building> = PlayerData::basicResearchStations
+        override val playerRef: KProperty1<PlayerBuildings, Building> = PlayerBuildings::basicResearchStations
 
         override fun getItem(cost: Int, count: Int): ItemStack {
             return item(Material.SCULK_SENSOR) {
@@ -73,7 +71,7 @@ class BasicResearchGenerator : Building {
         }
 
         override fun getItem(playerData: PlayerData): ItemStack {
-            return getItem(playerData.basicResearchStationCost, playerData.basicResearchStations.count)
+            return getItem(playerData.buildings.basicResearchStations.cost, playerData.buildings.basicResearchStations.count)
         }
 
         override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 3

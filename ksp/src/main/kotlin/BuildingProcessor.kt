@@ -13,8 +13,10 @@ class BuildingProcessor(
 ) : SymbolProcessor {
 
     private val initialized: MutableMap<KSClassDeclaration, String> = mutableMapOf()
+    private var invoked = false
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
+        if (invoked) return emptyList()
         val itemSymbols = resolver.getSymbolsWithAnnotation("io.github.flyingpig525.ksp.BuildingCompanion")
             .filterIsInstance<KSClassDeclaration>()
         logger.info("symbols")
@@ -33,7 +35,7 @@ class BuildingProcessor(
         }
         var i = 0
         var last: Pair<KSClassDeclaration, String> = initialized.filter { it.value == "first" }.entries.first().toPair()
-        file += "\t${last.first.cutName}.menuSlot = $i\n"
+        file += "\t${last.first.cutName}.menuSlot = 0\n"
         while (initialized.toList().isNotEmpty()) try {
             i++
             val it = initialized.filter { it.value + "Companion" == last.first.simpleName.getShortName() }.entries.first().toPair()
@@ -46,10 +48,40 @@ class BuildingProcessor(
 
         file += "}"
         file.close()
+        createBuildingContainerClass(itemSymbols.toSet(), codeGenerator, resolver)
+        invoked = true
         val unableToProcess = itemSymbols.filterNot { it.validate() }.toList()
         return unableToProcess
     }
 
+}
+
+fun createBuildingContainerClass(buildings: Set<KSClassDeclaration>, codeGenerator: CodeGenerator, resolver: Resolver) {
+    val file = codeGenerator.createNewFile(
+        dependencies = Dependencies(false, *resolver.getAllFiles().toList().toTypedArray()),
+        packageName = "io.github.flyingpig525.ksp",
+        fileName = "PlayerBuildings"
+    )
+    file += "package io.github.flyingpig525.ksp\n\n"
+    file += "import io.github.flyingpig525.building.*\n"
+    file += "import kotlinx.serialization.Serializable\n\n"
+    file += "@Serializable\n"
+    file += "class PlayerBuildings {\n"
+    for (building in buildings) {
+        val annotation: KSAnnotation = building.annotations.first {
+            it.shortName.asString() == "BuildingCompanion"
+        }
+        val propertyNameArg: KSValueArgument = annotation.arguments
+            .first { arg -> arg.name?.asString() == "propertyName" }
+        val propertyName = propertyNameArg.value as String
+        val lowerName: String = if (propertyName != "") propertyName
+            else building.simpleName.getShortName().let {
+                it[0].lowercase() + it.drop(1).replace("Companion", "s")
+            }
+        file += "\tval $lowerName = ${building.simpleName.getShortName().replace("Companion", "")}()\n"
+    }
+    file += "}"
+    file.close()
 }
 
 val KSClassDeclaration.cutName: String?

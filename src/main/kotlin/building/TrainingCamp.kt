@@ -1,12 +1,13 @@
 package io.github.flyingpig525.building
 
-import cz.lukynka.prettylog.log
 import io.github.flyingpig525.MATTER_SYMBOL
 import io.github.flyingpig525.POWER_SYMBOL
 import io.github.flyingpig525.building.Building.Companion.building
+import io.github.flyingpig525.building.Building.Companion.genericBuildingCost
 import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.player.PlayerData
 import io.github.flyingpig525.ksp.BuildingCompanion
+import io.github.flyingpig525.ksp.PlayerBuildings
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -27,17 +28,16 @@ import kotlin.reflect.KProperty1
 class TrainingCamp : Building {
     override var count: Int = 0
     override val resourceUse: Int get() = count * 3
+    override val cost: Int
+        get() = genericBuildingCost(count, 25)
+
     override fun place(playerTarget: Point, instance: Instance, playerData: PlayerData) {
         instance.setBlock(playerTarget.buildingPosition, block.building(identifier))
         count++
     }
 
-    override fun select(player: Player, cost: Int) {
+    override fun select(player: Player) {
         player.inventory[4] = getItem(cost, count)
-    }
-
-    override fun select(player: Player, data: PlayerData) {
-        player.inventory[4] = getItem(data)
     }
 
     override fun tick(data: PlayerData) {
@@ -49,7 +49,7 @@ class TrainingCamp : Building {
         override var menuSlot: Int = 1
         override val block: Block = Block.POLISHED_BLACKSTONE_BUTTON.withProperty("face", "floor")
         override val identifier: String = "power:generator"
-        override val playerRef: KProperty1<PlayerData, Building> = PlayerData::trainingCamps
+        override val playerRef: KProperty1<PlayerBuildings, Building> = PlayerBuildings::trainingCamps
 
         override fun getItem(cost: Int, count: Int): ItemStack {
             return item(Material.POLISHED_BLACKSTONE_BUTTON) {
@@ -66,7 +66,7 @@ class TrainingCamp : Building {
         }
 
         override fun getItem(playerData: PlayerData): ItemStack {
-            return getItem(playerData.trainingCampCost, playerData.trainingCamps.count)
+            return getItem(playerData.buildings.trainingCamps.cost, playerData.buildings.trainingCamps.count)
         }
 
         override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 3

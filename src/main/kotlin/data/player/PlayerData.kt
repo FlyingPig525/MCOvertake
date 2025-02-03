@@ -1,10 +1,13 @@
 package io.github.flyingpig525.data.player
 
 import io.github.flyingpig525.*
-import io.github.flyingpig525.building.*
+import io.github.flyingpig525.building.Building
+import io.github.flyingpig525.building.lubricantColor
+import io.github.flyingpig525.building.plasticColor
 import io.github.flyingpig525.data.player.config.BlockConfig
 import io.github.flyingpig525.data.research.ResearchContainer
 import io.github.flyingpig525.item.*
+import io.github.flyingpig525.ksp.PlayerBuildings
 import io.github.flyingpig525.serialization.BlockSerializer
 import io.github.flyingpig525.wall.wallLevel
 import kotlinx.serialization.Serializable
@@ -26,43 +29,19 @@ import net.minestom.server.utils.time.Cooldown
 import java.time.Duration
 import java.time.Instant
 import java.util.*
-import kotlin.reflect.KProperty0
 
 @Serializable
 class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val block: Block, var playerDisplayName: String) {
     @Transient var gameInstance: GameInstance? = null
     var blockConfig = BlockConfig()
     var blocks: Int = 0
-    val trainingCamps = TrainingCamp()
-    val trainingCampCost: Int get() = genericBuildingCost(trainingCamps.count, 25)
-    val barracks = Barrack()
-    val maxPower: Int get() = 100 + barracks.count * 25
-    val barracksCost: Int get() = genericBuildingCost(barracks.count, 25)
-    val matterExtractors = MatterExtractor()
-    val matterExtractorCost: Int get() = genericBuildingCost(matterExtractors.count, 25)
-    val matterContainers = MatterContainer()
-    val matterContainerCost: Int get() = genericBuildingCost(matterContainers.count, 20)
-    val matterCompressors = MatterCompressionPlant()
-    val matterCompressorCost: Int get() = (matterCompressors.count * 50) + 50
-    val maxMatter: Int get() = 100 + matterContainers.count * 25
+    val buildings = PlayerBuildings()
+    val maxPower: Int get() = 100 + buildings.barracks.count * 25
+    val maxMatter: Int get() = 100 + buildings.matterContainers.count * 25
     val claimCost: Int get() = blocks.floorDiv(500) + 5
     val maxClaimCooldown get() = (((blocks.toLong() / 1000.0) * 50.0) + 1000.0).toLong()
     val colonyCost: Int get() = claimCost * 10
     val raftCost: Int get() = (blocks.floorDiv(10000) * 500) + 500
-    val undergroundTeleporters = UndergroundTeleporter()
-    val teleporterCost: Int get() = undergroundTeleporters.count * 750 + 750
-    val basicResearchStations = BasicResearchGenerator()
-    val basicResearchStationCost get() = genericBuildingCost(basicResearchStations.count, 100)
-    val rockMiners = RockMiner()
-    val rockMinerCost get() = genericBuildingCost(rockMiners.count, 40)
-    val oilPatches = OilPatch()
-    val oilPatchCost get() = genericBuildingCost(oilPatches.count, 750)
-    val oilExtractors = OilExtractor()
-    val oilExtractorCost get() = genericBuildingCost(oilExtractors.count, 300)
-    val plasticPlants = PlasticPlant()
-    val plasticPlantCost get() = genericBuildingCost(plasticPlants.count, 400)
-    val lubricantProcessors = LubricantProcessor()
-    val lubricantProcessorCost get() = genericBuildingCost(lubricantProcessors.count, 400)
     @Transient var claimCooldown = Cooldown(Duration.ofMillis(maxClaimCooldown))
     @Transient var colonyCooldown = Cooldown(Duration.ofSeconds(if (blocks > 0) 15 else 0))
     @Transient var attackCooldown = Cooldown(Duration.ofSeconds(10))
@@ -111,7 +90,7 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
     val disposableResourcesUsed: Int get() {
         var acc = 0
         for (building in Building.BuildingCompanion.registry) {
-                acc += building.playerRef.get(this).resourceUse
+                acc += building.playerRef.get(buildings).resourceUse
         }
         return acc
     }
@@ -145,10 +124,10 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
     @Transient var handAnimationWasDrop = false
     @Transient var bulkWallQueueFirstPos: Point? = null
     @Transient var bulkWallQueueFirstPosJustReset = false
-    private var hasUnlockedMechanicalParts = false
-    private var hasUnlockedPlastic = false
-    private var hasUnlockedLubricant = false
-    private val showResearchTick get() = hasUnlockedMechanicalParts || hasUnlockedPlastic || hasUnlockedLubricant
+    var hasUnlockedMechanicalParts = false
+    var hasUnlockedPlastic = false
+    var hasUnlockedLubricant = false
+    val showResearchTick get() = hasUnlockedMechanicalParts || hasUnlockedPlastic || hasUnlockedLubricant
 
     fun tick(e: InstanceTickEvent) {
         if (wallUpgradeQueue.isNotEmpty() && wallUpgradeCooldown.isReady(Instant.now().toEpochMilli())) run {
@@ -169,8 +148,8 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
     }
 
     fun playerTick(instance: Instance) {
-        matterExtractors.tick(this)
-        rockMiners.tick(this)
+        buildings.matterExtractors.tick(this)
+        buildings.rockMiners.tick(this)
         val player = instance.getPlayerByUuid(UUID.fromString(uuid))
         if (player != null) {
             if (playerDisplayName == "") playerDisplayName = player.username
@@ -179,14 +158,14 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
     }
 
     fun powerTick() {
-        trainingCamps.tick(this)
+        buildings.trainingCamps.tick(this)
     }
 
     fun researchTick() {
-        matterCompressors.tick(this)
-        basicResearchStations.tick(this)
-        plasticPlants.tick(this)
-        lubricantProcessors.tick(this)
+        buildings.matterCompressors.tick(this)
+        buildings.basicResearchStations.tick(this)
+        buildings.plasticPlants.tick(this)
+        buildings.lubricantProcessors.tick(this)
     }
 
     fun updateBossBars(player: Player? = null) {
@@ -280,18 +259,6 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
         packets.forEach { sendPacket(it) }
     }
 
-    fun getBuildingReferenceByIdentifier(identifier: String): KProperty0<Building>? {
-        return when(identifier) {
-            "power:container" -> ::barracks
-            "power:generator" -> ::trainingCamps
-            "matter:container" -> ::matterContainers
-            "matter:generator" -> ::matterExtractors
-            "mechanical:generator" -> ::matterCompressors
-            "underground:teleport" -> ::undergroundTeleporters
-            "research:basic_research" -> ::basicResearchStations
-            else -> null
-        }
-    }
     val research = ResearchContainer()
 
     companion object {
@@ -308,15 +275,6 @@ class PlayerData(val uuid: String, @Serializable(BlockSerializer::class) val blo
         }
         fun Map<String, PlayerData>.toBlockList(): List<Block> {
             return values.map { it.block }
-        }
-        fun genericBuildingCost(count: Int, cost: Int): Int {
-            val generalCost = (count * cost) + cost
-            if (generalCost > 10000) {
-                return (generalCost/1000) * 1000
-            } else if (generalCost > 1000) {
-                return (generalCost/100) * 100
-            }
-            return generalCost
         }
     }
 }

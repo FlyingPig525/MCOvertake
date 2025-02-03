@@ -1,6 +1,5 @@
 package io.github.flyingpig525.item
 
-import cz.lukynka.prettylog.log
 import io.github.flyingpig525.GameInstance
 import io.github.flyingpig525.building.MatterExtractor
 import io.github.flyingpig525.data
@@ -27,13 +26,12 @@ object MatterExtractorItem : Actionable {
             event,
             MatterExtractor,
             PlayerData::organicMatter,
-            "Organic Matter",
-            PlayerData::matterExtractorCost
+            "Organic Matter"
         )
     }
 
     override fun setItemSlot(player: Player) {
         val data = player.data!!
-        data.matterExtractors.select(player, data.matterExtractorCost)
+        data.buildings.matterExtractors.select(player)
     }
 }

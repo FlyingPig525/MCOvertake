@@ -1,6 +1,5 @@
 package io.github.flyingpig525.item
 
-import cz.lukynka.prettylog.log
 import io.github.flyingpig525.BUILDING_SYMBOL
 import io.github.flyingpig525.GameInstance
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
@@ -69,8 +68,8 @@ object SelectBuildingItem : Actionable {
                 setItemSlot(player)
             } else if (res.clickedItem.hasTag(Tag.String("identifier"))) {
                 val identifier = res.clickedItem.getTag(Tag.String("identifier"))
-                val ref = Building.getBuildingByIdentifier(identifier)!!.playerRef.get(playerData)
-                ref.select(player, playerData)
+                val ref = Building.getBuildingByIdentifier(identifier)!!.playerRef.get(playerData.buildings)
+                ref.select(player)
                 close = true
             }
             if (close) {
@@ -92,7 +91,7 @@ object SelectBuildingItem : Actionable {
         val data = player.data ?: return
         val identifier = player.inventory[4].getTag(Tag.String("identifier"))
         val building = Building.getBuildingByIdentifier(identifier)
-        val ref = building?.playerRef?.get(data) ?: return
-        ref.select(player, data)
+        val ref = building?.playerRef?.get(data.buildings) ?: return
+        ref.select(player)
     }
 }

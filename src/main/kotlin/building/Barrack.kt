@@ -1,13 +1,14 @@
 package io.github.flyingpig525.building
 
-import cz.lukynka.prettylog.log
 import io.github.flyingpig525.BUILDING_INVENTORY_SLOT
 import io.github.flyingpig525.MATTER_SYMBOL
 import io.github.flyingpig525.POWER_SYMBOL
 import io.github.flyingpig525.building.Building.Companion.building
+import io.github.flyingpig525.building.Building.Companion.genericBuildingCost
 import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.player.PlayerData
 import io.github.flyingpig525.ksp.BuildingCompanion
+import io.github.flyingpig525.ksp.PlayerBuildings
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -28,17 +29,15 @@ import kotlin.reflect.KProperty1
 class Barrack : Building {
     override var count: Int = 0
     override val resourceUse: Int get() = count * 2
+    override val cost: Int
+        get() = genericBuildingCost(count, 25)
     override fun place(playerTarget: Point, instance: Instance, playerData: PlayerData) {
         instance.setBlock(playerTarget.buildingPosition, block.building(identifier))
         count++
     }
 
-    override fun select(player: Player, cost: Int) {
+    override fun select(player: Player) {
         player.inventory[BUILDING_INVENTORY_SLOT] = getItem(cost, count)
-    }
-
-    override fun select(player: Player, data: PlayerData) {
-        player.inventory[BUILDING_INVENTORY_SLOT] = getItem(data)
     }
 
     @BuildingCompanion("TrainingCamp")
@@ -46,7 +45,7 @@ class Barrack : Building {
         override var menuSlot: Int = 3
         override val block: Block = Block.SOUL_LANTERN
         override val identifier: String = "power:container"
-        override val playerRef: KProperty1<PlayerData, Building> = PlayerData::barracks
+        override val playerRef: KProperty1<PlayerBuildings, Building> = PlayerBuildings::barracks
 
         override fun getItem(cost: Int, count: Int): ItemStack {
             return item(Material.SOUL_LANTERN) {
@@ -62,7 +61,7 @@ class Barrack : Building {
         }
 
         override fun getItem(playerData: PlayerData): ItemStack {
-            return getItem(playerData.barracksCost, playerData.barracks.count)
+            return getItem(playerData.buildings.barracks.cost, playerData.buildings.barracks.count)
         }
 
         override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 2

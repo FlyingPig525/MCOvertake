@@ -2,8 +2,10 @@ package io.github.flyingpig525.building
 
 import io.github.flyingpig525.*
 import io.github.flyingpig525.building.Building.Companion.building
+import io.github.flyingpig525.building.Building.Companion.genericBuildingCost
 import io.github.flyingpig525.data.player.PlayerData
 import io.github.flyingpig525.ksp.BuildingCompanion
+import io.github.flyingpig525.ksp.PlayerBuildings
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -24,18 +26,16 @@ import kotlin.reflect.KProperty1
 class PlasticPlant : Building {
     override var count: Int = 0
     override val resourceUse: Int get() = 3 * count
+    override val cost: Int
+        get() = genericBuildingCost(count, 400)
 
     override fun place(playerTarget: Point, instance: Instance, data: PlayerData) {
         instance.setBlock(playerTarget.buildingPosition, block.building(identifier))
         count++
     }
 
-    override fun select(player: Player, cost: Int) {
+    override fun select(player: Player) {
         player.inventory[BUILDING_INVENTORY_SLOT] = getItem(cost, count)
-    }
-
-    override fun select(player: Player, data: PlayerData) {
-        player.inventory[BUILDING_INVENTORY_SLOT] = getItem(data)
     }
 
     override fun tick(data: PlayerData) {
@@ -47,7 +47,7 @@ class PlasticPlant : Building {
         override var menuSlot: Int = 0
         override val block: Block = Block.CAMPFIRE
         override val identifier: String = "oil:plastic_plant"
-        override val playerRef: KProperty1<PlayerData, Building> = PlayerData::plasticPlants
+        override val playerRef: KProperty1<PlayerBuildings, Building> = PlayerBuildings::plasticPlants
 
         override fun getItem(cost: Int, count: Int): ItemStack = item(Material.CAMPFIRE) {
             itemName = "$plasticColor$PLASTIC_SYMBOL Plastic Plant <gray>-</gray><green> $MATTER_SYMBOL $cost".asMini()
@@ -62,32 +62,32 @@ class PlasticPlant : Building {
             set(Tag.String("identifier"), identifier)
         }
 
-        override fun getItem(playerData: PlayerData): ItemStack = getItem(playerData.plasticPlantCost, playerData.plasticPlants.count)
+        override fun getItem(playerData: PlayerData): ItemStack =
+            getItem(playerData.buildings.plasticPlants.cost, playerData.buildings.plasticPlants.count)
 
         override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 3
 
         override fun validate(instance: Instance, point: Point): Boolean {
             if (!point.isUnderground) return false
-            val count = mutableListOf(2, 2, 2, 2)
+            var count = 0
+            val extractors: MutableSet<Point> = mutableSetOf()
             val positions: MutableSet<Point> = mutableSetOf()
-            var i = 0
             point.repeatDirection { point, _ ->
-                count[i] = 0
                 if (Building.getBuildingByBlock(instance.getBlock(point)) == OilExtractor && OilExtractor.validate(instance, point)) {
+                    extractors += point
                     point.repeatDirection { point, _ ->
                         if (Building.getBuildingByBlock(instance.getBlock(point)) in OilExtractor.oilExtractorDependents
                             && point !in positions
                         ) {
-                            count[i]++
+                            count++
                             positions += point
                         }
                         false
                     }
-                } else count[i] = 2
-                i++
+                }
                 false
             }
-            return count.any { it < 2 }
+            return count < extractors.size
         }
     }
 }

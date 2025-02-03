@@ -1,11 +1,12 @@
 package io.github.flyingpig525.building
 
-import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
 import io.github.flyingpig525.building.Building.Companion.building
+import io.github.flyingpig525.building.Building.Companion.genericBuildingCost
 import io.github.flyingpig525.data.player.PlayerData
 import io.github.flyingpig525.dsl.blockDisplay
 import io.github.flyingpig525.ksp.BuildingCompanion
+import io.github.flyingpig525.ksp.PlayerBuildings
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -21,13 +22,15 @@ import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import net.minestom.server.tag.Tag
-import java.util.UUID
+import java.util.*
 import kotlin.reflect.KProperty1
 
 @Serializable
 class RockMiner : Building {
     override var count: Int = 0
     override val resourceUse: Int get() = 4 * count
+    override val cost: Int
+        get() = genericBuildingCost(count, 40)
 
     override fun place(playerTarget: Point, instance: Instance, data: PlayerData) {
         playerTarget.buildingPosition.repeatDirection { point, dir ->
@@ -45,12 +48,8 @@ class RockMiner : Building {
         count++
     }
 
-    override fun select(player: Player, cost: Int) {
+    override fun select(player: Player) {
         player.inventory[BUILDING_INVENTORY_SLOT] = getItem(cost, count)
-    }
-
-    override fun select(player: Player, data: PlayerData) {
-        player.inventory[BUILDING_INVENTORY_SLOT] = getItem(data)
     }
 
     override fun tick(data: PlayerData) {
@@ -62,7 +61,7 @@ class RockMiner : Building {
         override var menuSlot: Int = 0
         override val block: Block = Block.TRIPWIRE_HOOK
         override val identifier: String = "matter:rock_miner"
-        override val playerRef: KProperty1<PlayerData, Building> = PlayerData::rockMiners
+        override val playerRef: KProperty1<PlayerBuildings, Building> = PlayerBuildings::rockMiners
 
         override fun getItem(cost: Int, count: Int): ItemStack = item(Material.TRIPWIRE_HOOK) {
             itemName = "<green>$MATTER_SYMBOL Rock Miner <gray>-</gray><white> $MECHANICAL_SYMBOL $cost".asMini()
@@ -76,7 +75,8 @@ class RockMiner : Building {
             set(Tag.String("identifier"), identifier)
         }
 
-        override fun getItem(playerData: PlayerData): ItemStack = getItem(playerData.rockMinerCost, playerData.rockMiners.count)
+        override fun getItem(playerData: PlayerData): ItemStack =
+            getItem(playerData.buildings.rockMiners.cost, playerData.buildings.rockMiners.count)
 
         override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 4
 

@@ -1,16 +1,14 @@
 package io.github.flyingpig525.item
 
-import io.github.flyingpig525.*
+import io.github.flyingpig525.GameInstance
 import io.github.flyingpig525.building.RockMiner
-import io.github.flyingpig525.building.UndergroundTeleporter
+import io.github.flyingpig525.data
 import io.github.flyingpig525.data.player.PlayerData
 import io.github.flyingpig525.ksp.Item
-import net.bladehunt.kotstom.extension.set
 import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerUseItemEvent
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
-import net.minestom.server.network.packet.server.ServerPacket.Play
 import java.util.*
 
 @Item
@@ -28,12 +26,11 @@ object RockMinerItem : Actionable {
             event,
             RockMiner,
             PlayerData::mechanicalParts,
-            "Mechanical Parts",
-            PlayerData::rockMinerCost
+            "Mechanical Parts"
         )
     }
 
     override fun setItemSlot(player: Player) {
-        player.data?.rockMiners?.select(player, player.data!!.rockMinerCost)
+        player.data?.buildings?.rockMiners?.select(player)
     }
 }

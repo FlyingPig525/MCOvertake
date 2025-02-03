@@ -23,7 +23,6 @@ import net.minestom.server.particle.Particle
 import net.minestom.server.tag.Tag
 import java.util.*
 import kotlin.reflect.KMutableProperty1
-import kotlin.reflect.KProperty1
 
 val ERROR_ITEM = item(Material.BARRIER) {
     itemName = "<red><bold>ERROR".asMini()
@@ -91,8 +90,7 @@ fun basicBuildingPlacementInt(
     event: PlayerUseItemEvent,
     buildingCompanion: Building.BuildingCompanion,
     currencyRef: KMutableProperty1<PlayerData, Int>,
-    currencyName: String,
-    costRef: KProperty1<PlayerData, Int>
+    currencyName: String
 ): Boolean {
     if (sneakCheck(event)) return true
     val instance = event.instance
@@ -104,16 +102,16 @@ fun basicBuildingPlacementInt(
         return true
     }
     if (buildingCompanion.getResourceUse(playerData.disposableResourcesUsed) > playerData.maxDisposableResources) return true
-    val cost = costRef.get(playerData)
+    val building = buildingCompanion.playerRef.get(playerData.buildings)
+    val cost = building.cost
     val currency = currencyRef.get(playerData)
     if (currency < cost) {
         event.player.sendMessage("<red><bold>Not enough $currencyName </bold>(${currency}/${cost})".asMini())
         return true
     }
     currencyRef.set(playerData, currency - cost)
-    val building = buildingCompanion.playerRef.get(playerData)
     building.place(target, instance, playerData)
-    building.select(event.player, costRef.get(playerData))
+    building.select(event.player)
     playerData.updateBossBars()
     return true
 }
@@ -122,8 +120,7 @@ fun basicBuildingPlacementDouble(
     event: PlayerUseItemEvent,
     buildingCompanion: Building.BuildingCompanion,
     currencyRef: KMutableProperty1<PlayerData, Double>,
-    currencyName: String,
-    costRef: KProperty1<PlayerData, Int>
+    currencyName: String
 ): Boolean {
     if (sneakCheck(event)) return true
     val instance = event.instance
@@ -137,16 +134,16 @@ fun basicBuildingPlacementDouble(
     if (buildingCompanion.getResourceUse(playerData.disposableResourcesUsed) > playerData.maxDisposableResources) {
         return true
     }
-    val cost = costRef.get(playerData)
+    val building = buildingCompanion.playerRef.get(playerData.buildings)
+    val cost = building.cost
     val currency = currencyRef.get(playerData)
     if (currency < cost) {
         event.player.sendMessage("<red><bold>Not enough $currencyName </bold>(${currency}/${cost})".asMini())
         return true
     }
     currencyRef.set(playerData, currency - cost)
-    val building = buildingCompanion.playerRef.get(playerData)
     building.place(target, instance, playerData)
-    building.select(event.player, costRef.get(playerData))
+    building.select(event.player)
     playerData.updateBossBars()
     return true
 }
