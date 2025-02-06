@@ -27,13 +27,6 @@ class ItemProcessor(
         file += "fun initItems() {\n"
         logger.info("file start")
         itemSymbols.forEach { it.accept(ItemVisitor(file, logger), Unit) }
-        // fuck selectblockitem
-        // it causes a stack overflow if it is annotated with @Item
-        file += "\tio.github.flyingpig525.item.SelectBlockItem.apply {\n"
-        file += "\t\tio.github.flyingpig525.item.Actionable.registry.add(this)\n"
-        file += "\t\tio.github.flyingpig525.item.Actionable.persistentRegistry.add(this)\n"
-        file += "\t}\n"
-        file += "\tcz.lukynka.prettylog.log(\"SelectBlockItem initialized...\")\n"
         file += "}"
         file.close()
         val unableToProcess = itemSymbols.filterNot { it.validate() }.toList()
