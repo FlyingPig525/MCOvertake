@@ -7,6 +7,7 @@ import io.github.flyingpig525.data.block.*
 import io.github.flyingpig525.data.inventory.InventoryConditionArguments
 import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.data.player.BlockData.Companion.toBlockList
+import io.github.flyingpig525.ksp.Item
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.dsl.item.lore
@@ -25,10 +26,7 @@ import net.minestom.server.tag.Tag
 import java.util.*
 import kotlin.enums.EnumEntries
 
-// man fuck this class
-// if it is annotated it causes a stack overflow crash in build
-// I CANT EVEN SEE WHAT THE PROBLEM IS BECAUSE IT CRASHES IN BUILD
-//@Item(persistent = true)
+@Item(persistent = true)
 object SelectBlockItem : Actionable {
     override val identifier: String = "item:select_block"
     override val itemMaterial: Material = Material.STRUCTURE_VOID
@@ -66,7 +64,7 @@ object SelectBlockItem : Actionable {
         return true
     }
 
-    private fun openCategory(entries: EnumEntries<*>, e: InventoryConditionArguments, instance: GameInstance) {
+    private fun <T : Enum<T>> openCategory(entries: EnumEntries<T>, e: InventoryConditionArguments, instance: GameInstance) {
         val inventory = Inventory(InventoryType.CHEST_6_ROW, "Select Block")
 
 
