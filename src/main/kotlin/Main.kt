@@ -3,7 +3,7 @@ package io.github.flyingpig525
 import cz.lukynka.prettylog.*
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.GameInstance.Companion.gameInstance
-import io.github.flyingpig525.command.coopCommand
+import io.github.flyingpig525.command.*
 import io.github.flyingpig525.console.Command
 import io.github.flyingpig525.console.ConfigCommand
 import io.github.flyingpig525.console.OpCommand
@@ -130,6 +130,8 @@ var instances: MutableMap<String, GameInstance> = mutableMapOf()
 lateinit var lobbyInstance: InstanceContainer
 
 lateinit var permissionManager: PermissionManager private set
+
+val tpsMonitor = TpsMonitor()
 
 fun main() = runBlocking { try {
     System.setProperty("minestom.chunk-view-distance", "32")
@@ -331,162 +333,7 @@ fun main() = runBlocking { try {
     instances.values.onEach { it.registerInteractionEvents() }
 
     // Stolen monitoring code
-    val tpsMonitor = TpsMonitor()
     tpsMonitor.start()
-    val tickCommand = kommand {
-        name = "tick"
-        defaultExecutor {
-            val tps = tpsMonitor.getTps()
-            val tps1 = tpsMonitor.getAvgTps1Min()
-            val tps5 = tpsMonitor.getAvgTps5Min()
-            val tps15 = tpsMonitor.getAvgTps15Min()
-            player.sendMessage("<dark_gray>-----<gold><bold>Tick Data</bold><dark_gray>-----".asMini().append(Component.newline())
-                .append("<gold>Tick: <bold>$tick".asMini()).append(Component.newline())
-                .append("<${if (tps <= 15) "red" else "gold"}>TPS: <bold>${tps}".asMini()).append(Component.newline())
-                .append("<${if (tps1 <= 17) "red" else "gold"}>Average TPS 1 Min: <bold>${tps1}".asMini()).append(Component.newline())
-                .append("<${if (tps5 <= 18) "red" else "gold"}>Average TPS 5 Min: <bold>${tps5}".asMini()).append(Component.newline())
-                .append("<${if (tps15 <= 19) "red" else "gold"}>Average TPS 15 Min: <bold>${tps15}".asMini())
-            )
-        }
-    }
-    val lobbyCommand = Kommand("lobby", "hub", "s", "home").apply {
-        defaultExecutor = CommandExecutor { sender, context ->
-            if (sender !is Player) return@CommandExecutor
-            if (sender.instance == lobbyInstance) return@CommandExecutor
-            sender.sendMessage("<gray>Sending you to the <red>lobby<gray>...".asMini())
-            sender.closeInventory()
-            sender.inventory.clear()
-            sender.instance = lobbyInstance
-            sender.removeBossBars()
-        }
-    }
-    val createInstanceCommand = kommand {
-        name = "createInstance"
-        buildSyntax {
-            condition {
-                permissionManager.hasPermission(player, Permission("instance.creation"))
-            }
-            executor {
-                player.sendMessage("<red><bold>Missing required arguments!".asMini())
-            }
-        }
-        val nameArg = ArgumentString("name")
-        val researchArg = ArgumentBoolean("research")
-        val skyIslandsArg = ArgumentBoolean("sky_islands")
-        val mapSizeArg = ArgumentInteger("map_size").min(1).max(1000).setDefaultValue(300)
-
-        buildSyntax(nameArg, researchArg, skyIslandsArg, mapSizeArg) {
-            condition {
-                permissionManager.hasPermission(player, Permission("instance.creation"))
-            }
-            onlyPlayers()
-            executorAsync(Dispatchers.IO) {
-                val name = context.get(nameArg)
-                val research = context.get(researchArg)
-                val skyIslands = context.get(skyIslandsArg)
-                val mapSize = context.get(mapSizeArg)
-                try {
-                    player.sendMessage("<green>Attempting to create instance $name".asMini())
-                    if (name == "") {
-                        player.sendMessage("<red><bold>Invalid instance name!".asMini())
-                        return@executorAsync
-                    }
-                    if (name in instances.keys) {
-                        player.sendMessage("<red><bold>Instance \"$name\" already exists!".asMini())
-                        return@executorAsync
-                    }
-                    instances[name] = GameInstance(
-                        Path.of("instances", name),
-                        name,
-                        parentInstanceConfig.copy(
-                            noiseSeed = (Long.MIN_VALUE..Long.MAX_VALUE).random(),
-                            allowResearch = research,
-                            generateSkyIslands = skyIslands,
-                            mapSize = mapSize
-                        )).apply {
-                        totalInit(player)
-                    }
-                    config.instanceNames += name
-                    configFile.writeText(getCommentString(config))
-                    player.sendMessage("<green><bold>Created instance \"$name\" successfully!".asMini())
-                } catch(e: Exception) {
-                    // IllegalPathException doesnt exist but it does??????
-                    if (e::class.simpleName == "IllegalPathException") {
-                        player.sendMessage("<red><bold>Name \"$name\" contains illegal characters!".asMini())
-                    }
-                    player.sendMessage("<red><bold>Something went wrong! </bold>(${e::class.simpleName} || ${e.message})".asMini())
-                    log(e)
-                }
-            }
-        }
-    }
-    val deleteInstanceCommand = kommand {
-        name = "removeInstance"
-        val argument = ArgumentString("name").apply {
-            setSuggestionCallback { sender, context, suggestion ->
-                for (name in instances.keys) {
-                    val current = context.getRaw("name")
-                    if (current in name) {
-                        suggestion.addEntry(SuggestionEntry(name))
-                    }
-                }
-                if (suggestion.entries.size == 0) {
-                    suggestion.entries += instances.keys.map { SuggestionEntry(it) }
-                }
-            }
-        }
-
-        buildSyntax {
-            condition {
-                permissionManager.hasPermission(player, Permission("instance.deletion"))
-            }
-            executor {
-                player.sendMessage("<red><bold>Missing required arguments!".asMini())
-            }
-        }
-
-        buildSyntax(argument) {
-            condition {
-                permissionManager.hasPermission(player, Permission("instance.deletion"))
-            }
-            onlyPlayers()
-            executorAsync {
-                val name = get(argument)
-                if (name !in instances.keys) {
-                    player.sendMessage("<red><bold>Instance \"$name\" does not exist!".asMini())
-                    return@executorAsync
-                }
-                val gameInstance = instances[name]!!
-                if (gameInstance.instance.players.isNotEmpty()) {
-                    player.sendMessage("<red><bold>Cannot delete an instance with players!".asMini())
-                    return@executorAsync
-                }
-                InstanceManager.unregisterInstance(gameInstance.instance)
-                gameInstance.delete()
-                instances.remove(name)
-                config.instanceNames.remove(name)
-                configFile.writeText(getCommentString(config))
-                player.sendMessage("<green><bold>Instance \"$name\" successfully removed!".asMini())
-                System.gc()
-            }
-        }
-    }
-    val gcCommand = kommand {
-        name = "gc"
-
-        buildSyntax {
-            condition {
-                permissionManager.hasPermission(player, Permission("process.garbage_collect"))
-            }
-            executor {
-                var ramUsage = (BenchmarkManager.usedMemory / 1e6).toLong()
-                player.sendMessage("Before: ${ramUsage}mb")
-                System.gc()
-                ramUsage = (BenchmarkManager.usedMemory / 1e6).toLong()
-                player.sendMessage("After: ${ramUsage}mb")
-            }
-        }
-    }
     val validateResearchCommand = kommand {
         name = "validateResearch"
         buildSyntax {
@@ -515,27 +362,6 @@ fun main() = runBlocking { try {
             data.blockConfig = BlockConfig()
         }
     }
-    val setTimeCommand = kommand {
-        name = "setTime"
-        val tick = ArgumentLong("tick")
-
-        buildSyntax {
-            condition {
-                permissionManager.hasPermission(player, Permission("instance.time"))
-            }
-            executor {  }
-        }
-
-        buildSyntax(tick) {
-            condition {
-                permissionManager.hasPermission(player, Permission("instance.time"))
-            }
-            executor {
-                val tick = context.get(tick)
-                player.instance.time = tick
-            }
-        }
-    }
     val noOpCommand = kommand {
         name = "removeOp"
 
@@ -543,66 +369,7 @@ fun main() = runBlocking { try {
             player.data?.research?.basicResearch?.upgradeByName("Test")?.level = 0
         }
     }
-    val setGrass = kommand {
-        name = "setGrass"
 
-        val loc = ArgumentRelativeVec3("pos")
-        buildSyntax(loc) {
-            executor {
-                val loc = context.get(loc).fromSender(sender)
-                player.instance.setBlock(loc.playerPosition, Block.GRASS_BLOCK)
-                player.instance.setBlock(loc.visiblePosition, Block.GRASS_BLOCK)
-            }
-        }
-    }
-    val setAllCommand = kommand {
-        name = "setAll"
-
-        val block = ArgumentBlockState("block")
-        buildSyntax(block) {
-            executorAsync {
-                println("called")
-                val block = context.get(block)
-                val instanceConfig = player.gameInstance!!.instanceConfig
-                val instance = player.instance
-                for (x in 0..instanceConfig.mapSize) {
-                    for (z in 0..instanceConfig.mapSize) {
-                        instance.loadChunk(Vec(x.toDouble(), z.toDouble())).thenRun {
-                            onAllBuildingPositions(Vec(x.toDouble(), 1.0, z.toDouble())) {
-                                val visible = instance.getBlock(it.visiblePosition).defaultState()
-                                if (visible != Block.WATER && visible != Block.AIR) {
-                                    instance.setBlock(it.visiblePosition, block)
-                                    instance.setBlock(it.playerPosition, block)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    val tpCommand = kommand {
-        name = "tp"
-        val targetArg = ArgumentEntity("player").apply {
-            onlyPlayers(true)
-            singleEntity(true)
-        }
-
-        buildSyntax(targetArg) {
-            condition {
-                permissionManager.hasPermission(player, Permission("instance.tp"))
-            }
-            executor {
-                val target = context.get(targetArg)
-                val targetPlayer = target.findFirstPlayer(sender)
-                if (targetPlayer == null) {
-                    player.sendMessage("<red><bold>Player ${context.getRaw(targetArg)} does not exist")
-                    return@executor
-                }
-                player.teleport(targetPlayer.position)
-            }
-        }
-    }
     CommandManager.register(
         createInstanceCommand,
         lobbyCommand,

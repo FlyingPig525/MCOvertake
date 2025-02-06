@@ -15,7 +15,8 @@ data class ConfigElement(
     val name: String,
     var value: Boolean,
     val trueText: String = "TRUE",
-    val falseText: String = "FALSE"
+    val falseText: String = "FALSE",
+    val hasOnChange: Boolean = false
 ) {
     val iconWithValue: ItemStack
         get() {

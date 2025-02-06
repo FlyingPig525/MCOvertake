@@ -124,6 +124,7 @@ class BlockData(val uuid: String, @Serializable(BlockSerializer::class) val bloc
     @Transient var handAnimationWasDrop = false
     @Transient var bulkWallQueueFirstPos: Point? = null
     @Transient var bulkWallQueueFirstPosJustReset = false
+    @Transient var sunOrMoonChangeCooldown: Cooldown = Cooldown(Duration.ZERO)
     var hasUnlockedMechanicalParts = false
     var hasUnlockedPlastic = false
     var hasUnlockedLubricant = false

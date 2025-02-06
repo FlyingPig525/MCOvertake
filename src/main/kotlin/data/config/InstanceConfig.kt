@@ -22,7 +22,10 @@ data class InstanceConfig(
     // Can be lowered to make inviting the wrong people less punishing, but that is not recommended
     val coopKickWaitTime: Long = 60,
     // Whether sky islands should be generated
-    val generateSkyIslands: Boolean = false
+    val generateSkyIslands: Boolean = false,
+    // How long a player needs to wait before they can change the targeted attack upgrade,
+    // "Induced Glare" or "Suprise Attack," in minutes
+    val sunOrMoonCooldownLength: Long = 60
 ) {
     init {
         assert(noiseScale in 0.0..2.0) { "Noise scale must be within 0 and 2" }
@@ -42,7 +45,9 @@ data class InstanceConfig(
             "// Whether to allow research upgrades or not",
             "// The amount of time a co-op kicked is queued for in minutes\n\t" +
                     "// Can be lowered to make inviting the wrong people less punishing, but that is not recommended. Default: 60",
-            "// Whether sky islands should be generated. Default: false"
+            "// Whether sky islands should be generated. Default: false",
+            "// How long a player needs to wait before they can change the targeted attack upgrade,\n\t" +
+                    "\"Induced Glare\" or \"Suprise Attack,\" in minutes. Default: 60"
         )
     }
 }

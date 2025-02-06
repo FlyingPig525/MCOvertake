@@ -75,7 +75,12 @@ object PlayerConfigItem : Actionable {
             }
             val name = res.clickedItem.getTag(Tag.String("name")) ?: return@addInventoryCondition
             val ref = config.map()[name]?.get(config) as ConfigElement? ?: return@addInventoryCondition
-            ref.value = !ref.value
+            val fn = PlayerConfig.onChangeFunctions[name]
+            if (fn != null) {
+                fn(player, ref)
+            } else {
+                ref.value = !ref.value
+            }
             player.openInventory!![slot] = ref.iconWithValue.withTag(Tag.String("name"), name)
         }
         event.player.openInventory(inventory)
@@ -113,7 +118,12 @@ object PlayerConfigItem : Actionable {
             }
             val name = res.clickedItem.getTag(Tag.String("name")) ?: return@addInventoryCondition
             val ref = data.blockConfig.map()[name]?.get(data.blockConfig) as ConfigElement? ?: return@addInventoryCondition
-            ref.value = !ref.value
+            val fn = BlockConfig.onChangeFunctions[name]
+            if (fn != null) {
+                fn(player, ref)
+            } else {
+                ref.value = !ref.value
+            }
             player.openInventory!![slot] = ref.iconWithValue.withTag(Tag.String("name"), name)
         }
         event.player.openInventory(inventory)
