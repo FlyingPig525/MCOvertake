@@ -1,8 +1,8 @@
 plugins {
-    kotlin("jvm") version "2.0.0"
+    kotlin("jvm") version "2.1.10"
     id("com.gradleup.shadow") version "8.3.0"
-    kotlin("plugin.serialization") version "2.0.0"
-    id("com.google.devtools.ksp") version "2.0.0-1.0.24"
+    kotlin("plugin.serialization") version "2.1.10"
+    id("com.google.devtools.ksp") version "2.1.10-1.0.29"
 }
 
 group = "io.github.flyingpig525"
