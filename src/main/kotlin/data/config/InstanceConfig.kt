@@ -47,7 +47,7 @@ data class InstanceConfig(
                     "// Can be lowered to make inviting the wrong people less punishing, but that is not recommended. Default: 60",
             "// Whether sky islands should be generated. Default: false",
             "// How long a player needs to wait before they can change the targeted attack upgrade,\n\t" +
-                    "\"Induced Glare\" or \"Suprise Attack,\" in minutes. Default: 60"
+                    "// \"Induced Glare\" or \"Suprise Attack,\" in minutes. Default: 60"
         )
     }
 }

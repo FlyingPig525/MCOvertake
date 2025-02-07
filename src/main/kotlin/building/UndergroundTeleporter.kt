@@ -3,6 +3,7 @@ package io.github.flyingpig525.building
 import io.github.flyingpig525.*
 import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.building.Building.Companion.genericBuildingCost
+import io.github.flyingpig525.building.category.BasicCategory
 import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.dsl.blockDisplay
 import io.github.flyingpig525.ksp.BuildingCompanion
@@ -54,9 +55,8 @@ class UndergroundTeleporter : Building, Interactable {
         return false
     }
 
-    @BuildingCompanion("BasicResearchGenerator")
+    @BuildingCompanion("BasicResearchGenerator", BasicCategory::class)
     companion object UndergroundTeleporterCompanion : Building.BuildingCompanion, DisplayEntityBlock, Validated {
-        override var menuSlot: Int = 6
         override val block: Block = Block.END_GATEWAY
         override val identifier: String = "underground:teleport"
         override val playerRef: KProperty1<PlayerBuildings, Building> = PlayerBuildings::undergroundTeleporters

@@ -5,6 +5,7 @@ import io.github.flyingpig525.MATTER_SYMBOL
 import io.github.flyingpig525.POWER_SYMBOL
 import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.building.Building.Companion.genericBuildingCost
+import io.github.flyingpig525.building.category.BasicCategory
 import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.ksp.BuildingCompanion
@@ -40,9 +41,8 @@ class Barrack : Building {
         player.inventory[BUILDING_INVENTORY_SLOT] = getItem(cost, count)
     }
 
-    @BuildingCompanion("TrainingCamp")
+    @BuildingCompanion("TrainingCamp", BasicCategory::class)
     companion object BarrackCompanion : Building.BuildingCompanion {
-        override var menuSlot: Int = 3
         override val block: Block = Block.SOUL_LANTERN
         override val identifier: String = "power:container"
         override val playerRef: KProperty1<PlayerBuildings, Building> = PlayerBuildings::barracks

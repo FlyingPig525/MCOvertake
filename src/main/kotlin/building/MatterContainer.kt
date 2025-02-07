@@ -4,6 +4,7 @@ import io.github.flyingpig525.BUILDING_INVENTORY_SLOT
 import io.github.flyingpig525.MATTER_SYMBOL
 import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.building.Building.Companion.genericBuildingCost
+import io.github.flyingpig525.building.category.BasicCategory
 import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.ksp.BuildingCompanion
@@ -40,9 +41,8 @@ class MatterContainer : Building {
         player.inventory[BUILDING_INVENTORY_SLOT] = getItem(cost, count)
     }
 
-    @BuildingCompanion("MatterExtractor")
+    @BuildingCompanion("MatterExtractor", BasicCategory::class)
     companion object MatterContainerCompanion : Building.BuildingCompanion {
-        override var menuSlot: Int = 2
         override val block: Block = Block.LANTERN
         override val identifier: String = "matter:container"
         override val playerRef: KProperty1<PlayerBuildings, Building> = PlayerBuildings::matterContainers

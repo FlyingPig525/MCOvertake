@@ -4,6 +4,9 @@ import io.github.flyingpig525.BUILDING_SYMBOL
 import io.github.flyingpig525.GameInstance
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.building.Building
+import io.github.flyingpig525.building.category.BasicCategory
+import io.github.flyingpig525.building.category.BuildingCategory
+import io.github.flyingpig525.building.category.UndergroundCategory
 import io.github.flyingpig525.data
 import io.github.flyingpig525.instances
 import io.github.flyingpig525.ksp.Item
@@ -36,7 +39,15 @@ object SelectBuildingItem : Actionable {
     }
 
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
-        val inventory = Inventory(InventoryType.CHEST_5_ROW, "Select Blueprint")
+        openCategory(event, BasicCategory)
+        return true
+    }
+
+    fun openCategory(event: PlayerUseItemEvent, category: BuildingCategory) {
+        val inventory = Inventory(
+            InventoryType.CHEST_5_ROW,
+            "Select Blueprint - ${category::class.simpleName?.replace("Category", "")}"
+        )
         val playerData = event.player.data!!
         val clearItem = item(Material.BARRIER) { itemName = "<red><bold>Clear Selected Item".asMini() }
 
@@ -53,11 +64,13 @@ object SelectBuildingItem : Actionable {
         inventory[0, 3] = yellowItem
         inventory[8, 3] = yellowItem
 
-        for ((i, building) in Building.BuildingCompanion.registry.sortedBy { it.menuSlot }.withIndex()) {
+        for ((i, building) in category.buildings.withIndex()) {
             val x = (i % 7) + 1
             val y = (i / 7) + 1
             inventory[x, y] = building.getItem(playerData)
         }
+        inventory[1, 3] = BasicCategory.icon.withTag(Tag.String("category"), "BasicCategory")
+        inventory[2, 3] = UndergroundCategory.icon.withTag(Tag.String("category"), "UndergroundCategory")
         inventory[4, 3] = clearItem
         event.player.openInventory(inventory)
         inventory.addInventoryCondition { player, slot, clickType, res ->
@@ -71,6 +84,12 @@ object SelectBuildingItem : Actionable {
                 val ref = Building.getBuildingByIdentifier(identifier)!!.playerRef.get(playerData.buildings)
                 ref.select(player)
                 close = true
+            } else if (res.clickedItem.hasTag(Tag.String("category"))) {
+                val category = res.clickedItem.getTag(Tag.String("category"))
+                when (category) {
+                    "BasicCategory" -> openCategory(event, BasicCategory)
+                    "UndergroundCategory" -> openCategory(event, UndergroundCategory)
+                }
             }
             if (close) {
                 player.closeInventory()
@@ -78,8 +97,6 @@ object SelectBuildingItem : Actionable {
                 inventory[slot] = res.clickedItem
             }
         }
-
-        return true
     }
 
     override fun setItemSlot(player: Player) {

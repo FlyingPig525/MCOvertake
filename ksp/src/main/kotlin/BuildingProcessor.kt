@@ -11,8 +11,10 @@ class BuildingProcessor(
     private val logger: KSPLogger,
     private val options: Map<String, String>
 ) : SymbolProcessor {
-
-    private val initialized: MutableMap<KSClassDeclaration, String> = mutableMapOf()
+    /**
+     * Category to (order to declaration)
+     */
+    private val initialized: MutableMap<String, MutableList<Pair<String, KSClassDeclaration>>> = mutableMapOf()
     private var invoked = false
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
@@ -28,23 +30,38 @@ class BuildingProcessor(
             fileName = "BuildingInitFunction"
         )
         file += "package io.github.flyingpig525.ksp\n\n"
+        file += "import io.github.flyingpig525.building.category.*\n"
         file += "import io.github.flyingpig525.building.*\n\n"
         file += "fun initBuildingCompanions() {\n"
         itemSymbols.forEach {
             it.accept(BuildingVisitor(file, logger, initialized), Unit)
         }
-        var i = 0
-        var last: Pair<KSClassDeclaration, String> = initialized.filter { it.value == "first" }.entries.first().toPair()
-        file += "\t${last.first.cutName}.menuSlot = 0\n"
-        while (initialized.toList().isNotEmpty()) try {
-            i++
-            val it = initialized.filter { it.value + "Companion" == last.first.simpleName.getShortName() }.entries.first().toPair()
-            file += "\t${it.first.cutName}.menuSlot = $i\n"
-            last = it
-            initialized.remove(last.first)
-        } catch (e: Exception) {
-            break
+//        var i = 0
+//        var last: Pair<KSClassDeclaration, Pair<String, String>> = initialized.filter { it.value.first == "first" }.entries.first().toPair()
+//        file += "\t${last.first.cutName}.menuSlot = 0\n"
+        for ((category, list) in initialized) {
+            var i = 0
+            var last = list.first { it.first == "first" }
+            file += "\t$category.buildings += ${last.second.cutName}\n"
+            while (list.isNotEmpty()) try {
+                i++
+                val it = list.first { it.first + "Companion" == last.second.simpleName.getShortName()}
+                file += "\t$category.buildings += ${it.second.cutName}\n"
+                last = it
+                list.remove(it)
+            } catch (e: Exception) {
+                break
+            }
         }
+//        while (initialized.toList().isNotEmpty()) try {
+//            i++
+//            val it = initialized.filter { it.value.first + "Companion" == last.first.simpleName.getShortName() }.entries.first().toPair()
+//            file += "\t${it.first.cutName}.menuSlot = $i\n"
+//            last = it
+//            initialized.remove(last.first)
+//        } catch (e: Exception) {
+//            break
+//        }
 
         file += "}"
         file.close()
@@ -90,7 +107,7 @@ val KSClassDeclaration.cutName: String?
 class BuildingVisitor(
     private val file: OutputStream,
     private val logger: KSPLogger,
-    private val initialized: MutableMap<KSClassDeclaration, String>
+    private val initialized: MutableMap<String, MutableList<Pair<String, KSClassDeclaration>>>
 ) : KSVisitorVoid() {
     override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
         if (classDeclaration.classKind != ClassKind.OBJECT || !classDeclaration.isCompanionObject) {
@@ -116,7 +133,13 @@ class BuildingVisitor(
         val orderAfterArg: KSValueArgument = annotation.arguments
             .first { arg -> arg.name?.asString() == "orderAfter" }
         val orderAfter = orderAfterArg.value as String
-        initialized[classDeclaration] = orderAfter
+        val categoryArg = annotation.arguments
+            .first { arg -> arg.name?.asString() == "category" }
+        val category = (categoryArg.value as KSType).declaration.simpleName.getShortName()
+        if (initialized[category] == null) {
+            initialized[category] = mutableListOf()
+        }
+        initialized[category]!! += orderAfter to classDeclaration
     }
 }
 

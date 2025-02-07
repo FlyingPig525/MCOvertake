@@ -3,6 +3,7 @@ package io.github.flyingpig525.building
 import io.github.flyingpig525.*
 import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.building.Building.Companion.genericBuildingCost
+import io.github.flyingpig525.building.category.UndergroundCategory
 import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.ksp.BuildingCompanion
 import io.github.flyingpig525.ksp.PlayerBuildings
@@ -42,9 +43,8 @@ class PlasticPlant : Building {
         data.plastic += 20 * count
     }
 
-    @BuildingCompanion("OilExtractor")
+    @BuildingCompanion("OilExtractor", UndergroundCategory::class)
     companion object PlasticPlantCompanion : Building.BuildingCompanion, Validated {
-        override var menuSlot: Int = 0
         override val block: Block = Block.CAMPFIRE
         override val identifier: String = "oil:plastic_plant"
         override val playerRef: KProperty1<PlayerBuildings, Building> = PlayerBuildings::plasticPlants

@@ -4,6 +4,7 @@ import io.github.flyingpig525.BUILDING_INVENTORY_SLOT
 import io.github.flyingpig525.MATTER_SYMBOL
 import io.github.flyingpig525.MECHANICAL_SYMBOL
 import io.github.flyingpig525.building.Building.Companion.building
+import io.github.flyingpig525.building.category.BasicCategory
 import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.ksp.BuildingCompanion
@@ -48,9 +49,8 @@ class MatterCompressionPlant : Building {
         }
     }
 
-    @BuildingCompanion("MatterContainer", "matterCompressors")
+    @BuildingCompanion("MatterContainer", BasicCategory::class, "matterCompressors")
     companion object MatterCompressionPlantCompanion : Building.BuildingCompanion {
-        override var menuSlot: Int = 4
         override val block: Block = Block.HEAVY_CORE
         override val identifier: String = "mechanical:generator"
         override val playerRef: KProperty1<PlayerBuildings, Building> = PlayerBuildings::matterCompressors

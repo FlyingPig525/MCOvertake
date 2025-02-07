@@ -3,6 +3,7 @@ package io.github.flyingpig525.building
 import io.github.flyingpig525.*
 import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.building.Building.Companion.genericBuildingCost
+import io.github.flyingpig525.building.category.UndergroundCategory
 import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.ksp.BuildingCompanion
 import io.github.flyingpig525.ksp.PlayerBuildings
@@ -43,9 +44,8 @@ class OilPatch : Building {
         }
     }
 
-    @BuildingCompanion("RockMiner", "oilPatches")
+    @BuildingCompanion("RockMiner", UndergroundCategory::class, "oilPatches")
     companion object OilPatchCompanion : Building.BuildingCompanion, Validated {
-        override var menuSlot: Int = 0
         override val block: Block = Block.BLACK_CARPET
         override val identifier: String = "oil:patch"
         override val playerRef: KProperty1<PlayerBuildings, Building> = PlayerBuildings::oilPatches

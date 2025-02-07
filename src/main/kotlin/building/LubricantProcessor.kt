@@ -5,6 +5,7 @@ import io.github.flyingpig525.LUBRICANT_SYMBOL
 import io.github.flyingpig525.MATTER_SYMBOL
 import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.building.Building.Companion.genericBuildingCost
+import io.github.flyingpig525.building.category.UndergroundCategory
 import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.ksp.BuildingCompanion
@@ -45,9 +46,8 @@ class LubricantProcessor : Building {
         data.lubricant += 5 * count
     }
 
-    @BuildingCompanion("PlasticPlant")
+    @BuildingCompanion("PlasticPlant", UndergroundCategory::class)
     companion object LubricantProcessorCompanion : Building.BuildingCompanion, Validated {
-        override var menuSlot: Int = 0
         override val block: Block = Block.SOUL_CAMPFIRE
         override val identifier: String = "oil:lubricant_processor"
         override val playerRef: KProperty1<PlayerBuildings, Building> = PlayerBuildings::lubricantProcessors

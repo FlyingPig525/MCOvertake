@@ -3,6 +3,7 @@ package io.github.flyingpig525.building
 import io.github.flyingpig525.*
 import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.building.Building.Companion.genericBuildingCost
+import io.github.flyingpig525.building.category.UndergroundCategory
 import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.dsl.blockDisplay
 import io.github.flyingpig525.ksp.BuildingCompanion
@@ -56,9 +57,8 @@ class RockMiner : Building {
         data.organicMatter += 4 * count
     }
 
-    @BuildingCompanion("UndergroundTeleporter")
+    @BuildingCompanion("first", UndergroundCategory::class)
     companion object RockMinerCompanion : Building.BuildingCompanion, DisplayEntityBlock, Validated {
-        override var menuSlot: Int = 0
         override val block: Block = Block.TRIPWIRE_HOOK
         override val identifier: String = "matter:rock_miner"
         override val playerRef: KProperty1<PlayerBuildings, Building> = PlayerBuildings::rockMiners

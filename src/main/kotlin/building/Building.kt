@@ -26,7 +26,6 @@ interface Building {
     fun tick(data: BlockData) {}
 
     interface BuildingCompanion {
-        var menuSlot: Int
         val block: Block
         val identifier: String
         val playerRef: KProperty1<PlayerBuildings, Building>

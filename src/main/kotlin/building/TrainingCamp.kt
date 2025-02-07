@@ -4,6 +4,7 @@ import io.github.flyingpig525.MATTER_SYMBOL
 import io.github.flyingpig525.POWER_SYMBOL
 import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.building.Building.Companion.genericBuildingCost
+import io.github.flyingpig525.building.category.BasicCategory
 import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.ksp.BuildingCompanion
@@ -44,9 +45,8 @@ class TrainingCamp : Building {
         data.power += count * 0.5 + 0.5
     }
 
-    @BuildingCompanion("first")
+    @BuildingCompanion("first", BasicCategory::class)
     companion object TrainingCampCompanion : Building.BuildingCompanion {
-        override var menuSlot: Int = 1
         override val block: Block = Block.POLISHED_BLACKSTONE_BUTTON.withProperty("face", "floor")
         override val identifier: String = "power:generator"
         override val playerRef: KProperty1<PlayerBuildings, Building> = PlayerBuildings::trainingCamps
