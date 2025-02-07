@@ -24,14 +24,14 @@ class BlockConfig {
     val doResearch = ConfigElement(
         trueIcon = Material.SCULK_SENSOR,
         falseIcon = Material.SCULK_SENSOR,
-        name = "Enable Research Creation",
+        name = "Enable Research Generation",
         value = true
     )
     @JvmField
     val doIntermediary = ConfigElement(
         trueIcon = Material.ANVIL,
         falseIcon = Material.BARRIER,
-        name = "Enable Intermediary Resource Creation",
+        name = "Enable Intermediary Resource Generation",
         value = true
     )
     @JvmField
@@ -44,7 +44,10 @@ class BlockConfig {
         falseText = "Suprise Attack",
         hasOnChange = true
     )
-    fun map(): Map<String, Field> = this::class.java.declaredFields.associateBy { it.name }.filter { it.key != "Companion" }
+
+    fun map(): Map<String, Field> = this::class.java.declaredFields.associateBy { it.name }.filter {
+        it.key != "Companion" && it.key != "onChangeFunctions"
+    }
 
     companion object {
         /**

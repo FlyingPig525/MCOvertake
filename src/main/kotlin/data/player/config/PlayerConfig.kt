@@ -22,7 +22,9 @@ class PlayerConfig {
         true
     )
 
-    fun map(): Map<String, Field> = this::class.java.declaredFields.associateBy { it.name }.filter { it.key != "Companion" }
+    fun map(): Map<String, Field> = this::class.java.declaredFields.associateBy { it.name }.filter {
+        it.key != "Companion" && it.key != "onChangeFunctions"
+    }
 
     companion object {
         /**

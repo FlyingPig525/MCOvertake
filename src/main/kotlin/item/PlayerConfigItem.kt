@@ -54,6 +54,7 @@ object PlayerConfigItem : Actionable {
 
         var i = 0
         for (el in config.map()) {
+            println(el.key)
             val value = el.value.get(config)
             if (value !is ConfigElement) continue
             inventory[i*2] = value.iconWithValue.withTag(Tag.String("name"), el.key)
