@@ -168,8 +168,8 @@ fun main() = runBlocking { try {
         log("Error when loading parent instance config", LogType.ERROR)
         log(e)
     }
-    val resourcePack = MinecraftResourcePackReader.minecraft().readFromDirectory(
-        object {}.javaClass.getResource("pack")!!.toURI().toPath().toFile()
+    val resourcePack = MinecraftResourcePackReader.minecraft().readFromInputStream(
+        object {}::class.java.getResourceAsStream("pack")!!
     )
     val builtResourcePack = MinecraftResourcePackWriter.minecraft().build(resourcePack)
     val packServer = ResourcePackServer.server()
