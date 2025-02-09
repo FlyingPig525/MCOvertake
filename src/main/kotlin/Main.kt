@@ -159,10 +159,11 @@ fun main() = runBlocking { try {
         log("Error when loading parent instance config", LogType.ERROR)
         log(e)
     }
-    val uri = object {}::class.java.getResourceAsStream("pack.zip")
+    val uri = object {}::class.java.getResourceAsStream("pack.zip") ?: throw Exception("Resource pack not found")
     val resourcePack = MinecraftResourcePackReader.minecraft().readFromInputStream(
         uri
     )
+    if (resourcePack.description() == null) throw Exception("Resource pack not loaded")
     val builtResourcePack = MinecraftResourcePackWriter.minecraft().build(resourcePack)
     val packServer = ResourcePackServer.server()
         .address(config.serverAddress, config.packServerPort)
@@ -234,6 +235,7 @@ fun main() = runBlocking { try {
             .build()
         player.sendResourcePacks(ResourcePackRequest.resourcePackRequest()
             .packs(info)
+            .replace(true)
             .prompt("<green>This resource pack provides \"crucial\" visual changes that allow for a better and more <i>smooth</i> experience.".asMini())
             .build()
         )

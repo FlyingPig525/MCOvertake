@@ -75,5 +75,7 @@ class MatterExtractor : Building {
         }
 
         override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 3
+
+        override fun shouldCallItemUse(): Boolean = true
     }
 }

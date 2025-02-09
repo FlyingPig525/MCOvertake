@@ -341,13 +341,17 @@ class GameInstance(
         instance.eventNode().listen<PlayerBlockInteractEvent> { e ->
             val item = e.player.getItemInHand(e.hand)
             val building = Building.getBuildingByBlock(e.block)
-            var callItemUse = true
+            var callItemUse = building?.shouldCallItemUse() ?: false
             val data = e.player.data
             if (building != null && data != null) {
                 val ref = building.playerRef.get(data.buildings)
                 if (ref is Interactable) {
                     ref.onInteract(e)
                 }
+            }
+            if (callItemUse) {
+                val event = PlayerUseItemEvent(e.player, e.hand, e.player.getItemInHand(e.hand), 0)
+                instance.eventNode().call(event)
             }
         }
 //        log("Item use event registered")

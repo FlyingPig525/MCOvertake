@@ -35,6 +35,8 @@ interface Building {
 
         fun getResourceUse(currentDisposableResources: Int): Int
 
+        fun shouldCallItemUse(): Boolean = false
+
         companion object {
             val registry: MutableSet<BuildingCompanion> = mutableSetOf()
         }
