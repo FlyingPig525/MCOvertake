@@ -11,8 +11,9 @@ import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade.Companion.on
 import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade.Companion.onPlaceColony
 import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade.Companion.onPlaceRaft
 import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade.Companion.onPostAttack
-import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade.Companion.onPreAttack
+import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade.Companion.onAttackCostCalculation
 import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade.Companion.onUpgradeWall
+import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade.Companion.onWaterAttackCostCalculation
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -38,8 +39,12 @@ class ResearchContainer : Iterable<ResearchCurrency> {
         var data = basicResearch.upgrades.onPostAttack(eventData)
         return data
     }
-    fun onPreAttack(eventData: AttackCostCalculation): AttackCostCalculation {
-        var data = basicResearch.upgrades.onPreAttack(eventData)
+    fun onAttackCostCalculation(eventData: AttackCostCalculation): AttackCostCalculation {
+        var data = basicResearch.upgrades.onAttackCostCalculation(eventData)
+        return data
+    }
+    fun onWaterAttackCostCalculation(eventData: WaterAttackCostCalculation): WaterAttackCostCalculation {
+        var data = basicResearch.upgrades.onWaterAttackCostCalculation(eventData)
         return data
     }
     fun onAttacked(eventData: Attacked): Attacked {

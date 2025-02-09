@@ -43,7 +43,7 @@ object AttackItem : Actionable {
             val preAttackData = ActionData.AttackCostCalculation(data, instance.instance, player).apply {
                 wallLevel = buildingBlock.wallLevel
                 this.targetData = targetData
-            }.let { data.research.onPreAttack(it) }
+            }.let { data.research.onAttackCostCalculation(it) }
             val attackCost = getAttackCost(
                 preAttackData.targetData,
                 target.buildingPosition,
@@ -61,13 +61,20 @@ object AttackItem : Actionable {
         }
     }
 
-    private fun getAttacking(player: Player): BlockData? {
+    fun getAttacking(player: Player): BlockData? {
         val players = instances.fromInstance(player.instance)!!.blockData
         val target = player.getTrueTarget(20)!!
         return players.getDataByPoint(target.playerPosition, player.instance)
     }
 
-    private fun getAttackCost(targetData: BlockData, wall: Point, instance: Instance, wallLevel: Int, percentageDecrease: Double): Int {
+    fun getAttackCost(
+        targetData: BlockData,
+        wall: Point,
+        instance: Instance,
+        wallLevel: Int,
+        percentageDecrease: Double,
+        baseAttackCost: Int = targetData.baseAttackCost
+    ): Int {
         var additiveModifier = 0
         additiveModifier += getWallAttackCost(
             wall,
@@ -76,10 +83,10 @@ object AttackItem : Actionable {
             customWallLevel = wallLevel,
             basePercentage = 1.05 - percentageDecrease + targetData.research.basicResearch.adjacentWallPercentageIncrease
         )
-        return (targetData.baseAttackCost) + additiveModifier
+        return (baseAttackCost) + additiveModifier
     }
 
-    private fun getAttackCooldown(targetData: BlockData, wallLevel: Int): Cooldown {
+    fun getAttackCooldown(targetData: BlockData, wallLevel: Int): Cooldown {
         var cooldownTicks = 20L
         if (wallLevel <= 10) {
             cooldownTicks += 3 * wallLevel
@@ -89,7 +96,7 @@ object AttackItem : Actionable {
         return Cooldown(Duration.ofMillis(cooldownTicks*50))
     }
 
-    private fun attackRaft(targetData: BlockData, point: Point, instance: Instance) {
+    fun attackRaft(targetData: BlockData, point: Point, instance: Instance) {
         ClaimWaterItem.destroyPlayerRaft(point.withY(40.0), instance)
         targetData.blocks--
         instance.setBlock(point.withY(38.0), Block.SAND)
@@ -104,7 +111,6 @@ object AttackItem : Actionable {
         val target = event.player.getTrueTarget(20) ?: return true
         val buildingPoint = target.buildingPosition
         val playerBlock = instance.getBlock(target.playerPosition)
-        val waterBlock = instance.getBlock(target.visiblePosition)
         val buildingBlock = instance.getBlock(buildingPoint)
         if (playerBlock == Block.GRASS_BLOCK || playerBlock == Block.SAND || playerBlock == data_.block) {
             return true
@@ -113,7 +119,7 @@ object AttackItem : Actionable {
         val preAttackData = ActionData.AttackCostCalculation(data_, instance, event.player).apply {
             wallLevel = buildingBlock.wallLevel
             targetData = _targetData
-        }.let { data_.research.onPreAttack(it) }
+        }.let { data_.research.onAttackCostCalculation(it) }
         val attackCost = getAttackCost(
             preAttackData.targetData,
             target.buildingPosition,
@@ -131,9 +137,23 @@ object AttackItem : Actionable {
             event.player.sendMessage("<red><bold>Not enough Power </bold>(${data.power}/${postAttack.attackCost})".asMini())
             return true
         }
-        val targetPlayer = instance.getPlayerByUuid(postAttack.targetData.uuid.toUUID())
-        val targetData = postAttack.targetData
-        // TODO: REFACTOR THIS TO USE BUILDING REFERENCES
+        attack(event, postAttack)
+
+        return true
+    }
+
+    fun attack(event: PlayerUseItemEvent, attackData: ActionData.Attack) {
+        val player = event.player
+        val instance = event.instance
+        val data = attackData.playerData
+        val targetPlayer = instance.getPlayerByUuid(attackData.targetData.uuid.toUUID())
+        val targetData = attackData.targetData
+        val target = player.getTrueTarget(20) ?: return
+        val buildingPoint = target.buildingPosition
+        val playerBlock = instance.getBlock(target.playerPosition)
+        val waterBlock = instance.getBlock(target.visiblePosition)
+        val buildingBlock = instance.getBlock(buildingPoint)
+
         val taken = when(buildingBlock) {
             Block.AIR -> { true }
             Block.LILY_PAD -> {
@@ -175,34 +195,32 @@ object AttackItem : Actionable {
             }
         }
         if (taken) {
-            postAttack.playerData.blocks++
-            postAttack.targetData.blocks--
+            attackData.playerData.blocks++
+            attackData.targetData.blocks--
             if (Building.blockIsBuilding(buildingBlock)) {
-                claimWithParticle(event.player, target, postAttack.playerData.block, instance)
+                claimWithParticle(event.player, target, attackData.playerData.block, instance)
                 if (targetPlayer != null) {
                     SelectBuildingItem.updatePlayerItem(targetPlayer)
                 }
                 SelectBuildingItem.updatePlayerItem(event.player)
             } else {
-                claimWithParticle(event.player, target, postAttack.playerData.block, instance)
+                claimWithParticle(event.player, target, attackData.playerData.block, instance)
             }
         }
-        data.attackCooldown = postAttack.attackCooldown
+        data.attackCooldown = attackData.attackCooldown
         data.sendPacket(
             SetCooldownPacket(
                 itemMaterial.cooldownIdentifier,
                 data.attackCooldown.ticks
             )
         )
-        data.power -= postAttack.attackCost
-        ActionData.Attacked(postAttack.targetData, instance, targetPlayer).apply {
+        data.power -= attackData.attackCost
+        ActionData.Attacked(attackData.targetData, instance, targetPlayer).apply {
             this.attackerData = data
             this.attackerPlayer = event.player
         }.also { targetData.research.onAttacked(it) }
         data.updateBossBars()
         targetData.updateBossBars()
-
-        return true
     }
 
     override fun setItemSlot(player: Player) {

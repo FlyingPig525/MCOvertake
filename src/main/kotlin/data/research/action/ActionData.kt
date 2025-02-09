@@ -64,6 +64,18 @@ sealed class ActionData(val playerData: BlockData, val instance: Instance?, val 
         var targetData: BlockData = BlockData.NONE
     }
 
+    class WaterAttackCostCalculation(playerData: BlockData, instance: Instance, player: Player) : ActionData(
+        playerData, instance, player
+    ) {
+        var wallLevel = 0
+        var targetData = BlockData.NONE
+
+        /**
+         * The cost added due to attacking from water
+         */
+        var costAddition = 0
+    }
+
     class UpgradeWall(playerData: BlockData, instance: Instance) : ActionData(
         playerData, instance,
         null

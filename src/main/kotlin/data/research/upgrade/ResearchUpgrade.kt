@@ -2,11 +2,11 @@ package io.github.flyingpig525.data.research.upgrade
 
 import io.github.flyingpig525.data.research.action.ActionData.*
 import io.github.flyingpig525.data.research.currency.ResearchCurrency
+import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade.Companion.onWaterAttackCostCalculation
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.ItemDsl
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
-import net.bladehunt.kotstom.dsl.item.lore
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.bladehunt.kotstom.extension.adventure.noItalic
 import net.minestom.server.entity.Player
@@ -43,6 +43,11 @@ sealed class ResearchUpgrade {
      * Executes before attacking another player
      */
     open fun onAttackCostCalculation(eventData: AttackCostCalculation): AttackCostCalculation? = null
+
+    /**
+     * Executes before attacking another player from water
+     */
+    open fun onWaterAttackCostCalculation(eventData: WaterAttackCostCalculation): WaterAttackCostCalculation? = null
 
     /**
      * Executes when another player attacks
@@ -92,10 +97,18 @@ sealed class ResearchUpgrade {
             return data
         }
         // Implemented
-        fun List<ResearchUpgrade>.onPreAttack(eventData: AttackCostCalculation): AttackCostCalculation {
+        fun List<ResearchUpgrade>.onAttackCostCalculation(eventData: AttackCostCalculation): AttackCostCalculation {
             var data = eventData
             forEach {
                 data = it.onAttackCostCalculation(data) ?: data
+            }
+            return data
+        }
+        // Implemented
+        fun List<ResearchUpgrade>.onWaterAttackCostCalculation(eventData: WaterAttackCostCalculation): WaterAttackCostCalculation {
+            var data = eventData
+            forEach {
+                data = it.onWaterAttackCostCalculation(data) ?: data
             }
             return data
         }

@@ -543,6 +543,9 @@ fun Point.anyAdjacentBlocksMatch(block: Block, instance: Instance): Boolean {
     return ret
 }
 
+fun Point.anyDirectionalBlocksMatch(block: Block, instance: Instance): Boolean =
+    repeatDirection { point, _ -> instance.getBlock(point).defaultState() == block.defaultState() }
+
 enum class Direction(val str: String, val opposite: String) {
     NORTH("north", "south"),
     NORTH_EAST("north_east", "south_west"),

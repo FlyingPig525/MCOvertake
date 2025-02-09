@@ -212,6 +212,7 @@ class GameInstance(
                 val buildingBlock = instance.getBlock(buildingPoint).defaultState()
                 val playerBlock = instance.getBlock(playerPoint).defaultState()
                 val canAccess = playerPoint.anyAdjacentBlocksMatch(playerData.block, instance)
+                val attackFromWater = playerPoint.anyDirectionalBlocksMatch(Block.SAND, instance)
                 when (playerBlock) {
                     Block.GRASS_BLOCK -> {
                         if (canAccess) {
@@ -242,8 +243,13 @@ class GameInstance(
                     }
 
                     else -> {
+                        val targetData = blockData.getDataByBlock(playerBlock)
                         if (canAccess) {
                             AttackItem.setItemSlot(e.player)
+                        } else if (attackFromWater) {
+                            AttackFromWaterItem.setItemSlot(e.player)
+                        } else if (targetData != null) {
+                            PlayerItem.setItemSlot(e.player)
                         } else {
                             e.player.inventory.idle()
                         }
@@ -594,6 +600,9 @@ class GameInstance(
             }
         }
     }
+
+    operator fun get(uuid: UUID) = dataResolver[uuid]
+    operator fun get(uuid: String) = dataResolver[uuid]
 
     companion object {
         fun Map<String, GameInstance>.fromInstance(instance: Instance): GameInstance? {
