@@ -20,14 +20,12 @@ import io.github.flyingpig525.item.SelectBlockItem
 import io.github.flyingpig525.ksp.initBuildingCompanions
 import io.github.flyingpig525.ksp.initItems
 import io.github.flyingpig525.log.MCOvertakeLogType
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import net.bladehunt.kotstom.*
-import net.bladehunt.kotstom.command.Kommand
 import net.bladehunt.kotstom.dsl.item.amount
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -41,18 +39,8 @@ import net.bladehunt.kotstom.extension.roundToBlock
 import net.bladehunt.kotstom.extension.set
 import net.kyori.adventure.resource.ResourcePackInfo
 import net.kyori.adventure.resource.ResourcePackRequest
-import net.kyori.adventure.text.Component
 import net.minestom.server.MinecraftServer
 import net.minestom.server.collision.ShapeImpl
-import net.minestom.server.command.builder.CommandExecutor
-import net.minestom.server.command.builder.arguments.ArgumentBoolean
-import net.minestom.server.command.builder.arguments.ArgumentString
-import net.minestom.server.command.builder.arguments.minecraft.ArgumentBlockState
-import net.minestom.server.command.builder.arguments.minecraft.ArgumentEntity
-import net.minestom.server.command.builder.arguments.number.ArgumentInteger
-import net.minestom.server.command.builder.arguments.number.ArgumentLong
-import net.minestom.server.command.builder.arguments.relative.ArgumentRelativeVec3
-import net.minestom.server.command.builder.suggestion.SuggestionEntry
 import net.minestom.server.coordinate.Point
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.coordinate.Vec
@@ -87,7 +75,10 @@ import team.unnamed.creative.serialize.minecraft.MinecraftResourcePackWriter
 import team.unnamed.creative.server.ResourcePackServer
 import java.io.File
 import java.net.URI
+import java.nio.file.FileSystemNotFoundException
 import java.nio.file.Path
+import java.nio.file.Paths
+import java.nio.file.spi.FileSystemProvider
 import java.util.*
 import kotlin.io.path.toPath
 
@@ -168,8 +159,9 @@ fun main() = runBlocking { try {
         log("Error when loading parent instance config", LogType.ERROR)
         log(e)
     }
+    val uri = object {}::class.java.getResourceAsStream("pack.zip")
     val resourcePack = MinecraftResourcePackReader.minecraft().readFromInputStream(
-        object {}::class.java.getResourceAsStream("pack")!!
+        uri
     )
     val builtResourcePack = MinecraftResourcePackWriter.minecraft().build(resourcePack)
     val packServer = ResourcePackServer.server()
