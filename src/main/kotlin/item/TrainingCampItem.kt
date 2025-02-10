@@ -6,8 +6,6 @@ import io.github.flyingpig525.item.template.BuildingItem
 import io.github.flyingpig525.ksp.Item
 
 @Item
-object TrainingCampItem : BuildingItem<Double>(
-    TrainingCamp,
-    BlockData::organicMatter,
-    "Organic Matter"
+object TrainingCampItem : BuildingItem(
+    TrainingCamp
 )

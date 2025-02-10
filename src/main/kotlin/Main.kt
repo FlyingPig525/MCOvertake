@@ -20,6 +20,7 @@ import io.github.flyingpig525.item.SelectBlockItem
 import io.github.flyingpig525.ksp.initBuildingCompanions
 import io.github.flyingpig525.ksp.initItems
 import io.github.flyingpig525.log.MCOvertakeLogType
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -382,11 +383,13 @@ fun main() = runBlocking { try {
 
     // Save loop
     SchedulerManager.scheduleTask({
-        instances.values.onEach {
-            it.save()
-        }
-        if (config.printSaveMessages) {
-            log("Game data saved")
+        launch {
+            instances.values.onEach {
+                it.save()
+            }
+            if (config.printSaveMessages) {
+                log("Game data saved")
+            }
         }
     }, TaskSchedule.minutes(1), TaskSchedule.minutes(1))
 

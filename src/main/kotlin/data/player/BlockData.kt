@@ -160,6 +160,7 @@ class BlockData(val uuid: String, @Serializable(BlockSerializer::class) val bloc
 
     fun powerTick() {
         buildings.trainingCamps.tick(this)
+        buildings.armsManufacturers.tick(this)
     }
 
     fun researchTick() {

@@ -6,8 +6,6 @@ import io.github.flyingpig525.item.template.BuildingItem
 import io.github.flyingpig525.ksp.Item
 
 @Item
-object RockMinerItem : BuildingItem<Int>(
-    RockMiner,
-    BlockData::mechanicalParts,
-    "Mechanical Parts"
+object RockMinerItem : BuildingItem(
+    RockMiner
 )

@@ -7,9 +7,7 @@ import io.github.flyingpig525.ksp.Item
 import net.minestom.server.item.Material
 
 @Item
-object UndergroundTeleporterItem : BuildingItem<Double>(
+object UndergroundTeleporterItem : BuildingItem(
     UndergroundTeleporter,
-    BlockData::organicMatter,
-    "Organic Matter",
     Material.COPPER_GRATE
 )

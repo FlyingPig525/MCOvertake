@@ -6,8 +6,6 @@ import io.github.flyingpig525.item.template.BuildingItem
 import io.github.flyingpig525.ksp.Item
 
 @Item
-object PlasticPlantItem : BuildingItem<Double>(
-    PlasticPlant,
-    BlockData::organicMatter,
-    "Organic Matter"
+object PlasticPlantItem : BuildingItem(
+    PlasticPlant
 )

@@ -5,6 +5,7 @@ import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.building.Building.Companion.genericBuildingCost
 import io.github.flyingpig525.building.category.UndergroundCategory
 import io.github.flyingpig525.data.player.BlockData
+import io.github.flyingpig525.data.player.CurrencyCost
 import io.github.flyingpig525.ksp.BuildingCompanion
 import io.github.flyingpig525.ksp.PlayerBuildings
 import kotlinx.serialization.Serializable
@@ -27,8 +28,7 @@ import kotlin.reflect.KProperty1
 class PlasticPlant : Building {
     override var count: Int = 0
     override val resourceUse: Int get() = 3 * count
-    override val cost: Int
-        get() = genericBuildingCost(count, 400)
+    override val cost get() = CurrencyCost.genericOrganicMatter(count, 400.0)
 
     override fun place(playerTarget: Point, instance: Instance, data: BlockData) {
         instance.setBlock(playerTarget.buildingPosition, block.building(identifier))
@@ -49,8 +49,8 @@ class PlasticPlant : Building {
         override val identifier: String = "oil:plastic_plant"
         override val playerRef: KProperty1<PlayerBuildings, Building> = PlayerBuildings::plasticPlants
 
-        override fun getItem(cost: Int, count: Int): ItemStack = item(Material.CAMPFIRE) {
-            itemName = "$plasticColor$PLASTIC_SYMBOL Plastic Plant <gray>-</gray><green> $MATTER_SYMBOL $cost".asMini()
+        override fun getItem(cost: CurrencyCost, count: Int): ItemStack = item(Material.CAMPFIRE) {
+            itemName = "$plasticColor$PLASTIC_SYMBOL Plastic Plant <gray>-</gray><green> $MATTER_SYMBOL ${cost.organicMatter}".asMini()
             lore {
                 +"<dark_gray>Processes oil provided by Oil Extractors".asMini()
                 +"<dark_gray>to create Plastic"

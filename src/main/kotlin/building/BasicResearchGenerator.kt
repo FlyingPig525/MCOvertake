@@ -7,6 +7,7 @@ import io.github.flyingpig525.building.Building.Companion.genericBuildingCost
 import io.github.flyingpig525.building.category.BasicCategory
 import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.player.BlockData
+import io.github.flyingpig525.data.player.CurrencyCost
 import io.github.flyingpig525.data.research.currency.BasicResearch
 import io.github.flyingpig525.ksp.BuildingCompanion
 import io.github.flyingpig525.ksp.PlayerBuildings
@@ -30,8 +31,7 @@ import kotlin.reflect.KProperty1
 class BasicResearchGenerator : Building {
     override var count: Int = 0
     override val resourceUse: Int get() = 3 * count
-    override val cost: Int
-        get() = genericBuildingCost(count, 100)
+    override val cost get() = CurrencyCost.genericMechanicalParts(count, 100)
     override fun place(playerTarget: Point, instance: Instance, playerData: BlockData) {
         instance.setBlock(playerTarget.buildingPosition, block.building(identifier))
         count++
@@ -56,9 +56,9 @@ class BasicResearchGenerator : Building {
         override val identifier: String = "research:basic_research"
         override val playerRef: KProperty1<PlayerBuildings, Building> = PlayerBuildings::basicResearchStations
 
-        override fun getItem(cost: Int, count: Int): ItemStack {
+        override fun getItem(cost: CurrencyCost, count: Int): ItemStack {
             return item(Material.SCULK_SENSOR) {
-                itemName = "<${BasicResearch.color}>${BasicResearch.symbol} Basic Research Station <gray>-</gray><white> $MECHANICAL_SYMBOL $cost".asMini()
+                itemName = "<${BasicResearch.color}>${BasicResearch.symbol} Basic Research Station <gray>-</gray><white> $MECHANICAL_SYMBOL ${cost.mechanicalParts}".asMini()
                 lore {
                     +"<dark_gray>Employs scientists to aid development of new tech".asMini()
                     +"<dark_gray>using mechanical parts"

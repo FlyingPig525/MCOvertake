@@ -5,6 +5,7 @@ import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.building.Building.Companion.genericBuildingCost
 import io.github.flyingpig525.building.category.BasicCategory
 import io.github.flyingpig525.data.player.BlockData
+import io.github.flyingpig525.data.player.CurrencyCost
 import io.github.flyingpig525.dsl.blockDisplay
 import io.github.flyingpig525.ksp.BuildingCompanion
 import io.github.flyingpig525.ksp.PlayerBuildings
@@ -33,8 +34,7 @@ import kotlin.reflect.KProperty1
 class UndergroundTeleporter : Building, Interactable {
     override var count: Int = 0
     override val resourceUse: Int = count * 20
-    override val cost: Int
-        get() = genericBuildingCost(count, 750)
+    override val cost get() = CurrencyCost.genericOrganicMatter(count, 750.0)
 
     override fun place(playerTarget: Point, instance: Instance, playerData: BlockData) {
         instance.setBlock(playerTarget.buildingPosition, block.building(identifier))
@@ -61,9 +61,9 @@ class UndergroundTeleporter : Building, Interactable {
         override val identifier: String = "underground:teleport"
         override val playerRef: KProperty1<PlayerBuildings, Building> = PlayerBuildings::undergroundTeleporters
 
-        override fun getItem(cost: Int, count: Int): ItemStack {
+        override fun getItem(cost: CurrencyCost, count: Int): ItemStack {
             return item(Material.COPPER_GRATE) {
-                itemName = "<dark_purple>Underground Gateway <gray>-<green> $MATTER_SYMBOL $cost".asMini()
+                itemName = "<dark_purple>Underground Gateway <gray>-<green> $MATTER_SYMBOL ${cost.organicMatter}".asMini()
                 lore {
                     +"<gray>Allows teleportation to the next underground layer".asMini().noItalic()
                     +"<dark_gray>Can only be placed on rafts".asMini().noItalic()

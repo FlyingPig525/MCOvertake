@@ -7,6 +7,7 @@ import io.github.flyingpig525.building.Building.Companion.genericBuildingCost
 import io.github.flyingpig525.building.category.BasicCategory
 import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.player.BlockData
+import io.github.flyingpig525.data.player.CurrencyCost
 import io.github.flyingpig525.ksp.BuildingCompanion
 import io.github.flyingpig525.ksp.PlayerBuildings
 import kotlinx.serialization.Serializable
@@ -29,8 +30,7 @@ import kotlin.reflect.KProperty1
 class MatterContainer : Building {
     override var count: Int = 0
     override val resourceUse: Int get() = count * 2
-    override val cost: Int
-        get() = genericBuildingCost(count, 20)
+    override val cost get() = CurrencyCost.genericOrganicMatter(count, 20.0)
 
     override fun place(playerTarget: Point, instance: Instance, playerData: BlockData) {
         instance.setBlock(playerTarget.buildingPosition, block.building(identifier))
@@ -47,9 +47,9 @@ class MatterContainer : Building {
         override val identifier: String = "matter:container"
         override val playerRef: KProperty1<PlayerBuildings, Building> = PlayerBuildings::matterContainers
 
-        override fun getItem(cost: Int, count: Int): ItemStack {
+        override fun getItem(cost: CurrencyCost, count: Int): ItemStack {
             return item(Material.LANTERN) {
-                itemName = "<green>$MATTER_SYMBOL Organic Matter Container <gray>-<green> $MATTER_SYMBOL $cost".asMini()
+                itemName = "<green>$MATTER_SYMBOL Organic Matter Container <gray>-<green> $MATTER_SYMBOL ${cost.organicMatter}".asMini()
                 lore {
                     +"<dark_gray>Stores 25 cubic feet of organic matter".asMini()
                     +"<gray>Increases Max $organicMatter Storage".asMini().noItalic()

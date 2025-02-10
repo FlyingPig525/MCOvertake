@@ -7,6 +7,7 @@ import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.building.category.BasicCategory
 import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.player.BlockData
+import io.github.flyingpig525.data.player.CurrencyCost
 import io.github.flyingpig525.ksp.BuildingCompanion
 import io.github.flyingpig525.ksp.PlayerBuildings
 import kotlinx.serialization.Serializable
@@ -29,8 +30,7 @@ import kotlin.reflect.KProperty1
 class MatterCompressionPlant : Building {
     override var count: Int = 0
     override val resourceUse: Int get() = count * 4
-    override val cost: Int
-        get() = (count * 50) + 50
+    override val cost get() = CurrencyCost.genericOrganicMatter(count, 50.0)
 
     override fun place(playerTarget: Point, instance: Instance, playerData: BlockData) {
         instance.setBlock(playerTarget.buildingPosition, block.building(identifier))
@@ -55,9 +55,9 @@ class MatterCompressionPlant : Building {
         override val identifier: String = "mechanical:generator"
         override val playerRef: KProperty1<PlayerBuildings, Building> = PlayerBuildings::matterCompressors
 
-        override fun getItem(cost: Int, count: Int): ItemStack {
+        override fun getItem(cost: CurrencyCost, count: Int): ItemStack {
             return item(Material.HEAVY_CORE) {
-                itemName = "<white>$MECHANICAL_SYMBOL Matter Compression Plant <gray>-<green> $MATTER_SYMBOL $cost".asMini()
+                itemName = "<white>$MECHANICAL_SYMBOL Matter Compression Plant <gray>-<green> $MATTER_SYMBOL ${cost.organicMatter}".asMini()
                 lore {
                     +"<dark_gray>Separates and compresses metallic materials found in".asMini()
                     +"<dark_gray>organic matter".asMini()

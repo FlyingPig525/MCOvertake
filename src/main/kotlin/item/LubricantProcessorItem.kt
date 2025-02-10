@@ -6,8 +6,6 @@ import io.github.flyingpig525.item.template.BuildingItem
 import io.github.flyingpig525.ksp.Item
 
 @Item
-object LubricantProcessorItem : BuildingItem<Double>(
-    LubricantProcessor,
-    BlockData::organicMatter,
-    "Organic Matter"
+object LubricantProcessorItem : BuildingItem(
+    LubricantProcessor
 )
