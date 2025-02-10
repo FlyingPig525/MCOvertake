@@ -63,7 +63,6 @@ object UpgradeWallItem : Actionable {
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
         val instance = event.instance
         val data = event.player.data ?: return true
-        if (!data.wallUpgradeCooldown.isReady(Instant.now().toEpochMilli())) return true
         val target = event.player.getTrueTarget(20)?.buildingPosition ?: return true
         if (event.player.isSneaking && data.targetWallLevel != 0) {
             if (data.bulkWallQueueFirstPosJustReset) {
@@ -131,6 +130,7 @@ object UpgradeWallItem : Actionable {
             }, TaskSchedule.nextTick())
             return true
         }
+        if (!data.wallUpgradeCooldown.isReady(Instant.now().toEpochMilli())) return true
         val block = instance.getBlock(target).defaultState()
         if (!block.canUpgradeWall) return true
         upgradeWall(block, target, data, instance)
