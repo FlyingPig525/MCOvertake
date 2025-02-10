@@ -2,6 +2,7 @@ package io.github.flyingpig525
 
 import cz.lukynka.prettylog.log
 import de.articdive.jnoise.generators.noise_parameters.simplex_variants.Simplex2DVariant
+import de.articdive.jnoise.generators.noise_parameters.simplex_variants.Simplex3DVariant
 import de.articdive.jnoise.generators.noisegen.opensimplex.SuperSimplexNoiseGenerator
 import de.articdive.jnoise.modules.octavation.fractal_functions.FractalFunction
 import de.articdive.jnoise.pipeline.JNoise
@@ -59,6 +60,7 @@ import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteRecursively
 import kotlin.io.path.exists
+import kotlin.math.pow
 
 
 class GameInstance(
@@ -457,8 +459,8 @@ class GameInstance(
     suspend fun setupInstance(player: Player? = null) = coroutineScope {
         val noise = JNoise.newBuilder()
             .superSimplex(
-                SuperSimplexNoiseGenerator.newBuilder().setSeed(instanceConfig.noiseSeed).setVariant2D(
-                    Simplex2DVariant.CLASSIC
+                SuperSimplexNoiseGenerator.newBuilder().setSeed(instanceConfig.noiseSeed).setVariant3D(
+                    Simplex3DVariant.CLASSIC
                 )
             )
             .octavate(2, 0.1, 1.0, FractalFunction.TURBULENCE, true)
@@ -480,20 +482,24 @@ class GameInstance(
                 unit.modifier().setAll { x, y, z ->
                     if (x in 0..instanceConfig.mapSize && z in 0..instanceConfig.mapSize) {
                         val eval = noise.evaluateNoise(x.toDouble(), z.toDouble())
-                        if (y in 38..39) {
+                        if (y == 39) {
                             if (eval > instanceConfig.noiseThreshold) return@setAll Block.GRASS_BLOCK
-                        } else if (y in 29..36) {
-                            if (eval <= instanceConfig.noiseThreshold && y != 30 && y != 36)
-                                return@setAll if (y != 29) Block.AIR else Block.GRASS_BLOCK
+                        } else if (y == 5) {
+                            return@setAll if (eval > instanceConfig.noiseThreshold) Block.GRASS_BLOCK else Block.SAND
+                        } else if (y == 4) {
+                            return@setAll if (eval > instanceConfig.noiseThreshold) Block.DIAMOND_BLOCK else Block.GRASS_BLOCK
+                        } else if (y == 38) {
+                            if (eval > instanceConfig.noiseThreshold) return@setAll Block.DIRT
+                        } else if (y in 28..35) {
+                            if (eval <= instanceConfig.noiseThreshold && y != 29 && y != 35)
+                                return@setAll Block.AIR
 
-                            if (y == 30)
-                                return@setAll instanceConfig.undergroundBlock
                             if (y == 29)
-                                return@setAll Block.DIAMOND_BLOCK
+                                return@setAll instanceConfig.undergroundBlock
                             return@setAll Block.DEEPSLATE
                         }
-                        if (y in 38..39) {
-                            return@setAll if (y == 39) Block.WATER else Block.SAND
+                        if (y in 36..39) {
+                            return@setAll if (eval > (instanceConfig.noiseThreshold - 0.05 * (y - 39.0).pow(2.0))) Block.SAND else Block.WATER
                         }
                         if (instanceConfig.generateSkyIslands) {
                             if (y in 89..90) {
@@ -503,7 +509,8 @@ class GameInstance(
                         }
                     }
                     if (x in -1..instanceConfig.mapSize + 1 && z in -1..instanceConfig.mapSize + 1 && y < 40) {
-                        return@setAll if (y in 30..36) Block.DEEPSLATE else if (y > 25) Block.DIAMOND_BLOCK else Block.AIR
+                        if (y in 29..35) return@setAll Block.DEEPSLATE
+                        else if (y > 24) return@setAll Block.DIAMOND_BLOCK
                     }
                     Block.AIR
                 }

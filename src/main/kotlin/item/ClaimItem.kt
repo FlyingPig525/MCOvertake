@@ -47,8 +47,8 @@ object ClaimItem : Actionable {
             event.player.sendMessage("<red><bold>Not enough Power </bold>(${data.power}/${claimData.claimCost})".asMini())
             return true
         }
-        val target = event.player.getTrueTarget(20)?.playerPosition ?: return true
-        if (event.instance.getBlock(target) == Block.GRASS_BLOCK) {
+        val target = event.player.getTrueTarget(20) ?: return true
+        if (event.instance.getBlock(target.playerPosition) == Block.GRASS_BLOCK) {
             claimWithParticle(event.player, target, Block.GRASS_BLOCK, data.block, gameInstance.instance)
             data.blocks++
             data.power -= claimData.claimCost

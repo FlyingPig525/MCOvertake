@@ -1,6 +1,5 @@
 package io.github.flyingpig525.item
 
-import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.data.research.action.ActionData
@@ -47,8 +46,8 @@ object ColonyItem : Actionable {
             event.player.sendMessage("<red><bold>Not enough Power </bold>(${data.power}/${actionData.cost})".asMini())
             return true
         }
-        val target = event.player.getTrueTarget(20)?.playerPosition ?: return true
-        if (event.instance.getBlock(target) == Block.GRASS_BLOCK) {
+        val target = event.player.getTrueTarget(20) ?: return true
+        if (event.instance.getBlock(target.playerPosition) == Block.GRASS_BLOCK) {
             claimWithParticle(event.player, target, Block.GRASS_BLOCK, data.block, gameInstance.instance)
             data.blocks++
             data.power -= actionData.cost
