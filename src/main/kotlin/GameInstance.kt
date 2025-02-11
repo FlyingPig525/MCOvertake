@@ -484,6 +484,9 @@ class GameInstance(
             .build()
         instance = InstanceManager.createInstanceContainer().apply {
             chunkLoader = PolarLoader(path.resolve("world.polar"))
+            val upperSkyBlocks = arrayOf(Block.DIRT, Block.COARSE_DIRT, Block.ROOTED_DIRT, Block.GRAVEL, Block.COBBLESTONE)
+            val middleSkyBlocks = arrayOf(Block.DIRT, Block.STONE, Block.GRAVEL, Block.COBBLESTONE)
+            val lowerSkyBlocks = arrayOf(Block.STONE, Block.STONE, Block.STONE, Block.GRAVEL, Block.COBBLESTONE)
             val random = Random(instanceConfig.noiseSeed)
             setGenerator { unit ->
                 unit.modifier().setAll { x, y, z ->
@@ -501,8 +504,10 @@ class GameInstance(
                         } else if (y == 40) {
                             if (eval > instanceConfig.noiseThreshold && ambientEval > 0.5) {
                                 if (ambientEval > 0.9) {
-                                    val block = FLOWER_BLOCKS[random.nextInt(FLOWER_BLOCKS.size)]
-
+                                    var block = FLOWER_BLOCKS[random.nextInt(FLOWER_BLOCKS.size)]
+                                    if (block == Block.PINK_PETALS) block = block.withProperty("flower_amount",
+                                        (random.nextInt(4) + 1).toString()
+                                    )
                                     return@setAll block
                                 }
                                 else return@setAll Block.SHORT_GRASS
@@ -519,9 +524,31 @@ class GameInstance(
                             return@setAll if (eval > (instanceConfig.noiseThreshold - 0.05 * (y - 39.0).pow(2.0))) Block.SAND else Block.WATER
                         }
                         if (instanceConfig.generateSkyIslands) {
-                            if (y in 89..90) {
-                                val skyEval = ((skyNoise.evaluateNoise(x.toDouble(), z.toDouble()) + 1) / 2)
-                                return@setAll if (skyEval > 0.77) Block.GRASS_BLOCK else Block.AIR
+                            val skyEval = ((skyNoise.evaluateNoise(x.toDouble(), z.toDouble()) + 1) / 2)
+                            if (skyEval > 0.77) {
+                                if (y == 90) return@setAll Block.GRASS_BLOCK
+                                if (y in 86..89) {
+                                   if (skyEval > (0.77 + 0.01 * (y - 89.0).pow(2.0))) {
+                                       when (y) {
+                                           89 -> return@setAll upperSkyBlocks[random.nextInt(upperSkyBlocks.size)]
+                                           88 -> return@setAll middleSkyBlocks[random.nextInt(middleSkyBlocks.size)]
+                                           else -> return@setAll lowerSkyBlocks[random.nextInt(lowerSkyBlocks.size)]
+                                       }
+                                   }
+                                }
+                                if (y == 91) {
+                                    if (ambientEval > 0.5) {
+                                        if (ambientEval > 0.9) {
+                                            var block = FLOWER_BLOCKS[random.nextInt(FLOWER_BLOCKS.size)]
+                                            if (block == Block.PINK_PETALS) block = block.withProperty("flower_amount",
+                                                (random.nextInt(4) + 1).toString()
+                                            )
+                                            return@setAll block
+                                        }
+                                        else return@setAll Block.SHORT_GRASS
+                                    }
+                                }
+                                if (y == 6) return@setAll Block.GRASS_BLOCK
                             }
                         }
                     }
