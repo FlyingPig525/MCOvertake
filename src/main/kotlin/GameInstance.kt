@@ -61,6 +61,7 @@ import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteRecursively
 import kotlin.io.path.exists
 import kotlin.math.pow
+import kotlin.random.Random
 
 
 class GameInstance(
@@ -457,6 +458,11 @@ class GameInstance(
     }
 
     suspend fun setupInstance(player: Player? = null) = coroutineScope {
+        val ambientNoise = JNoise.newBuilder()
+            .white(instanceConfig.noiseSeed)
+            .scale(instanceConfig.noiseScale * 100)
+            .clamp(-1.0, 1.1)
+            .build()
         val noise = JNoise.newBuilder()
             .superSimplex(
                 SuperSimplexNoiseGenerator.newBuilder().setSeed(instanceConfig.noiseSeed).setVariant3D(
@@ -478,10 +484,12 @@ class GameInstance(
             .build()
         instance = InstanceManager.createInstanceContainer().apply {
             chunkLoader = PolarLoader(path.resolve("world.polar"))
+            val random = Random(instanceConfig.noiseSeed)
             setGenerator { unit ->
                 unit.modifier().setAll { x, y, z ->
                     if (x in 0..instanceConfig.mapSize && z in 0..instanceConfig.mapSize) {
                         val eval = noise.evaluateNoise(x.toDouble(), z.toDouble())
+                        val ambientEval = ambientNoise.evaluateNoise(x.toDouble(), z.toDouble())
                         if (y == 39) {
                             if (eval > instanceConfig.noiseThreshold) return@setAll Block.GRASS_BLOCK
                         } else if (y == 5) {
@@ -490,6 +498,15 @@ class GameInstance(
                             return@setAll if (eval > instanceConfig.noiseThreshold) Block.DIAMOND_BLOCK else Block.GRASS_BLOCK
                         } else if (y == 38) {
                             if (eval > instanceConfig.noiseThreshold) return@setAll Block.DIRT
+                        } else if (y == 40) {
+                            if (eval > instanceConfig.noiseThreshold && ambientEval > 0.5) {
+                                if (ambientEval > 0.9) {
+                                    val block = FLOWER_BLOCKS[random.nextInt(FLOWER_BLOCKS.size)]
+
+                                    return@setAll block
+                                }
+                                else return@setAll Block.SHORT_GRASS
+                            }
                         } else if (y in 28..35) {
                             if (eval <= instanceConfig.noiseThreshold && y != 29 && y != 35)
                                 return@setAll Block.AIR

@@ -55,6 +55,22 @@ fun claimWithParticle(player: Player, target: Point, resultBlock: Block, instanc
 fun claimWithParticle(player: Player, target: Point, targetBlock: Block, resultBlock: Block, instance: Instance) {
     instance.setBlock(target.visiblePosition, resultBlock)
     instance.setBlock(target.playerPosition, resultBlock)
+    if (
+        FLOWER_BLOCKS.contains(instance.getBlock(target.buildingPosition).defaultState())
+        || instance.getBlock(target.buildingPosition) == Block.SHORT_GRASS
+    ) {
+        if (player.config?.claimParticles?.value == true) {
+            val particle = ParticlePacket(
+                Particle.BLOCK.withBlock(instance.getBlock(target.buildingPosition)),
+                target.visiblePosition.add(0.5, 1.5, 0.5),
+                Vec(0.2, 0.0, 0.2),
+                1f,
+                20
+            )
+            player.data?.sendPacket(particle)
+        }
+        instance.setBlock(target.buildingPosition, Block.AIR)
+    }
     if (player.config?.claimParticles?.value == true) {
         val particle = ParticlePacket(
             Particle.BLOCK.withBlock(targetBlock),

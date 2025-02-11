@@ -106,6 +106,9 @@ const val PIXEL_SIZE = 1.0 / 16.0
 
 const val DASH_BANNER = "----------------------------------------------"
 
+// Used for terrain generation
+val FLOWER_BLOCKS: Array<Block> = arrayOf(Block.PINK_PETALS, Block.CORNFLOWER, Block.LILY_OF_THE_VALLEY, Block.POPPY, Block.DANDELION)
+
 var tick: ULong = 0uL
 
 var runConsoleLoop = true
@@ -624,4 +627,3 @@ fun initConsoleCommands() {
     SaveCommand
     OpCommand
 }
-
