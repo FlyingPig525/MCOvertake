@@ -487,6 +487,8 @@ class GameInstance(
             val upperSkyBlocks = arrayOf(Block.DIRT, Block.COARSE_DIRT, Block.ROOTED_DIRT, Block.GRAVEL, Block.COBBLESTONE)
             val middleSkyBlocks = arrayOf(Block.DIRT, Block.STONE, Block.GRAVEL, Block.COBBLESTONE)
             val lowerSkyBlocks = arrayOf(Block.STONE, Block.STONE, Block.STONE, Block.GRAVEL, Block.COBBLESTONE)
+            val upperRiverBlocks = arrayOf(Block.DIRT, Block.SAND, Block.SAND, Block.COARSE_DIRT)
+            val lowerRiverBlocks = arrayOf(Block.SAND, Block.SAND, Block.SAND, Block.SANDSTONE)
             val random = Random(instanceConfig.noiseSeed)
             setGenerator { unit ->
                 unit.modifier().setAll { x, y, z ->
@@ -500,7 +502,7 @@ class GameInstance(
                         } else if (y == 4) {
                             return@setAll if (eval > instanceConfig.noiseThreshold) Block.DIAMOND_BLOCK else Block.GRASS_BLOCK
                         } else if (y == 38) {
-                            if (eval > instanceConfig.noiseThreshold) return@setAll Block.DIRT
+                            if (eval > instanceConfig.noiseThreshold) return@setAll upperRiverBlocks[random.nextInt(upperRiverBlocks.size)]
                         } else if (y == 40) {
                             if (eval > instanceConfig.noiseThreshold && ambientEval > 0.5) {
                                 if (ambientEval > 0.9) {
@@ -521,7 +523,9 @@ class GameInstance(
                             return@setAll Block.DEEPSLATE
                         }
                         if (y in 36..39) {
-                            return@setAll if (eval > (instanceConfig.noiseThreshold - 0.05 * (y - 39.0).pow(2.0))) Block.SAND else Block.WATER
+                            return@setAll if (eval > (instanceConfig.noiseThreshold - 0.05 * (y - 39.0).pow(2.0)))
+                                lowerRiverBlocks[random.nextInt(lowerRiverBlocks.size)]
+                            else Block.WATER
                         }
                         if (instanceConfig.generateSkyIslands) {
                             val skyEval = ((skyNoise.evaluateNoise(x.toDouble(), z.toDouble()) + 1) / 2)
