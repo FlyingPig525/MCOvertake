@@ -2,6 +2,7 @@ package io.github.flyingpig525
 
 import cz.lukynka.prettylog.log
 import de.articdive.jnoise.generators.noise_parameters.simplex_variants.Simplex2DVariant
+import de.articdive.jnoise.generators.noise_parameters.simplex_variants.Simplex3DVariant
 import de.articdive.jnoise.generators.noisegen.opensimplex.SuperSimplexNoiseGenerator
 import de.articdive.jnoise.modules.octavation.fractal_functions.FractalFunction
 import de.articdive.jnoise.pipeline.JNoise
@@ -59,6 +60,8 @@ import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteRecursively
 import kotlin.io.path.exists
+import kotlin.math.pow
+import kotlin.random.Random
 
 
 class GameInstance(
@@ -455,10 +458,15 @@ class GameInstance(
     }
 
     suspend fun setupInstance(player: Player? = null) = coroutineScope {
+        val ambientNoise = JNoise.newBuilder()
+            .white(instanceConfig.noiseSeed)
+            .scale(instanceConfig.noiseScale * 100)
+            .clamp(-1.0, 1.1)
+            .build()
         val noise = JNoise.newBuilder()
             .superSimplex(
-                SuperSimplexNoiseGenerator.newBuilder().setSeed(instanceConfig.noiseSeed).setVariant2D(
-                    Simplex2DVariant.CLASSIC
+                SuperSimplexNoiseGenerator.newBuilder().setSeed(instanceConfig.noiseSeed).setVariant3D(
+                    Simplex3DVariant.CLASSIC
                 )
             )
             .octavate(2, 0.1, 1.0, FractalFunction.TURBULENCE, true)
@@ -476,34 +484,81 @@ class GameInstance(
             .build()
         instance = InstanceManager.createInstanceContainer().apply {
             chunkLoader = PolarLoader(path.resolve("world.polar"))
+            val upperSkyBlocks = arrayOf(Block.DIRT, Block.COARSE_DIRT, Block.ROOTED_DIRT, Block.GRAVEL, Block.COBBLESTONE)
+            val middleSkyBlocks = arrayOf(Block.DIRT, Block.STONE, Block.GRAVEL, Block.COBBLESTONE)
+            val lowerSkyBlocks = arrayOf(Block.STONE, Block.STONE, Block.STONE, Block.GRAVEL, Block.COBBLESTONE)
+            val upperRiverBlocks = arrayOf(Block.DIRT, Block.SAND, Block.SAND, Block.COARSE_DIRT)
+            val lowerRiverBlocks = arrayOf(Block.SAND, Block.SAND, Block.SAND, Block.SANDSTONE)
+            val random = Random(instanceConfig.noiseSeed)
             setGenerator { unit ->
                 unit.modifier().setAll { x, y, z ->
                     if (x in 0..instanceConfig.mapSize && z in 0..instanceConfig.mapSize) {
                         val eval = noise.evaluateNoise(x.toDouble(), z.toDouble())
-                        if (y in 38..39) {
+                        val ambientEval = ambientNoise.evaluateNoise(x.toDouble(), z.toDouble())
+                        if (y == 39) {
                             if (eval > instanceConfig.noiseThreshold) return@setAll Block.GRASS_BLOCK
-                        } else if (y in 29..36) {
-                            if (eval <= instanceConfig.noiseThreshold && y != 30 && y != 36)
-                                return@setAll if (y != 29) Block.AIR else Block.GRASS_BLOCK
+                        } else if (y == 5) {
+                            return@setAll if (eval > instanceConfig.noiseThreshold) Block.GRASS_BLOCK else Block.SAND
+                        } else if (y == 4) {
+                            return@setAll if (eval > instanceConfig.noiseThreshold) Block.DIAMOND_BLOCK else Block.GRASS_BLOCK
+                        } else if (y == 38) {
+                            if (eval > instanceConfig.noiseThreshold) return@setAll upperRiverBlocks[random.nextInt(upperRiverBlocks.size)]
+                        } else if (y == 40) {
+                            if (eval > instanceConfig.noiseThreshold && ambientEval > 0.5) {
+                                if (ambientEval > 0.9) {
+                                    var block = FLOWER_BLOCKS[random.nextInt(FLOWER_BLOCKS.size)]
+                                    if (block == Block.PINK_PETALS) block = block.withProperty("flower_amount",
+                                        (random.nextInt(4) + 1).toString()
+                                    )
+                                    return@setAll block
+                                }
+                                else return@setAll Block.SHORT_GRASS
+                            }
+                        } else if (y in 28..35) {
+                            if (eval <= instanceConfig.noiseThreshold && y != 29 && y != 35)
+                                return@setAll Block.AIR
 
-                            if (y == 30)
-                                return@setAll instanceConfig.undergroundBlock
                             if (y == 29)
-                                return@setAll Block.DIAMOND_BLOCK
+                                return@setAll instanceConfig.undergroundBlock
                             return@setAll Block.DEEPSLATE
                         }
-                        if (y in 38..39) {
-                            return@setAll if (y == 39) Block.WATER else Block.SAND
+                        if (y in 36..39) {
+                            return@setAll if (eval > (instanceConfig.noiseThreshold - 0.05 * (y - 39.0).pow(2.0)))
+                                lowerRiverBlocks[random.nextInt(lowerRiverBlocks.size)]
+                            else Block.WATER
                         }
                         if (instanceConfig.generateSkyIslands) {
-                            if (y in 89..90) {
-                                val skyEval = ((skyNoise.evaluateNoise(x.toDouble(), z.toDouble()) + 1) / 2)
-                                return@setAll if (skyEval > 0.77) Block.GRASS_BLOCK else Block.AIR
+                            val skyEval = ((skyNoise.evaluateNoise(x.toDouble(), z.toDouble()) + 1) / 2)
+                            if (skyEval > 0.77) {
+                                if (y == 90) return@setAll Block.GRASS_BLOCK
+                                if (y in 86..89) {
+                                   if (skyEval > (0.77 + 0.01 * (y - 89.0).pow(2.0))) {
+                                       when (y) {
+                                           89 -> return@setAll upperSkyBlocks[random.nextInt(upperSkyBlocks.size)]
+                                           88 -> return@setAll middleSkyBlocks[random.nextInt(middleSkyBlocks.size)]
+                                           else -> return@setAll lowerSkyBlocks[random.nextInt(lowerSkyBlocks.size)]
+                                       }
+                                   }
+                                }
+                                if (y == 91) {
+                                    if (ambientEval > 0.5) {
+                                        if (ambientEval > 0.9) {
+                                            var block = FLOWER_BLOCKS[random.nextInt(FLOWER_BLOCKS.size)]
+                                            if (block == Block.PINK_PETALS) block = block.withProperty("flower_amount",
+                                                (random.nextInt(4) + 1).toString()
+                                            )
+                                            return@setAll block
+                                        }
+                                        else return@setAll Block.SHORT_GRASS
+                                    }
+                                }
+                                if (y == 6) return@setAll Block.GRASS_BLOCK
                             }
                         }
                     }
                     if (x in -1..instanceConfig.mapSize + 1 && z in -1..instanceConfig.mapSize + 1 && y < 40) {
-                        return@setAll if (y in 30..36) Block.DEEPSLATE else if (y > 25) Block.DIAMOND_BLOCK else Block.AIR
+                        if (y in 29..35) return@setAll Block.DEEPSLATE
+                        else if (y > 24) return@setAll Block.DIAMOND_BLOCK
                     }
                     Block.AIR
                 }

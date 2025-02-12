@@ -107,6 +107,9 @@ const val PIXEL_SIZE = 1.0 / 16.0
 
 const val DASH_BANNER = "----------------------------------------------"
 
+// Used for terrain generation
+val FLOWER_BLOCKS: Array<Block> = arrayOf(Block.PINK_PETALS, Block.CORNFLOWER, Block.LILY_OF_THE_VALLEY, Block.POPPY, Block.DANDELION)
+
 var tick: ULong = 0uL
 
 var runConsoleLoop = true
@@ -478,11 +481,11 @@ fun Entity.getTrueTarget(maxDistance: Int, onRayStep: ((pos: Point, block: Block
 
 val Point.buildingPosition: Point get() {
     // TODO: WHEN ADDING DIFFERENT LEVELS ADD MORE CASES
-    if (y() in 38.0..46.0) {
+    if (y() in 37.0..46.0) {
         return withY(40.0)
     }
-    if (y() in 29.0..37.0) {
-        return withY(31.0)
+    if (y() in 28.0..36.0) {
+        return withY(30.0)
     }
     if (y() in 47.0..91.0) {
         return withY(91.0)
@@ -491,24 +494,24 @@ val Point.buildingPosition: Point get() {
 }
 
 val Point.playerPosition: Point get() {
-    if (y() in 38.0..46.0) {
-        return withY(38.0)
+    if (y() in 37.0..46.0) {
+        return withY(5.0)
     }
-    if (y() in 29.0..37.0) {
-        return withY(29.0)
+    if (y() in 28.0..36.0) {
+        return withY(4.0)
     }
     if (y() in 47.0..91.0) {
-        return withY(89.0)
+        return withY(6.0)
     }
-    return withY(38.0)
+    return withY(5.0)
 }
 
 val Point.visiblePosition: Point get() {
-    if (y() in 38.0..46.0) {
+    if (y() in 37.0..46.0) {
         return withY(39.0)
     }
-    if (y() in 29.0..37.0) {
-        return withY(30.0)
+    if (y() in 28.0..36.0) {
+        return withY(29.0)
     }
     if (y() in 47.0..91.0) {
         return withY(90.0)
@@ -627,4 +630,3 @@ fun initConsoleCommands() {
     SaveCommand
     OpCommand
 }
-
