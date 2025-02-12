@@ -7,6 +7,7 @@ import io.github.flyingpig525.building.Validated
 import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data
 import io.github.flyingpig525.data.player.BlockData
+import io.github.flyingpig525.data.player.CurrencyCost
 import io.github.flyingpig525.getTrueTarget
 import io.github.flyingpig525.item.Actionable
 import io.github.flyingpig525.item.ERROR_ITEM
@@ -20,10 +21,8 @@ import net.minestom.server.item.Material
 import java.util.*
 import kotlin.reflect.KMutableProperty1
 
-open class BuildingItem<T : Number>(
+open class BuildingItem(
     private val building: Building.BuildingCompanion,
-    private val currencyRef: KMutableProperty1<BlockData, T>,
-    private val currencyName: String,
     override val itemMaterial: Material = building.block.registry().material()!!
 ) : Actionable {
     override val identifier: String = building.identifier
@@ -43,27 +42,22 @@ open class BuildingItem<T : Number>(
             return true
         }
         if (building.getResourceUse(playerData.disposableResourcesUsed) > playerData.maxDisposableResources) {
+            event.player.sendMessage("<red><bold>Reached Disposable Resources cap".asMini())
             return true
         }
         val building = building.playerRef.get(playerData.buildings)
         val cost = building.cost
-        val currency = currencyRef.get(playerData)
-        if (currency is Int) {
-            if (currency < cost) {
-                event.player.sendMessage("<red><bold>Not enough $currencyName </bold>(${currency}/${cost})".asMini())
-                return true
+        when (val res = cost.apply(playerData)) {
+            is CurrencyCost.ApplicationResult.Success -> {
+                building.place(target, instance, playerData)
+                building.select(event.player)
+                playerData.updateBossBars()
             }
-            currencyRef.set(playerData, (currency - cost) as T)
-        } else if (currency is Double) {
-            if (currency < cost) {
-                event.player.sendMessage("<red><bold>Not enough $currencyName </bold>(${currency}/${cost})".asMini())
-                return true
+
+            is CurrencyCost.ApplicationResult.Fail -> {
+                event.player.sendMessage(res.message)
             }
-            currencyRef.set(playerData, (currency - cost) as T)
-        } else throw InvalidTypeException("Currency must be type Int or Double")
-        building.place(target, instance, playerData)
-        building.select(event.player)
-        playerData.updateBossBars()
+        }
         return true
     }
 

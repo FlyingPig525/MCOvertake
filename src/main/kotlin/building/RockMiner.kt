@@ -5,6 +5,7 @@ import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.building.Building.Companion.genericBuildingCost
 import io.github.flyingpig525.building.category.UndergroundCategory
 import io.github.flyingpig525.data.player.BlockData
+import io.github.flyingpig525.data.player.CurrencyCost
 import io.github.flyingpig525.dsl.blockDisplay
 import io.github.flyingpig525.ksp.BuildingCompanion
 import io.github.flyingpig525.ksp.PlayerBuildings
@@ -30,8 +31,7 @@ import kotlin.reflect.KProperty1
 class RockMiner : Building {
     override var count: Int = 0
     override val resourceUse: Int get() = 4 * count
-    override val cost: Int
-        get() = genericBuildingCost(count, 40)
+    override val cost get() = CurrencyCost.genericMechanicalParts(count, 40)
 
     override fun place(playerTarget: Point, instance: Instance, data: BlockData) {
         playerTarget.buildingPosition.repeatDirection { point, dir ->
@@ -63,8 +63,8 @@ class RockMiner : Building {
         override val identifier: String = "matter:rock_miner"
         override val playerRef: KProperty1<PlayerBuildings, Building> = PlayerBuildings::rockMiners
 
-        override fun getItem(cost: Int, count: Int): ItemStack = item(Material.TRIPWIRE_HOOK) {
-            itemName = "<green>$MATTER_SYMBOL Rock Miner <gray>-</gray><white> $MECHANICAL_SYMBOL $cost".asMini()
+        override fun getItem(cost: CurrencyCost, count: Int): ItemStack = item(Material.TRIPWIRE_HOOK) {
+            itemName = "<green>$MATTER_SYMBOL Rock Miner <gray>-</gray><white> $MECHANICAL_SYMBOL ${cost.mechanicalParts}".asMini()
             lore {
                 +"<dark_gray>Breaks down adjacent rock walls".asMini()
                 +"<dark_gray>to create organic matter".asMini()

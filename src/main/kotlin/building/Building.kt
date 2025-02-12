@@ -2,6 +2,7 @@ package io.github.flyingpig525.building
 
 import io.github.flyingpig525.building.Building.BuildingCompanion.Companion.registry
 import io.github.flyingpig525.data.player.BlockData
+import io.github.flyingpig525.data.player.CurrencyCost
 import io.github.flyingpig525.ksp.PlayerBuildings
 import net.minestom.server.coordinate.Point
 import net.minestom.server.entity.Player
@@ -14,7 +15,7 @@ import kotlin.reflect.KProperty1
 interface Building {
     var count: Int
     val resourceUse: Int
-    val cost: Int
+    val cost: CurrencyCost
 
     fun place(playerTarget: Point, instance: Instance, data: BlockData)
 
@@ -30,7 +31,7 @@ interface Building {
         val identifier: String
         val playerRef: KProperty1<PlayerBuildings, Building>
 
-        fun getItem(cost: Int, count: Int): ItemStack
+        fun getItem(cost: CurrencyCost, count: Int): ItemStack
         fun getItem(playerData: BlockData): ItemStack
 
         fun getResourceUse(currentDisposableResources: Int): Int

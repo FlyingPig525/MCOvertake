@@ -7,6 +7,7 @@ import io.github.flyingpig525.building.Building.Companion.genericBuildingCost
 import io.github.flyingpig525.building.category.BasicCategory
 import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.player.BlockData
+import io.github.flyingpig525.data.player.CurrencyCost
 import io.github.flyingpig525.ksp.BuildingCompanion
 import io.github.flyingpig525.ksp.PlayerBuildings
 import kotlinx.serialization.Serializable
@@ -29,8 +30,7 @@ import kotlin.reflect.KProperty1
 class TrainingCamp : Building {
     override var count: Int = 0
     override val resourceUse: Int get() = count * 3
-    override val cost: Int
-        get() = genericBuildingCost(count, 25)
+    override val cost get() = CurrencyCost.genericOrganicMatter(count, 25.0)
 
     override fun place(playerTarget: Point, instance: Instance, playerData: BlockData) {
         instance.setBlock(playerTarget.buildingPosition, block.building(identifier))
@@ -51,9 +51,9 @@ class TrainingCamp : Building {
         override val identifier: String = "power:generator"
         override val playerRef: KProperty1<PlayerBuildings, Building> = PlayerBuildings::trainingCamps
 
-        override fun getItem(cost: Int, count: Int): ItemStack {
+        override fun getItem(cost: CurrencyCost, count: Int): ItemStack {
             return item(Material.POLISHED_BLACKSTONE_BUTTON) {
-                itemName = "<red>$POWER_SYMBOL Training Camp</red> <gray>-</gray><green> $MATTER_SYMBOL $cost".asMini()
+                itemName = "<red>$POWER_SYMBOL Training Camp</red> <gray>-</gray><green> $MATTER_SYMBOL ${cost.organicMatter}".asMini()
                 lore {
                     +"<dark_gray>Provides space for troops and other assets to".asMini()
                     +"<dark_gray>refine their specific skills".asMini()

@@ -6,8 +6,6 @@ import io.github.flyingpig525.item.template.BuildingItem
 import io.github.flyingpig525.ksp.Item
 
 @Item
-object MatterCompressorItem : BuildingItem<Double>(
-    MatterCompressionPlant,
-    BlockData::organicMatter,
-    "Organic Matter"
+object MatterCompressorItem : BuildingItem(
+    MatterCompressionPlant
 )
