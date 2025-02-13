@@ -215,7 +215,14 @@ class GameInstance(
                 val buildingBlock = instance.getBlock(buildingPoint).defaultState()
                 val playerBlock = instance.getBlock(playerPoint).defaultState()
                 val canAccess = playerPoint.anyAdjacentBlocksMatch(playerData.block, instance)
-                val attackFromWater = playerPoint.anyDirectionalBlocksMatch(Block.SAND, instance)
+                val attackFromWater = playerPoint.repeatDirection { point, dir ->
+                    val block = instance.getBlock(point.playerPosition.add(0.0, 1.0, 0.0)).defaultState()
+                    if (point.y() == 6.0) {
+                    }
+
+
+                    block == Block.SAND || block == Block.AIR
+                }
                 when (playerBlock) {
                     Block.GRASS_BLOCK -> {
                         if (canAccess) {
@@ -250,7 +257,7 @@ class GameInstance(
                         if (canAccess) {
                             AttackItem.setItemSlot(e.player)
                         } else if (attackFromWater) {
-                            AttackFromWaterItem.setItemSlot(e.player)
+                            AttackFromEdgeItem.setItemSlot(e.player)
                         } else if (targetData != null) {
                             PlayerItem.setItemSlot(e.player)
                         } else {
@@ -310,19 +317,19 @@ class GameInstance(
     }
 
     fun registerInteractionEvents() {
-        instance.eventNode().listen<PlayerMoveEvent> { e ->
-            with(e) {
-                if (newPosition.x !in 0.0..instanceConfig.mapSize + 1.0 || newPosition.z !in 0.0..instanceConfig.mapSize + 1.0) {
-                    newPosition = Pos(
-                        newPosition.x.coerceIn(0.0..instanceConfig.mapSize + 1.0),
-                        newPosition.y,
-                        newPosition.z.coerceIn(0.0..instanceConfig.mapSize + 1.0),
-                        newPosition.yaw,
-                        newPosition.pitch
-                    )
-                }
-            }
-        }
+//        instance.eventNode().listen<PlayerMoveEvent> { e ->
+//            with(e) {
+//                if (newPosition.x !in 0.0..instanceConfig.mapSize + 1.0 || newPosition.z !in 0.0..instanceConfig.mapSize + 1.0) {
+//                    newPosition = Pos(
+//                        newPosition.x.coerceIn(0.0..instanceConfig.mapSize + 1.0),
+//                        newPosition.y,
+//                        newPosition.z.coerceIn(0.0..instanceConfig.mapSize + 1.0),
+//                        newPosition.yaw,
+//                        newPosition.pitch
+//                    )
+//                }
+//            }
+//        }
 
         instance.eventNode().listen<PlayerUseItemEvent> { e ->
             e.itemUseTime = 0

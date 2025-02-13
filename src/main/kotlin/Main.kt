@@ -481,46 +481,43 @@ fun Entity.getTrueTarget(maxDistance: Int, onRayStep: ((pos: Point, block: Block
 
 val Point.buildingPosition: Point get() {
     // TODO: WHEN ADDING DIFFERENT LEVELS ADD MORE CASES
-    if (y() in 37.0..46.0) {
+    val y = y()
+    if (y in 37.0..46.0 || y == 5.0) {
         return withY(40.0)
-    }
-    if (y() in 28.0..36.0) {
+    } else if (y in 28.0..36.0 || y == 4.0) {
         return withY(30.0)
-    }
-    if (y() in 47.0..91.0) {
+    } else if (y in 47.0..91.0 || y == 6.0) {
         return withY(91.0)
     }
     return withY(40.0)
 }
 
 val Point.playerPosition: Point get() {
-    if (y() in 37.0..46.0) {
+    val y = y()
+    if (y in 37.0..46.0 || y == 5.0) {
         return withY(5.0)
-    }
-    if (y() in 28.0..36.0) {
+    } else if (y in 28.0..36.0 || y == 4.0) {
         return withY(4.0)
-    }
-    if (y() in 47.0..91.0) {
+    } else if (y in 47.0..91.0 || y == 6.0) {
         return withY(6.0)
     }
-    return withY(5.0)
+    return withY(40.0)
 }
 
 val Point.visiblePosition: Point get() {
-    if (y() in 37.0..46.0) {
+    val y = y()
+    if (y in 37.0..46.0 || y == 5.0) {
         return withY(39.0)
-    }
-    if (y() in 28.0..36.0) {
-        return withY(29.0)
-    }
-    if (y() in 47.0..91.0) {
+    } else if (y in 28.0..36.0 || y == 4.0) {
+        return withY(31.0)
+    } else if (y in 47.0..91.0 || y == 6.0) {
         return withY(90.0)
     }
     return withY(39.0)
 }
 
 val Point.isUnderground: Boolean get() {
-    return y() <= 37.0
+    return y() in 28.0..36.0 || y() <= 4.0
 }
 
 fun onAllBuildingPositions(point: Point, fn: (point: Point) -> Unit) {

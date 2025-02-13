@@ -1,8 +1,6 @@
 package io.github.flyingpig525.item
 
-import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
-import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.GameInstance.Companion.gameInstance
 import io.github.flyingpig525.data.research.action.ActionData
 import io.github.flyingpig525.item.AttackItem.attack
@@ -23,17 +21,22 @@ import java.time.Instant
 import java.util.*
 
 @Item
-object AttackFromWaterItem : Actionable {
+object AttackFromEdgeItem : Actionable {
     override val identifier: String = "block:water_attack"
     override val itemMaterial: Material = Material.DIAMOND_SWORD
 
     override fun getItem(uuid: UUID, instance: GameInstance): ItemStack {
         return gameItem(itemMaterial, identifier) {
+
             val player = instance.instance.getPlayerByUuid(uuid) ?: return ERROR_ITEM
+
             val target = player.getTrueTarget(20) ?: return ERROR_ITEM
             val buildingBlock = instance.instance.getBlock(target.buildingPosition)
+
             val data = player.data ?: return ERROR_ITEM
+
             val targetData = getAttacking(player) ?: return ERROR_ITEM
+
             val targetName = targetData.playerDisplayName
             val preAttackData = ActionData.WaterAttackCostCalculation(data, instance.instance, player).apply {
                 wallLevel = buildingBlock.wallLevel
@@ -54,7 +57,7 @@ object AttackFromWaterItem : Actionable {
                 this.targetData = preAttackData.targetData
             }.also { data.research.onPostAttack(it) }
 
-            itemName = "<red>$ATTACK_SYMBOL <bold>Attack $targetName From Water</bold> <gray>- <red>$POWER_SYMBOL <bold>${postAttack.attackCost}".asMini().asComponent()
+            itemName = "<red>$ATTACK_SYMBOL <bold>Attack $targetName From Edge</bold> <gray>- <red>$POWER_SYMBOL <bold>${postAttack.attackCost}".asMini().asComponent()
         }
     }
 
@@ -100,6 +103,5 @@ object AttackFromWaterItem : Actionable {
 
     override fun setItemSlot(player: Player) {
         player.inventory[0] = getItem(player.uuid, player.gameInstance ?: return)
-
     }
 }

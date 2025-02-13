@@ -270,6 +270,7 @@ class BlockData(val uuid: String, @Serializable(BlockSerializer::class) val bloc
         }
         fun Map<String, BlockData>.getDataByPoint(point: Point, instance: Instance): BlockData? {
             val block = instance.getBlock(point.playerPosition)
+
             return values.find { it.block == block}
         }
         fun Map<String, BlockData>.toBlockSortedList(): List<BlockData> {

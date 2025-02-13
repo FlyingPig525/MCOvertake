@@ -64,6 +64,7 @@ object AttackItem : Actionable {
     fun getAttacking(player: Player): BlockData? {
         val players = instances.fromInstance(player.instance)!!.blockData
         val target = player.getTrueTarget(20)!!
+
         return players.getDataByPoint(target.playerPosition, player.instance)
     }
 

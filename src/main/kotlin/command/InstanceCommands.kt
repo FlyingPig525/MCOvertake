@@ -196,7 +196,7 @@ val setAllCommand = kommand {
         }
 
         executorAsync {
-            println("called")
+
             val block = context.get(block)
             val instanceConfig = player.gameInstance!!.instanceConfig
             val instance = player.instance

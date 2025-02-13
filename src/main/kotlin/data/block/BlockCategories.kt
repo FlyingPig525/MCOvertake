@@ -16,6 +16,7 @@ interface CategoryBlock {
 val NATURAL_CATEGORY = item(OAK_LEAVES) { itemName = "<green><bold>Natural Blocks".asMini() }
 val NETHER_CATEGORY = item(NETHERRACK) { itemName = "<red><bold>Nether Blocks".asMini() }
 val UNDERGROUND_CATEGORY = item(COBBLESTONE) { itemName = "<gray><bold>Underground Blocks".asMini() }
+val END_CATEGORY = item(END_STONE) { itemName = "<purple><bold>End Blocks".asMini() }
 
 enum class NaturalCategory(override val material: Material) : CategoryBlock {
     Dirt(DIRT),
@@ -50,6 +51,7 @@ enum class NaturalCategory(override val material: Material) : CategoryBlock {
 enum class UndergroundCategory(override val material: Material) : CategoryBlock {
     Stone(STONE),
     Cobblestone(COBBLESTONE),
+    Cobbled_Deepslate(COBBLED_DEEPSLATE),
     Deepslate(DEEPSLATE),
     Deepslate_Bricks(DEEPSLATE_BRICKS),
     Granite(GRANITE),
@@ -110,4 +112,9 @@ enum class NetherCategory(override val material: Material) : CategoryBlock {
     Nether_Gold_Ore(NETHER_GOLD_ORE),
     Nether_Quartz_Ore(NETHER_QUARTZ_ORE),
     Ancient_Debris(ANCIENT_DEBRIS),
+}
+
+enum class EndCategory(override val material: Material) : CategoryBlock {
+    End_Stone(END_STONE),
+    Purpur_Block(PURPUR_BLOCK),
 }
