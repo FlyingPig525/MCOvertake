@@ -509,7 +509,7 @@ val Point.visiblePosition: Point get() {
     if (y in 37.0..46.0 || y == 5.0) {
         return withY(39.0)
     } else if (y in 28.0..36.0 || y == 4.0) {
-        return withY(31.0)
+        return withY(29.0)
     } else if (y in 47.0..91.0 || y == 6.0) {
         return withY(90.0)
     }

@@ -19,9 +19,7 @@ import io.github.flyingpig525.data.player.config.PlayerConfig
 import io.github.flyingpig525.item.*
 import io.github.flyingpig525.log.MCOvertakeLogType
 import io.github.flyingpig525.wall.blockIsWall
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.bladehunt.kotstom.InstanceManager
@@ -56,6 +54,8 @@ import net.minestom.server.tag.Tag
 import net.minestom.server.timer.TaskSchedule
 import java.nio.file.Path
 import java.util.*
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.suspendCoroutine
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteRecursively
@@ -316,20 +316,21 @@ class GameInstance(
         }
     }
 
+    @OptIn(ExperimentalStdlibApi::class)
     fun registerInteractionEvents() {
-//        instance.eventNode().listen<PlayerMoveEvent> { e ->
-//            with(e) {
-//                if (newPosition.x !in 0.0..instanceConfig.mapSize + 1.0 || newPosition.z !in 0.0..instanceConfig.mapSize + 1.0) {
-//                    newPosition = Pos(
-//                        newPosition.x.coerceIn(0.0..instanceConfig.mapSize + 1.0),
-//                        newPosition.y,
-//                        newPosition.z.coerceIn(0.0..instanceConfig.mapSize + 1.0),
-//                        newPosition.yaw,
-//                        newPosition.pitch
-//                    )
-//                }
-//            }
-//        }
+        instance.eventNode().listen<PlayerMoveEvent> { e ->
+            with(e) {
+                if (newPosition.x !in 0.0..instanceConfig.mapSize + 1.0 || newPosition.z !in 0.0..instanceConfig.mapSize + 1.0) {
+                    newPosition = Pos(
+                        newPosition.x.coerceIn(0.0..instanceConfig.mapSize + 1.0),
+                        newPosition.y,
+                        newPosition.z.coerceIn(0.0..instanceConfig.mapSize + 1.0),
+                        newPosition.yaw,
+                        newPosition.pitch
+                    )
+                }
+            }
+        }
 
         instance.eventNode().listen<PlayerUseItemEvent> { e ->
             e.itemUseTime = 0
@@ -372,12 +373,18 @@ class GameInstance(
 
 
         instance.eventNode().listen<PlayerDisconnectEvent> { e ->
-            val file = path.resolve("block-data.json5").toFile()
-            if (!file.exists()) {
-                file.createNewFile()
+            runBlocking {
+                withContext(Dispatchers.IO) {
+                    launch {
+                        val file = path.resolve("block-data.json5").toFile()
+                        if (!file.exists()) {
+                            file.createNewFile()
+                        }
+                        file.writeText(Json.encodeToString(blockData))
+                        instance.saveChunksToStorage()
+                    }
+                }
             }
-            file.writeText(Json.encodeToString(blockData))
-            instance.saveChunksToStorage()
         }
 
         instance.eventNode().listen<PlayerHandAnimationEvent> {
@@ -566,6 +573,7 @@ class GameInstance(
                     if (x in -1..instanceConfig.mapSize + 1 && z in -1..instanceConfig.mapSize + 1 && y < 40) {
                         if (y in 29..35) return@setAll Block.DEEPSLATE
                         else if (y > 24) return@setAll Block.DIAMOND_BLOCK
+                        else if (y in 2..8) return@setAll Block.DIAMOND_BLOCK
                     }
                     Block.AIR
                 }

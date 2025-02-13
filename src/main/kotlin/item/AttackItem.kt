@@ -102,6 +102,8 @@ object AttackItem : Actionable {
         targetData.blocks--
         instance.setBlock(point.withY(38.0), Block.SAND)
         instance.setBlock(point.buildingPosition, Block.AIR)
+        val pos = visualWaterBlock(point, instance)
+        instance.setBlock(pos, listOf(Block.SAND, Block.SAND, Block.SAND, Block.SANDSTONE).random())
         // TODO: PARTICLES
     }
 
@@ -162,6 +164,8 @@ object AttackItem : Actionable {
                 targetData.blocks--
                 instance.setBlock(target.playerPosition, Block.SAND)
                 instance.setBlock(buildingPoint, Block.AIR)
+                val pos = visualWaterBlock(target, instance)
+                instance.setBlock(pos, listOf(Block.SAND, Block.SAND, Block.SAND, Block.SANDSTONE).random())
                 false
             }
             else -> run {
@@ -222,6 +226,17 @@ object AttackItem : Actionable {
         }.also { targetData.research.onAttacked(it) }
         data.updateBossBars()
         targetData.updateBossBars()
+    }
+
+    fun visualWaterBlock(pos: Point, instance: Instance): Point {
+        var block = Block.WATER
+        var pos = pos.visiblePosition
+        while (block == Block.WATER) {
+            pos = pos.sub(0.0, 1.0, 0.0)
+            block = instance.getBlock(pos).defaultState()
+            if (pos.isUnderground) break
+        }
+        return pos
     }
 
     override fun setItemSlot(player: Player) {

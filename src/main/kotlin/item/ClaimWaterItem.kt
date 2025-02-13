@@ -52,6 +52,9 @@ object ClaimWaterItem : Actionable {
         // Claim logic
         event.instance.setBlock(target.playerPosition, data.block)
         event.instance.setBlock(target.withY(40.0), Block.LILY_PAD)
+        // Find sand block
+        val pos = AttackItem.visualWaterBlock(target, event.instance)
+        event.instance.setBlock(pos, data.block)
         spawnPlayerRaft(data.block, target.withY(40.0), event.instance, data.uuid.toUUID()!!)
         data.blocks++
         data.organicMatter -= actionData.cost
@@ -92,7 +95,7 @@ object ClaimWaterItem : Actionable {
 
     fun destroyPlayerRaft(point: Point, instance: Instance) =
         instance.getNearbyEntities(point.withY(40.0), 0.2).forEach {
-            if (it.hasTag(Tag.String("player_raft"))) it.remove()
+            if (it.hasTag(Tag.Boolean("player_raft"))) it.remove()
         }
 
     override fun setItemSlot(player: Player) {
