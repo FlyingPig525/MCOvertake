@@ -32,6 +32,7 @@ import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.dsl.kbar
 import net.bladehunt.kotstom.dsl.kommand.buildSyntax
+import net.bladehunt.kotstom.dsl.kommand.defaultExecutor
 import net.bladehunt.kotstom.dsl.kommand.kommand
 import net.bladehunt.kotstom.dsl.listen
 import net.bladehunt.kotstom.extension.adventure.asMini
@@ -332,22 +333,20 @@ fun main() = runBlocking { try {
 
     // Stolen monitoring code
     tpsMonitor.start()
-    val validateResearchCommand = kommand {
-        name = "validateResearch"
+    val validateResearchCommand = kommand("validateResearch") {
         buildSyntax {
-            condition {
-                permissionManager.hasPermission(player, Permission("data.research.validation"))
+            condition { sender, cmd ->
+                permissionManager.hasPermission(sender as Player, Permission("data.research.validation"))
             }
-            executor {
-                player.instance.players.onEach { it.data!!.research.basicResearch.validateUpgrades() }
+            executor { player, ctx ->
+                (player as Player).instance.players.onEach { it.data!!.research.basicResearch.validateUpgrades() }
             }
         }
     }
-    val refreshConfig = kommand {
-        name = "refreshConfig"
+    val refreshConfig = kommand("refreshConfig") {
 
-        defaultExecutor {
-            val game = player.gameInstance
+        defaultExecutor { player, ctx ->
+            val game = (player as Player).gameInstance
             if (game == null) {
                 player.sendMessage("<red><bold>You must be in a game instance to run this command!".asMini())
                 return@defaultExecutor
@@ -360,11 +359,10 @@ fun main() = runBlocking { try {
             data.blockConfig = BlockConfig()
         }
     }
-    val noOpCommand = kommand {
-        name = "removeOp"
+    val noOpCommand = kommand("removeOp") {
 
-        defaultExecutor {
-            player.data?.research?.basicResearch?.upgradeByName("Test")?.level = 0
+        defaultExecutor { player, ctx ->
+            (player as Player).data?.research?.basicResearch?.upgradeByName("Test")?.level = 0
         }
     }
 
@@ -405,10 +403,8 @@ fun main() = runBlocking { try {
 
     minecraftServer.start(config.serverAddress, config.serverPort)
     log("GameServer online!")
-    if (packServer != null) {
-        packServer.start()
-        log("PackServer online!")
-    }
+    packServer.start()
+    log("PackServer online!")
 
     initConsoleCommands()
     log("Console commands initialized...")

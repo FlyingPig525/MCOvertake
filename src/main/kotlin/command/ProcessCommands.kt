@@ -6,13 +6,14 @@ import io.github.flyingpig525.tick
 import io.github.flyingpig525.tpsMonitor
 import net.bladehunt.kotstom.BenchmarkManager
 import net.bladehunt.kotstom.dsl.kommand.buildSyntax
+import net.bladehunt.kotstom.dsl.kommand.defaultExecutor
 import net.bladehunt.kotstom.dsl.kommand.kommand
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.kyori.adventure.text.Component
+import net.minestom.server.entity.Player
 
-val tickCommand = kommand {
-    name = "tick"
-    defaultExecutor {
+val tickCommand = kommand("tick") {
+    defaultExecutor { player, ctx ->
         val tps = tpsMonitor.getTps()
         val tps1 = tpsMonitor.getAvgTps1Min()
         val tps5 = tpsMonitor.getAvgTps5Min()
@@ -27,14 +28,13 @@ val tickCommand = kommand {
     }
 }
 
-val gcCommand = kommand {
-    name = "gc"
+val gcCommand = kommand("gc") {
 
     buildSyntax {
-        condition {
-            permissionManager.hasPermission(player, Permission("process.garbage_collect"))
+        condition { player, ctx ->
+            permissionManager.hasPermission(player as Player, Permission("process.garbage_collect"))
         }
-        executor {
+        executor { player, ctx ->
             var ramUsage = (BenchmarkManager.usedMemory / 1e6).toLong()
             player.sendMessage("Before: ${ramUsage}mb")
             System.gc()

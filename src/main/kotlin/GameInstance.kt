@@ -72,6 +72,7 @@ class GameInstance(
     lateinit var instance: InstanceContainer
 
     var instanceConfig: InstanceConfig = run {
+
         val file = path.resolve("instance-config.json5").toFile()
         if (file.exists()) {
             return@run json.decodeFromString(file.readText())

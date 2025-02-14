@@ -7,6 +7,7 @@ import io.github.flyingpig525.removeBossBars
 import io.github.flyingpig525.toUUID
 import net.bladehunt.kotstom.dsl.kommand.buildSyntax
 import net.bladehunt.kotstom.dsl.kommand.kommand
+import net.bladehunt.kotstom.dsl.kommand.subkommand
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.kyori.adventure.text.event.ClickEvent
 import net.kyori.adventure.text.event.HoverEvent
@@ -17,11 +18,9 @@ import net.minestom.server.entity.Player
 import net.minestom.server.timer.TaskSchedule
 import net.minestom.server.utils.mojang.MojangUtils
 
-val coopCommand = kommand {
-    name = "coop"
+val coopCommand = kommand("coop") {
 
-    subkommand {
-        name = "invite"
+    subkommand("invite") {
 
         val playerArg = ArgumentEntity("player").apply {
             onlyPlayers(true)
@@ -31,8 +30,8 @@ val coopCommand = kommand {
         buildSyntax(playerArg) {
             onlyPlayers()
 
-            executor {
-                val target = context.get(playerArg).findFirstPlayer(player.instance, player)
+            executor { player, ctx ->
+                val target = ctx.get(playerArg).findFirstPlayer((player as Player).instance, player)
                 if (target?.equals(player) == true) {
                     player.sendMessage("<red><bold>You cannot send a co-op invite to yourself! duh".asMini())
                     return@executor
@@ -70,10 +69,7 @@ val coopCommand = kommand {
         }
     }
 
-    subkommand {
-        name = "accept"
-
-
+    subkommand("accept") {
         val playerArg = ArgumentString("player").apply {
             setSuggestionCallback { sender, ctx, suggestion ->
                 val player = sender as Player
@@ -91,9 +87,9 @@ val coopCommand = kommand {
         }
 
         buildSyntax(playerArg) {
-            executor {
-                val instance = player.gameInstance ?: return@executor
-                val targetUsername = context.get(playerArg)
+            executor { player, ctx ->
+                val instance = (player as Player).gameInstance ?: return@executor
+                val targetUsername = ctx.get(playerArg)
                 val targetUUID = instance.incomingCoopInvites[player.uuid]?.first { it.second == targetUsername }
                 if (targetUUID == null) {
                     player.sendMessage("<red><bold>No invite from $targetUsername!".asMini())
@@ -121,8 +117,7 @@ val coopCommand = kommand {
         }
     }
 
-    subkommand {
-        name = "kick"
+    subkommand("kick") {
 
         val playerName = ArgumentString("player").apply {
             setSuggestionCallback { sender, ctx, suggestion ->
@@ -142,10 +137,10 @@ val coopCommand = kommand {
             }
         }
         buildSyntax(playerName) {
-            executor {
-                val targetName = context.get(playerName)
+            executor { player, ctx ->
+                val targetName = ctx.get(playerName)
                 val targetUUID = MojangUtils.getUUID(targetName)
-                val gameInstance = player.gameInstance
+                val gameInstance = (player as Player).gameInstance
                 if (gameInstance == null) {
                     player.sendMessage("<red><bold>You must be in a game instance to run this command".asMini())
                     return@executor

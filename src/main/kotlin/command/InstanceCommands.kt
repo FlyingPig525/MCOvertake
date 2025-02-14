@@ -8,6 +8,7 @@ import io.github.flyingpig525.data.player.permission.Permission
 import kotlinx.coroutines.Dispatchers
 import net.bladehunt.kotstom.InstanceManager
 import net.bladehunt.kotstom.command.Kommand
+import net.bladehunt.kotstom.coroutines.kommand.executorAsync
 import net.bladehunt.kotstom.dsl.kommand.buildSyntax
 import net.bladehunt.kotstom.dsl.kommand.kommand
 import net.bladehunt.kotstom.extension.adventure.asMini
@@ -37,13 +38,12 @@ val lobbyCommand = Kommand("lobby", "hub", "s", "home").apply {
         sender.removeBossBars()
     }
 }
-val createInstanceCommand = kommand {
-    name = "createInstance"
+val createInstanceCommand = kommand("createInstance") {
     buildSyntax {
-        condition {
-            permissionManager.hasPermission(player, Permission("instance.creation"))
+        condition { player, ctx ->
+            permissionManager.hasPermission((player as Player), Permission("instance.creation"))
         }
-        executor {
+        executor { player, ctx ->
             player.sendMessage("<red><bold>Missing required arguments!".asMini())
         }
     }
@@ -53,15 +53,15 @@ val createInstanceCommand = kommand {
     val mapSizeArg = ArgumentInteger("map_size").min(1).max(1000).setDefaultValue(300)
 
     buildSyntax(nameArg, researchArg, skyIslandsArg, mapSizeArg) {
-        condition {
-            permissionManager.hasPermission(player, Permission("instance.creation"))
+        condition { player, ctx ->
+            permissionManager.hasPermission((player as Player), Permission("instance.creation"))
         }
         onlyPlayers()
-        executorAsync(Dispatchers.IO) {
-            val name = context.get(nameArg)
-            val research = context.get(researchArg)
-            val skyIslands = context.get(skyIslandsArg)
-            val mapSize = context.get(mapSizeArg)
+        executorAsync(Dispatchers.IO) { player, ctx ->
+            val name = ctx.get(nameArg)
+            val research = ctx.get(researchArg)
+            val skyIslands = ctx.get(skyIslandsArg)
+            val mapSize = ctx.get(mapSizeArg)
             try {
                 player.sendMessage("<green>Attempting to create instance $name".asMini())
                 if (name == "") {
@@ -81,7 +81,7 @@ val createInstanceCommand = kommand {
                         generateSkyIslands = skyIslands,
                         mapSize = mapSize
                     )).apply {
-                    totalInit(player)
+                    totalInit((player as Player))
                 }
                 config.instanceNames += name
                 File("config.json5").writeText(getCommentString(config))
@@ -97,8 +97,7 @@ val createInstanceCommand = kommand {
         }
     }
 }
-val deleteInstanceCommand = kommand {
-    name = "removeInstance"
+val deleteInstanceCommand = kommand("removeInstance") {
     val argument = ArgumentString("name").apply {
         setSuggestionCallback { sender, context, suggestion ->
             for (name in instances.keys) {
@@ -114,21 +113,21 @@ val deleteInstanceCommand = kommand {
     }
 
     buildSyntax {
-        condition {
-            permissionManager.hasPermission(player, Permission("instance.deletion"))
+        condition { player, ctx ->
+            permissionManager.hasPermission(player as Player, Permission("instance.deletion"))
         }
-        executor {
-            player.sendMessage("<red><bold>Missing required arguments!".asMini())
+        executor { player, ctx ->
+            (player as Player).sendMessage("<red><bold>Missing required arguments!".asMini())
         }
     }
 
     buildSyntax(argument) {
-        condition {
-            permissionManager.hasPermission(player, Permission("instance.deletion"))
+        condition { player, ctx ->
+            permissionManager.hasPermission(player as Player, Permission("instance.deletion"))
         }
         onlyPlayers()
-        executorAsync {
-            val name = get(argument)
+        executorAsync(Dispatchers.IO) { player, ctx ->
+            val name = ctx.get(argument)
             if (name !in instances.keys) {
                 player.sendMessage("<red><bold>Instance \"$name\" does not exist!".asMini())
                 return@executorAsync
@@ -148,57 +147,54 @@ val deleteInstanceCommand = kommand {
         }
     }
 }
-val tpCommand = kommand {
-    name = "tp"
+val tpCommand = kommand("tp") {
     val targetArg = ArgumentEntity("player").apply {
         onlyPlayers(true)
         singleEntity(true)
     }
 
     buildSyntax(targetArg) {
-        condition {
-            permissionManager.hasPermission(player, Permission("instance.tp"))
+        condition { player, ctx ->
+            permissionManager.hasPermission(player as Player, Permission("instance.tp"))
         }
-        executor {
-            val target = context.get(targetArg)
-            val targetPlayer = target.findFirstPlayer(sender)
+        executor { player, ctx ->
+            val target = ctx.get(targetArg)
+            val targetPlayer = target.findFirstPlayer(player as Player)
             if (targetPlayer == null) {
-                player.sendMessage("<red><bold>Player ${context.getRaw(targetArg)} does not exist")
+                player.sendMessage("<red><bold>Player ${ctx.getRaw(targetArg)} does not exist")
                 return@executor
             }
             player.teleport(targetPlayer.position)
         }
     }
 }
-val setGrass = kommand {
-    name = "setGrass"
+val setGrass = kommand("setGrass") {
 
     val loc = ArgumentRelativeVec3("pos")
     buildSyntax(loc) {
-        condition {
-            permissionManager.hasPermission(player, Permission("instance.set"))
+        condition { player, ctx ->
+            permissionManager.hasPermission(player as Player, Permission("instance.set"))
         }
 
-        executor {
-            val loc = context.get(loc).fromSender(sender)
+        executor { player, ctx ->
+            val loc = ctx.get(loc).fromSender(player as Player)
             player.instance.setBlock(loc.playerPosition, Block.GRASS_BLOCK)
             player.instance.setBlock(loc.visiblePosition, Block.GRASS_BLOCK)
         }
     }
 }
-val setAllCommand = kommand {
-    name = "setAll"
+val setAllCommand = kommand("setAll") {
 
     val block = ArgumentBlockState("block")
     buildSyntax(block) {
-        condition {
-            permissionManager.hasPermission(player, Permission("instance.set"))
+        condition { player, ctx ->
+            permissionManager.hasPermission(player as Player, Permission("instance.set"))
         }
 
-        executorAsync {
+        executorAsync { player, ctx ->
 
-            val block = context.get(block)
-            val instanceConfig = player.gameInstance!!.instanceConfig
+            val block = ctx.get(block)
+            val instanceConfig = (player as Player).gameInstance!!.instanceConfig
             val instance = player.instance
             for (x in 0..instanceConfig.mapSize) {
                 for (z in 0..instanceConfig.mapSize) {
@@ -216,24 +212,23 @@ val setAllCommand = kommand {
         }
     }
 }
-val setTimeCommand = kommand {
-    name = "setTime"
+val setTimeCommand = kommand("setTime") {
     val tick = ArgumentLong("tick")
 
     buildSyntax {
-        condition {
-            permissionManager.hasPermission(player, Permission("instance.time"))
+        condition { player, ctx ->
+            permissionManager.hasPermission(player as Player, Permission("instance.time"))
         }
-        executor {  }
+        executor { player, ctx -> }
     }
 
     buildSyntax(tick) {
-        condition {
-            permissionManager.hasPermission(player, Permission("instance.time"))
+        condition { player, ctx ->
+            permissionManager.hasPermission(player as Player, Permission("instance.time"))
         }
-        executor {
-            val tick = context.get(tick)
-            player.instance.time = tick
+        executor { player, ctx ->
+            val tick = ctx.get(tick)
+            (player as Player).instance.time = tick
         }
     }
 }
