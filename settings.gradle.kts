@@ -13,7 +13,6 @@ dependencyResolutionManagement {
         repositories {
             maven("https://repo.unnamed.team/repository/unnamed-public/")
             mavenCentral()
-            maven("https://mvn.bladehunt.net/releases")
             maven {
                 name = "devOS"
                 url = uri("https://mvn.devos.one/releases")

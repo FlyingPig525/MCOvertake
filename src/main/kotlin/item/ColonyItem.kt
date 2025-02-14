@@ -3,6 +3,7 @@ package io.github.flyingpig525.item
 import io.github.flyingpig525.*
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.data.research.action.ActionData
+import io.github.flyingpig525.item.ClaimItem.validateSky
 import io.github.flyingpig525.ksp.Item
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -38,6 +39,8 @@ object ColonyItem : Actionable {
         val gameInstance = instances.fromInstance(event.instance) ?: return true
         val data = event.player.data ?: return true
         if (!data.colonyCooldown.isReady(Instant.now().toEpochMilli())) return true
+        val target = event.player.getTrueTarget(20) ?: return true
+        if (target.visiblePosition.isSky && !validateSky(data, target.visiblePosition)) return true
         val actionData = ActionData.PlaceColony(data, event.instance, event.player).apply {
             cost = data.colonyCost
             cooldown = Cooldown(Duration.ofSeconds(15))
@@ -46,7 +49,6 @@ object ColonyItem : Actionable {
             event.player.sendMessage("<red><bold>Not enough Power </bold>(${data.power}/${actionData.cost})".asMini())
             return true
         }
-        val target = event.player.getTrueTarget(20) ?: return true
         if (event.instance.getBlock(target.playerPosition) == Block.GRASS_BLOCK) {
             claimWithParticle(event.player, target, Block.GRASS_BLOCK, data.block, gameInstance.instance)
             data.blocks++

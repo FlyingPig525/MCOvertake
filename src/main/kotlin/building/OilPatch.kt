@@ -66,7 +66,7 @@ class OilPatch : Building {
         override fun getItem(playerData: BlockData): ItemStack =
             getItem(playerData.buildings.oilPatches.cost, playerData.buildings.oilPatches.count)
 
-        override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 2
+        override fun getResourceUse(currentDisposableResources: Int, count: Int): Int = currentDisposableResources + 2
         override fun validate(instance: Instance, point: Point): Boolean {
             return point.isUnderground
         }

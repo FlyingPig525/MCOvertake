@@ -65,7 +65,7 @@ class PlasticPlant : Building {
         override fun getItem(playerData: BlockData): ItemStack =
             getItem(playerData.buildings.plasticPlants.cost, playerData.buildings.plasticPlants.count)
 
-        override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 3
+        override fun getResourceUse(currentDisposableResources: Int, count: Int): Int = currentDisposableResources + 3
 
         override fun validate(instance: Instance, point: Point): Boolean {
             if (!point.isUnderground) return false

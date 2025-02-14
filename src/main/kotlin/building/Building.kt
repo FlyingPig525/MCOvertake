@@ -34,7 +34,7 @@ interface Building {
         fun getItem(cost: CurrencyCost, count: Int): ItemStack
         fun getItem(playerData: BlockData): ItemStack
 
-        fun getResourceUse(currentDisposableResources: Int): Int
+        fun getResourceUse(currentDisposableResources: Int, count: Int): Int
 
         fun shouldCallItemUse(): Boolean = false
 

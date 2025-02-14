@@ -33,7 +33,7 @@ import kotlin.reflect.KProperty1
 @Serializable
 class UndergroundTeleporter : Building, Interactable {
     override var count: Int = 0
-    override val resourceUse: Int = count * 20
+    override val resourceUse: Int get() = count * 20
     override val cost get() = CurrencyCost.genericOrganicMatter(count, 750.0)
 
     override fun place(playerTarget: Point, instance: Instance, playerData: BlockData) {
@@ -76,7 +76,7 @@ class UndergroundTeleporter : Building, Interactable {
         override fun getItem(playerData: BlockData): ItemStack =
             getItem(playerData.buildings.undergroundTeleporters.cost, playerData.buildings.undergroundTeleporters.count)
 
-        override fun getResourceUse(currentDisposableResources: Int): Int {
+        override fun getResourceUse(currentDisposableResources: Int, count: Int): Int {
             return currentDisposableResources + 20
         }
 

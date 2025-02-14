@@ -30,7 +30,7 @@ import kotlin.reflect.KProperty1
 @Serializable
 class LubricantProcessor : Building {
     override var count: Int = 0
-    override val resourceUse: Int = 3 * count
+    override val resourceUse: Int get() = 3 * count
     override val cost get() = CurrencyCost.genericOrganicMatter(count, 400.0)
 
     override fun place(playerTarget: Point, instance: Instance, data: BlockData) {
@@ -68,7 +68,7 @@ class LubricantProcessor : Building {
         override fun getItem(playerData: BlockData): ItemStack =
             getItem(playerData.buildings.lubricantProcessors.cost, playerData.buildings.lubricantProcessors.count)
 
-        override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 3
+        override fun getResourceUse(currentDisposableResources: Int, count: Int): Int = currentDisposableResources + 3
 
         override fun validate(instance: Instance, point: Point): Boolean = PlasticPlant.validate(instance, point)
 

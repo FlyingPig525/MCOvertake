@@ -27,7 +27,7 @@ import kotlin.reflect.KProperty1
 @Serializable
 class ArmsManufacturer : Building {
     override var count: Int = 0
-    override val resourceUse: Int = 5
+    override val resourceUse: Int get() = 5 * count
     override val cost: CurrencyCost get() = CurrencyCost.genericMechanicalParts(count, 75).genericPlastic(count, 50)
 
     override fun place(playerTarget: Point, instance: Instance, data: BlockData) {
@@ -67,6 +67,6 @@ class ArmsManufacturer : Building {
 
         override fun getItem(playerData: BlockData): ItemStack = getItem(playerData.buildings.armsManufacturers.cost, playerData.buildings.armsManufacturers.count)
 
-        override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 5
+        override fun getResourceUse(currentDisposableResources: Int, count: Int): Int = currentDisposableResources + 5
     }
 }

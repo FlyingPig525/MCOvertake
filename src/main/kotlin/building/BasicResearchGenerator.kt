@@ -74,6 +74,6 @@ class BasicResearchGenerator : Building {
             return getItem(playerData.buildings.basicResearchStations.cost, playerData.buildings.basicResearchStations.count)
         }
 
-        override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 3
+        override fun getResourceUse(currentDisposableResources: Int, count: Int): Int = currentDisposableResources + 3
     }
 }

@@ -65,6 +65,6 @@ class MatterContainer : Building {
             return getItem(playerData.buildings.matterContainers.cost, playerData.buildings.matterContainers.count)
         }
 
-        override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 2
+        override fun getResourceUse(currentDisposableResources: Int, count: Int): Int = currentDisposableResources + 2
     }
 }

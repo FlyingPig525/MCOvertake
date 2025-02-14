@@ -113,6 +113,7 @@ fun getWallAttackCost(wall: Point, instance: Instance, targetBlock: Block, baseP
         if (block.wallLevel == 0) return 0
         cost = getWallAttackCost(block.wallLevel)
     } else {
+        if (customWallLevel == 0) return 0
         cost = getWallAttackCost(customWallLevel)
     }
     var count = 0.0

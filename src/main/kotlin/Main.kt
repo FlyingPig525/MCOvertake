@@ -520,6 +520,10 @@ val Point.isUnderground: Boolean get() {
     return y() in 28.0..36.0 || y() <= 4.0
 }
 
+val Point.isSky: Boolean get() {
+    return y() >= 47 || y() == 6.0
+}
+
 fun onAllBuildingPositions(point: Point, fn: (point: Point) -> Unit) {
     fn(point.withY(91.0).buildingPosition)
     fn(point.withY(40.0).buildingPosition)
