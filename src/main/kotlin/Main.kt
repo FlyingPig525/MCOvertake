@@ -296,6 +296,10 @@ fun main() = runBlocking { try {
                 if (res.clickedItem.hasTag(Tag.String("selector"))) {
                     val instance = instances[res.clickedItem.getTag(Tag.String("selector"))!!]
                     if (instance != null) {
+                        if (instance.instanceConfig.whitelist.isNotEmpty() && player.username !in instance.instanceConfig.whitelist) {
+                            player.sendMessage("<red>You are not whitelisted in this instance".asMini())
+                            return@addInventoryCondition
+                        }
                         if (player.instance == instance.instance) return@addInventoryCondition
                         player.inventory.clear()
                         player.closeInventory()
