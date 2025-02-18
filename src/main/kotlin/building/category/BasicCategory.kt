@@ -1,6 +1,5 @@
 package io.github.flyingpig525.building.category
 
-import io.github.flyingpig525.building.Building
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.dsl.item.lore

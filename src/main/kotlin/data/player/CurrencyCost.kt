@@ -3,7 +3,6 @@ package io.github.flyingpig525.data.player
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.TextComponent
-import net.minestom.server.instance.block.Block
 
 data class CurrencyCost(
     val organicMatter: Double = 0.0,

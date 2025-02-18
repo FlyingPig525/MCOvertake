@@ -4,6 +4,7 @@ import io.github.flyingpig525.data.research.action.ActionData.*
 import io.github.flyingpig525.data.research.currency.AttackResearch
 import io.github.flyingpig525.data.research.currency.BasicResearch
 import io.github.flyingpig525.data.research.currency.ResearchCurrency
+import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade.Companion.onAttackCostCalculation
 import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade.Companion.onAttacked
 import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade.Companion.onBuildWall
 import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade.Companion.onClaimLand
@@ -12,7 +13,6 @@ import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade.Companion.on
 import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade.Companion.onPlaceColony
 import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade.Companion.onPlaceRaft
 import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade.Companion.onPostAttack
-import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade.Companion.onAttackCostCalculation
 import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade.Companion.onUpgradeWall
 import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade.Companion.onWaterAttackCostCalculation
 import kotlinx.serialization.Serializable

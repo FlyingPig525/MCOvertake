@@ -2,8 +2,6 @@ package io.github.flyingpig525.building
 
 import io.github.flyingpig525.MECHANICAL_SYMBOL
 import io.github.flyingpig525.PLASTIC_SYMBOL
-import io.github.flyingpig525.POWER_SYMBOL
-import io.github.flyingpig525.building.ArmsManufacturer.ArmsManufacturerCompanion
 import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.building.category.SkyCategory
 import io.github.flyingpig525.buildingPosition
@@ -13,13 +11,11 @@ import io.github.flyingpig525.ksp.BuildingCompanion
 import io.github.flyingpig525.ksp.PlayerBuildings
 import io.github.flyingpig525.serialization.PointSerializer
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.Serializer
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.dsl.item.lore
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.bladehunt.kotstom.extension.adventure.noItalic
-import net.minestom.server.adventure.MinestomAdventure
 import net.minestom.server.coordinate.Point
 import net.minestom.server.entity.Player
 import net.minestom.server.instance.Instance

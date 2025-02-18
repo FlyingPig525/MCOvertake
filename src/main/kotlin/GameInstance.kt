@@ -54,8 +54,6 @@ import net.minestom.server.tag.Tag
 import net.minestom.server.timer.TaskSchedule
 import java.nio.file.Path
 import java.util.*
-import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.suspendCoroutine
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteRecursively

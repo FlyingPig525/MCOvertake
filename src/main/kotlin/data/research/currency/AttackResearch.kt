@@ -1,7 +1,8 @@
 package io.github.flyingpig525.data.research.currency
 
-import io.github.flyingpig525.GameInstance
-import io.github.flyingpig525.data.research.upgrade.*
+import io.github.flyingpig525.data.research.upgrade.QuickerCornering
+import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade
+import io.github.flyingpig525.data.research.upgrade.T2
 import kotlinx.serialization.Required
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient

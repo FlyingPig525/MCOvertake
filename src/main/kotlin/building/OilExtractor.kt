@@ -2,7 +2,6 @@ package io.github.flyingpig525.building
 
 import io.github.flyingpig525.*
 import io.github.flyingpig525.building.Building.Companion.building
-import io.github.flyingpig525.building.Building.Companion.genericBuildingCost
 import io.github.flyingpig525.building.category.UndergroundCategory
 import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.data.player.CurrencyCost
@@ -74,9 +73,7 @@ class OilExtractor : Building {
             if (!point.isUnderground) return false
             return point.buildingPosition.repeatDirection { point, _ ->
                 val block = instance.getBlock(point)
-                if (Building.getBuildingByBlock(block) == OilPatch) {
-                    true
-                } else false
+                Building.getBuildingByBlock(block) == OilPatch
             }
         }
     }

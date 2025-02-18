@@ -2,7 +2,6 @@ package io.github.flyingpig525.building
 
 import io.github.flyingpig525.*
 import io.github.flyingpig525.building.Building.Companion.building
-import io.github.flyingpig525.building.Building.Companion.genericBuildingCost
 import io.github.flyingpig525.building.category.UndergroundCategory
 import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.data.player.CurrencyCost
@@ -97,9 +96,7 @@ class RockMiner : Building {
         }
 
         override fun validate(instance: Instance, point: Point): Boolean = point.isUnderground && point.buildingPosition.repeatDirection { point, dir ->
-            if (instance.getBlock(point).defaultState() == Block.DEEPSLATE) {
-                true
-            } else false
+            instance.getBlock(point).defaultState() == Block.DEEPSLATE
         }
     }
 }

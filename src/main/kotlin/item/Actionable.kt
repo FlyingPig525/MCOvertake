@@ -1,8 +1,6 @@
 package io.github.flyingpig525.item
 
 import io.github.flyingpig525.*
-import io.github.flyingpig525.building.Building
-import io.github.flyingpig525.building.Validated
 import io.github.flyingpig525.data.player.BlockData
 import net.bladehunt.kotstom.dsl.item.ItemDsl
 import net.bladehunt.kotstom.dsl.item.item
@@ -22,7 +20,6 @@ import net.minestom.server.network.packet.server.play.ParticlePacket
 import net.minestom.server.particle.Particle
 import net.minestom.server.tag.Tag
 import java.util.*
-import kotlin.reflect.KMutableProperty1
 
 val ERROR_ITEM = item(Material.BARRIER) {
     itemName = "<red><bold>ERROR".asMini()
