@@ -40,7 +40,11 @@ object ColonyItem : Actionable {
         val data = event.player.data ?: return true
         if (!data.colonyCooldown.isReady(Instant.now().toEpochMilli())) return true
         val target = event.player.getTrueTarget(20) ?: return true
-        if (target.visiblePosition.isSky && !validateSky(data, target.visiblePosition)) return true
+        if (target.visiblePosition.isSky && !validateSky(data, target.visiblePosition)) {
+            event.player.sendMessage(("<red><bold>You must have an </bold><aqua>$SKY_SYMBOL Elevated Biosphere<red><bold> " +
+                    "within 50 blocks of this position.").asMini())
+            return true
+        }
         val actionData = ActionData.PlaceColony(data, event.instance, event.player).apply {
             cost = data.colonyCost
             cooldown = Cooldown(Duration.ofSeconds(15))

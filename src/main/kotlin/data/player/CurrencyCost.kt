@@ -102,6 +102,7 @@ data class CurrencyCost(
         fun genericMechanicalParts(count: Int, cost: Int): CurrencyCost = CurrencyCost().genericMechanicalParts(count, cost)
         fun genericPlastic(count: Int, cost: Int): CurrencyCost = CurrencyCost().genericPlastic(count, cost)
         fun genericLubricant(count: Int, cost: Int): CurrencyCost = CurrencyCost().genericLubricant(count, cost)
+        val NONE = CurrencyCost(0.0, 0.0, 0, 0, 0)
     }
 
     sealed class ApplicationResult {

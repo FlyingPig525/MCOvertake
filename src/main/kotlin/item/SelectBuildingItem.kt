@@ -6,6 +6,7 @@ import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.building.Building
 import io.github.flyingpig525.building.category.BasicCategory
 import io.github.flyingpig525.building.category.BuildingCategory
+import io.github.flyingpig525.building.category.SkyCategory
 import io.github.flyingpig525.building.category.UndergroundCategory
 import io.github.flyingpig525.data
 import io.github.flyingpig525.instances
@@ -71,6 +72,7 @@ object SelectBuildingItem : Actionable {
         }
         inventory[1, 3] = BasicCategory.icon.withTag(Tag.String("category"), "BasicCategory")
         inventory[2, 3] = UndergroundCategory.icon.withTag(Tag.String("category"), "UndergroundCategory")
+        inventory[3, 3] = SkyCategory.icon.withTag(Tag.String("category"), "SkyCategory")
         inventory[4, 3] = clearItem
         event.player.openInventory(inventory)
         inventory.addInventoryCondition { player, slot, clickType, res ->
@@ -89,6 +91,7 @@ object SelectBuildingItem : Actionable {
                 when (category) {
                     "BasicCategory" -> openCategory(event, BasicCategory)
                     "UndergroundCategory" -> openCategory(event, UndergroundCategory)
+                    "SkyCategory" -> openCategory(event, SkyCategory)
                 }
             }
             if (close) {

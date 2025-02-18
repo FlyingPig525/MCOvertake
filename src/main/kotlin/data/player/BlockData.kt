@@ -164,10 +164,14 @@ class BlockData(val uuid: String, @Serializable(BlockSerializer::class) val bloc
     }
 
     fun researchTick() {
+        // Intermediary Producers
         buildings.matterCompressors.tick(this)
-        buildings.basicResearchStations.tick(this)
         buildings.plasticPlants.tick(this)
         buildings.lubricantProcessors.tick(this)
+        // Currency Producers
+        buildings.basicResearchStations.tick(this)
+        // Consumers
+        buildings.elevatedBiospheres.tick(this)
     }
 
     fun updateBossBars(player: Player? = null) {

@@ -10,6 +10,7 @@ import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.bladehunt.kotstom.extension.set
+import net.bladehunt.kotstom.extension.y
 import net.minestom.server.coordinate.Point
 import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerUseItemEvent
@@ -43,7 +44,11 @@ object ClaimItem : Actionable {
         val data = event.player.data ?: return true
         if (!data.claimCooldown.isReady(Instant.now().toEpochMilli())) return true
         val target = event.player.getTrueTarget(20) ?: return true
-        if (target.visiblePosition.isSky && !validateSky(data, target.visiblePosition)) return true
+        if (target.visiblePosition.isSky && !validateSky(data, target.visiblePosition)) {
+            event.player.sendMessage(("<red><bold>You must have an </bold><aqua>$SKY_SYMBOL Elevated Biosphere<red><bold> " +
+                    "within 50 blocks of this position.").asMini())
+            return true
+        }
         var claimData = ActionData.ClaimLand(data, event.instance, event.player)
         claimData = data.research.onClaimLand(claimData)
         if (data.power < claimData.claimCost) {
@@ -69,9 +74,13 @@ object ClaimItem : Actionable {
      * @return Whether this block can be claimed or not
      */
     fun validateSky(data: BlockData, point: Point): Boolean {
-        for (pt in data.buildings.elevatedBiospheres.positions) {
-            if (pt.distanceSquared(point) <= 10000) {
-                return true
+        for (pt in data.buildings.elevatedBiospheres.enabledPositions) {
+            val cur = pt.visiblePosition
+            val next = cur.playerPosition.add(0.0, 1.0, 0.0).visiblePosition
+            if (cur.distanceSquared(point.visiblePosition) <= 5000 || next.distanceSquared(point.visiblePosition) <= 5000) {
+                if (point.y == cur.y || point.y == next.y) {
+                    return true
+                }
             }
         }
         return false
