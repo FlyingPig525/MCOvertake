@@ -3,6 +3,7 @@ package io.github.flyingpig525.data.research
 import io.github.flyingpig525.data.research.action.ActionData.*
 import io.github.flyingpig525.data.research.currency.AttackResearch
 import io.github.flyingpig525.data.research.currency.BasicResearch
+import io.github.flyingpig525.data.research.currency.HiddenResearch
 import io.github.flyingpig525.data.research.currency.ResearchCurrency
 import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade.Companion.onAttacked
 import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade.Companion.onBuildWall
@@ -22,6 +23,7 @@ class ResearchContainer : Iterable<ResearchCurrency> {
     var unlockedCurrency = 1
     val basicResearch: BasicResearch = BasicResearch()
     val attackResearch = AttackResearch()
+    val hiddenResearch = HiddenResearch()
 
     fun currencyById(id: Int): ResearchCurrency? = when(id) {
         1 -> basicResearch
@@ -31,6 +33,7 @@ class ResearchContainer : Iterable<ResearchCurrency> {
 
     override fun iterator(): Iterator<ResearchCurrency> =
         iterator {
+            yield(hiddenResearch)
             yield(basicResearch)
             yield(attackResearch)
         }

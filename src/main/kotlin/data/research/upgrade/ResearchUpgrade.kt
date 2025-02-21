@@ -20,8 +20,7 @@ import net.minestom.server.item.Material
 /**
  * @property [name] - Unique (to currency) identifier
  */
-sealed class ResearchUpgrade {
-    open var level: Int = 0
+sealed class ResearchUpgrade(open var level: Int = 0) {
 
     abstract var maxLevel: Int
     abstract val name: String

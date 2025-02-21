@@ -49,7 +49,7 @@ object ResearchUpgradeItem : Actionable {
         val data = event.player.data ?: return true
         val inventory = Inventory(InventoryType.CHEST_1_ROW, "Research Type")
 
-        for ((i, currency) in data.research.withIndex()) {
+        for ((i, currency) in data.research.filter { it.currencyLevel != 0 }.withIndex()) {
             inventory[i] = item(currency.colorItem) {
                 itemName = "<${currency.color}>${currency.symbol} <gray>-<${currency.color}> ${currency.count}".asMini()
                 setTag(Tag.Integer("currencyId"), currency.currencyLevel)
