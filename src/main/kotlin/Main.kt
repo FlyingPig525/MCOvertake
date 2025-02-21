@@ -20,7 +20,6 @@ import io.github.flyingpig525.item.SelectBlockItem
 import io.github.flyingpig525.ksp.initBuildingCompanions
 import io.github.flyingpig525.ksp.initItems
 import io.github.flyingpig525.log.MCOvertakeLogType
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -78,12 +77,8 @@ import team.unnamed.creative.serialize.minecraft.MinecraftResourcePackWriter
 import team.unnamed.creative.server.ResourcePackServer
 import java.io.File
 import java.net.URI
-import java.nio.file.FileSystemNotFoundException
 import java.nio.file.Path
-import java.nio.file.Paths
-import java.nio.file.spi.FileSystemProvider
 import java.util.*
-import kotlin.io.path.toPath
 
 
 const val POWER_SYMBOL = "✘"
@@ -123,7 +118,9 @@ var scoreboardTitleProgress = -1.0
 lateinit var config: Config
 lateinit var parentInstanceConfig: InstanceConfig
 
-var instances: MutableMap<String, GameInstance> = mutableMapOf()
+typealias InstanceMap = MutableMap<String, GameInstance>
+
+var instances: InstanceMap = mutableMapOf()
 lateinit var lobbyInstance: InstanceContainer
 
 lateinit var permissionManager: PermissionManager private set

@@ -3,8 +3,6 @@ package io.github.flyingpig525.data.research.upgrade
 import io.github.flyingpig525.data.research.currency.BasicResearch
 import io.github.flyingpig525.data.research.currency.ResearchCurrency
 import kotlinx.serialization.Serializable
-import net.bladehunt.kotstom.dsl.item.item
-import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.dsl.item.lore
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.bladehunt.kotstom.extension.adventure.noItalic

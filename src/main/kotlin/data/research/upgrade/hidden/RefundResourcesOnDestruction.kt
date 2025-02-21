@@ -3,7 +3,6 @@ package io.github.flyingpig525.data.research.upgrade
 import io.github.flyingpig525.data.research.action.ActionData
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.extension.adventure.asMini
-import net.kyori.adventure.text.Component
 import net.minestom.server.item.ItemStack
 import kotlin.math.absoluteValue
 

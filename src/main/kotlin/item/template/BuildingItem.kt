@@ -1,12 +1,10 @@
 package io.github.flyingpig525.item.template
 
-import com.sun.jdi.InvalidTypeException
 import io.github.flyingpig525.GameInstance
 import io.github.flyingpig525.building.Building
 import io.github.flyingpig525.building.Validated
 import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data
-import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.data.player.CurrencyCost
 import io.github.flyingpig525.getTrueTarget
 import io.github.flyingpig525.item.Actionable
@@ -19,7 +17,6 @@ import net.minestom.server.event.player.PlayerUseItemEvent
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import java.util.*
-import kotlin.reflect.KMutableProperty1
 
 open class BuildingItem(
     private val building: Building.BuildingCompanion,

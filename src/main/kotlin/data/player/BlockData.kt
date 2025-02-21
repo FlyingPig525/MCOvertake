@@ -230,7 +230,7 @@ class BlockData(val uuid: String, @Serializable(BlockSerializer::class) val bloc
         player.helmet = item(Material.fromNamespaceId(block.namespace())!!)
     }
 
-    fun sendCooldowns(player: Player) {
+    fun sendCooldowns() {
         sendPackets(
             SetCooldownPacket(
                 ClaimItem.itemMaterial.cooldownIdentifier,
@@ -265,18 +265,18 @@ class BlockData(val uuid: String, @Serializable(BlockSerializer::class) val bloc
 
     companion object {
         val NONE = BlockData("", Block.AIR, "")
-        fun Map<String, BlockData>.getDataByBlock(block: Block): BlockData? {
+        fun DataMap.getDataByBlock(block: Block): BlockData? {
             return values.find { it.block == block }
         }
-        fun Map<String, BlockData>.getDataByPoint(point: Point, instance: Instance): BlockData? {
+        fun DataMap.getDataByPoint(point: Point, instance: Instance): BlockData? {
             val block = instance.getBlock(point.playerPosition)
 
             return values.find { it.block == block}
         }
-        fun Map<String, BlockData>.toBlockSortedList(): List<BlockData> {
+        fun DataMap.toBlockSortedList(): List<BlockData> {
             return values.sortedByDescending { it.blocks }
         }
-        fun Map<String, BlockData>.toBlockList(): List<Block> {
+        fun DataMap.toBlockList(): List<Block> {
             return values.map { it.block }
         }
     }

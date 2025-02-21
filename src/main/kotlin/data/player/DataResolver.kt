@@ -1,7 +1,7 @@
 package io.github.flyingpig525.data.player
 
 import io.github.flyingpig525.GameInstance
-import java.util.UUID
+import java.util.*
 
 class DataResolver(val instance: GameInstance) {
     operator fun get(uuid: String) = instance.blockData[instance.uuidParents[uuid] ?: uuid]

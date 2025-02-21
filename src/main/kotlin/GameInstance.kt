@@ -54,8 +54,6 @@ import net.minestom.server.tag.Tag
 import net.minestom.server.timer.TaskSchedule
 import java.nio.file.Path
 import java.util.*
-import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.suspendCoroutine
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteRecursively
@@ -63,6 +61,8 @@ import kotlin.io.path.exists
 import kotlin.math.pow
 import kotlin.random.Random
 
+typealias DataMap = MutableMap<String, BlockData>
+typealias PlayerConfigMap = MutableMap<String, PlayerConfig>
 
 class GameInstance(
     val path: Path,
@@ -81,12 +81,12 @@ class GameInstance(
     }
         private set
 
-    val blockData: MutableMap<String, BlockData> = Json.decodeFromString<MutableMap<String, BlockData>>(
+    val blockData: DataMap = Json.decodeFromString<DataMap>(
         if (path.resolve("block-data.json5").toFile().exists())
             path.resolve("block-data.json5").toFile().readText()
         else "{}"
     )
-    val playerConfigs: MutableMap<String, PlayerConfig> = Json.decodeFromString(
+    val playerConfigs: PlayerConfigMap = Json.decodeFromString(
         if (path.resolve("player-configs.json5").toFile().exists())
             path.resolve("player-configs.json5").toFile().readText()
         else "{}"
@@ -316,7 +316,6 @@ class GameInstance(
         }
     }
 
-    @OptIn(ExperimentalStdlibApi::class)
     fun registerInteractionEvents() {
         instance.eventNode().listen<PlayerMoveEvent> { e ->
             with(e) {
@@ -464,7 +463,7 @@ class GameInstance(
                 data.gameInstance = this
                 data.setupPlayer(e.player)
                 if (e.isFirstSpawn) {
-                    data.sendCooldowns(e.player)
+                    data.sendCooldowns()
                 }
             }
             e.player.config
@@ -679,7 +678,7 @@ class GameInstance(
     operator fun get(uuid: String) = dataResolver[uuid]
 
     companion object {
-        fun Map<String, GameInstance>.fromInstance(instance: Instance): GameInstance? {
+        fun InstanceMap.fromInstance(instance: Instance): GameInstance? {
             // Random string so it doesn't return anything on accident
             return this[instance.getTag(Tag.String("name")) ?: "189271890379012837uoahwd-8127"]
         }

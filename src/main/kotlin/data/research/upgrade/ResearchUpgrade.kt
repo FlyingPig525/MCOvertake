@@ -2,7 +2,6 @@ package io.github.flyingpig525.data.research.upgrade
 
 import io.github.flyingpig525.data.research.action.ActionData.*
 import io.github.flyingpig525.data.research.currency.ResearchCurrency
-import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade.Companion.onWaterAttackCostCalculation
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.ItemDsl
 import net.bladehunt.kotstom.dsl.item.item

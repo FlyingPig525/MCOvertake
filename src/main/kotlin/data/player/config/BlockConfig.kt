@@ -2,19 +2,14 @@ package io.github.flyingpig525.data.player.config
 
 import io.github.flyingpig525.GameInstance.Companion.gameInstance
 import io.github.flyingpig525.data
-import io.github.flyingpig525.serialization.MaterialSerializer
 import kotlinx.serialization.Serializable
-import net.bladehunt.kotstom.dsl.item.item
-import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.minestom.server.entity.Player
-import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import net.minestom.server.utils.time.Cooldown
 import java.lang.reflect.Field
 import java.time.Duration
 import java.time.Instant
-import kotlin.reflect.KProperty0
 
 @Serializable
 
