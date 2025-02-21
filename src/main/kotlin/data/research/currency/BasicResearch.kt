@@ -25,6 +25,7 @@ class BasicResearch : ResearchCurrency {
         SupriseAttack(),
         InducedGlare(),
         OnlineAttacking(),
+        QuickerCornering(),
         TestUpgrade(),
         T2(),
         TripleMatter(),
