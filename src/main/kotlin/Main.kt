@@ -30,11 +30,13 @@ import net.bladehunt.kotstom.*
 import net.bladehunt.kotstom.dsl.item.amount
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
+import net.bladehunt.kotstom.dsl.item.lore
 import net.bladehunt.kotstom.dsl.kbar
 import net.bladehunt.kotstom.dsl.kommand.buildSyntax
 import net.bladehunt.kotstom.dsl.kommand.kommand
 import net.bladehunt.kotstom.dsl.listen
 import net.bladehunt.kotstom.extension.adventure.asMini
+import net.bladehunt.kotstom.extension.adventure.noItalic
 import net.bladehunt.kotstom.extension.get
 import net.bladehunt.kotstom.extension.roundToBlock
 import net.bladehunt.kotstom.extension.set
@@ -285,9 +287,15 @@ fun main() = runBlocking { try {
                 else CHEST_6_ROW
             }
             val inventory = Inventory(type, "Game Instances")
-            instances.onEachIndexed { index, (name, _) ->
+            instances.onEachIndexed { index, (name, instance) ->
                 inventory[index] = item(Material.WHITE_WOOL) {
                     itemName = name.asMini()
+                    if (instance.instanceConfig.whitelist.isNotEmpty()) {
+                        lore {
+                            val color = if (e.player.username in instance.instanceConfig.whitelist) "<green>" else "<red>"
+                            +"${color}Whitelisted".asMini().noItalic()
+                        }
+                    }
                     set(Tag.String("selector"), name)
                 }
             }
