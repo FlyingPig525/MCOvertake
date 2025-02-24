@@ -33,6 +33,7 @@ class BasicResearch : ResearchCurrency {
     )
     var adjacentWallPercentageDecrease = 0.0
     var adjacentWallPercentageIncrease = 0.0
+    var noOp = false
 
     fun validateUpgrades() {
         val fresh = BasicResearch()

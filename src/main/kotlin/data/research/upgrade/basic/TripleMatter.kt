@@ -1,6 +1,8 @@
 package io.github.flyingpig525.data.research.upgrade
 
 import io.github.flyingpig525.data.research.action.ActionData
+import io.github.flyingpig525.data.research.currency.BasicResearch
+import io.github.flyingpig525.data.research.currency.ResearchCurrency
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -24,7 +26,8 @@ class TripleMatter : ResearchUpgrade() {
         }
     }
 
-    override fun item(): ItemStack {
+    override fun item(currency: ResearchCurrency): ItemStack {
+        if ((currency as BasicResearch).noOp) return ItemStack.AIR
         return item(Material.OAK_LEAVES) {
             itemName = "<gold><bold>Triple Organic Matter Increase</bold> <gray>-<aqua> Level: $level/$maxLevel".asMini()
             lore {

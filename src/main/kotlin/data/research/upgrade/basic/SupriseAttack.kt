@@ -2,6 +2,7 @@ package io.github.flyingpig525.data.research.upgrade
 
 import io.github.flyingpig525.data
 import io.github.flyingpig525.data.research.action.ActionData
+import io.github.flyingpig525.data.research.currency.ResearchCurrency
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.lore
 import net.bladehunt.kotstom.extension.adventure.asMini
@@ -15,7 +16,7 @@ class SupriseAttack : ResearchUpgrade() {
     override val name: String = "Suprise Attack"
     override val cost: Long = 1000
 
-    override fun item(): ItemStack = researchItem(Material.SCULK, this) {
+    override fun item(currency: ResearchCurrency): ItemStack = researchItem(Material.SCULK, this) {
         lore {
             +"<dark_gray>Reduces attack cost by 5% when attacking".asMini().noItalic()
             +"<dark_gray>under moonlight".asMini().noItalic()

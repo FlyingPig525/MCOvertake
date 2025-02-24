@@ -1,6 +1,8 @@
 package io.github.flyingpig525.data.research.upgrade
 
 import io.github.flyingpig525.data.research.action.ActionData
+import io.github.flyingpig525.data.research.currency.BasicResearch
+import io.github.flyingpig525.data.research.currency.ResearchCurrency
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -20,7 +22,8 @@ class TestUpgrade : ResearchUpgrade() {
     override val cost: Long
         get() = 600
 
-    override fun item(): ItemStack = item(Material.GOLDEN_HOE) {
+    override fun item(currency: ResearchCurrency): ItemStack = item(Material.GOLDEN_HOE) {
+        if ((currency as BasicResearch).noOp) return ItemStack.AIR
         itemName = "<gold><bold>Literally the best upgrade <gray>-<aqua> Level: $level/$maxLevel".asMini()
         lore {
             +"<dark_gray>Removes claim cooldown and cost".asMini().noItalic()

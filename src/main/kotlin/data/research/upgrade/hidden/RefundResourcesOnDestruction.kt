@@ -1,6 +1,7 @@
 package io.github.flyingpig525.data.research.upgrade
 
 import io.github.flyingpig525.data.research.action.ActionData
+import io.github.flyingpig525.data.research.currency.ResearchCurrency
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.minestom.server.item.ItemStack
@@ -12,7 +13,7 @@ class RefundResourcesOnDestruction : ResearchUpgrade(level = 1) {
     override val name: String = "Refund Resources on Destruction"
     override val cost: Long = 0
 
-    override fun item(): ItemStack {
+    override fun item(currency: ResearchCurrency): ItemStack {
         TODO("This function should not be accessible!")
     }
 

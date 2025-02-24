@@ -53,7 +53,7 @@ sealed class ResearchUpgrade(open var level: Int = 0) {
     open fun onAttacked(eventData: Attacked): Attacked? = null
     open fun onMatterBuildingTick(eventData: MatterBuildingTick): MatterBuildingTick? = null
 
-    abstract fun item(): ItemStack
+    abstract fun item(currency: ResearchCurrency): ItemStack
 
     open fun onPurchase(clickEvent: InventoryConditionResult, currency: ResearchCurrency, player: Player): PurchaseState {
         if (level == maxLevel) return PurchaseState.MaxLevel(currency, this)

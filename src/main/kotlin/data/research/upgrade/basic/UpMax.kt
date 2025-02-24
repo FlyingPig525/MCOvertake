@@ -1,6 +1,7 @@
 package io.github.flyingpig525.data.research.upgrade
 
 import io.github.flyingpig525.data
+import io.github.flyingpig525.data.research.currency.BasicResearch
 import io.github.flyingpig525.data.research.currency.ResearchCurrency
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item
@@ -19,7 +20,8 @@ class UpMax : ResearchUpgrade() {
     override val name: String = "Up Maxes"
     override val cost: Long = 0
 
-    override fun item(): ItemStack {
+    override fun item(currency: ResearchCurrency): ItemStack {
+        if ((currency as BasicResearch).noOp) return ItemStack.AIR
         return item(Material.ANVIL) {
             itemName =
                 "<gold><bold>Increase Maximums</bold> <gray>-<aqua> Level: $level/$maxLevel".asMini()
