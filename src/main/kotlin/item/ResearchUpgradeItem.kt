@@ -48,7 +48,7 @@ object ResearchUpgradeItem : Actionable {
         val data = event.player.data ?: return true
         val inventory = Inventory(InventoryType.CHEST_1_ROW, "Research Type")
 
-        for ((i, currency) in data.research.withIndex()) {
+        for ((i, currency) in data.research.filter { it.currencyLevel != 0 }.withIndex()) {
             inventory[i] = item(currency.colorItem) {
                 itemName = "<${currency.color}>${currency.symbol} <gray>-<${currency.color}> ${currency.count}".asMini()
                 setTag(Tag.Integer("currencyId"), currency.currencyLevel)
@@ -71,8 +71,10 @@ object ResearchUpgradeItem : Actionable {
             "<${currency.color}>${currency.symbol}</${currency.color}> - ${currency.count}".asMini()
         )
 
-        for ((i, upgrade) in currency.upgrades.withIndex()) {
-            val newItem = upgrade.item().withTag(Tag.String("name"), upgrade.name)
+        var i = 0
+        for (upgrade in currency.upgrades) {
+            val newItem = upgrade.item(currency).withTag(Tag.String("name"), upgrade.name)
+            if (newItem.material() == Material.AIR) continue
             val lore = newItem.get(ItemComponent.LORE)!!.map {
                 if (it.toString().contains("Cost:") && upgrade.level == upgrade.maxLevel) {
                     return@map "<green><bold>Max Level".asMini().noItalic()
@@ -80,6 +82,7 @@ object ResearchUpgradeItem : Actionable {
                 it
             }
             inventory[i * 2] = newItem.withLore(lore)
+            i++
         }
         inventory.addInventoryCondition { player, slot, clickType, res ->
             res.isCancel = true
@@ -107,7 +110,7 @@ object ResearchUpgradeItem : Actionable {
                 return@addInventoryCondition
             }
             (player.openInventory!! as Inventory).apply {
-                val newItem = upgrade.item().withTag(Tag.String("name"), upgrade.name)
+                val newItem = upgrade.item(currency).withTag(Tag.String("name"), upgrade.name)
                 val lore = newItem.get(ItemComponent.LORE)!!.map {
                     if (it.toString().contains("Cost:") && upgrade.level == upgrade.maxLevel) {
                         return@map "<green><bold>Max Level".asMini().noItalic()

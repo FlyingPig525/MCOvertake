@@ -2,7 +2,6 @@ package io.github.flyingpig525.building
 
 import io.github.flyingpig525.BUILDING_INVENTORY_SLOT
 import io.github.flyingpig525.MATTER_SYMBOL
-import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.building.category.BasicCategory
 import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.player.BlockData
@@ -27,8 +26,7 @@ import net.minestom.server.tag.Tag
 import kotlin.reflect.KProperty1
 
 @Serializable
-class MatterExtractor : Building {
-    override var count: Int = 0
+class MatterExtractor : Building() {
     override val resourceUse: Int get() = count * 3
     override val cost get() = CurrencyCost.genericOrganicMatter(count, 25.0)
 
@@ -50,8 +48,8 @@ class MatterExtractor : Building {
         data.organicMatter += action.increase
     }
 
-    @BuildingCompanion("Barrack", BasicCategory::class)
-    companion object MatterExtractorCompanion : Building.BuildingCompanion {
+    @io.github.flyingpig525.ksp.BuildingCompanion("Barrack", BasicCategory::class)
+    companion object MatterExtractorCompanion : BuildingCompanion {
         override val block: Block = Block.BREWING_STAND
         override val identifier: String = "matter:generator"
         override val playerRef: KProperty1<PlayerBuildings, Building> = PlayerBuildings::matterExtractors
@@ -73,7 +71,7 @@ class MatterExtractor : Building {
             return getItem(playerData.buildings.matterExtractors.cost, playerData.buildings.matterExtractors.count)
         }
 
-        override fun getResourceUse(currentDisposableResources: Int, count: Int): Int = currentDisposableResources + 3
+        override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 3
 
         override fun shouldCallItemUse(): Boolean = true
     }

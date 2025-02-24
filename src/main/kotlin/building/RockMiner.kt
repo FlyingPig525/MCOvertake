@@ -1,7 +1,6 @@
 package io.github.flyingpig525.building
 
 import io.github.flyingpig525.*
-import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.building.category.UndergroundCategory
 import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.data.player.CurrencyCost
@@ -27,8 +26,7 @@ import java.util.*
 import kotlin.reflect.KProperty1
 
 @Serializable
-class RockMiner : Building {
-    override var count: Int = 0
+class RockMiner : Building() {
     override val resourceUse: Int get() = 4 * count
     override val cost get() = CurrencyCost.genericMechanicalParts(count, 40)
 
@@ -56,8 +54,8 @@ class RockMiner : Building {
         data.organicMatter += 4 * count
     }
 
-    @BuildingCompanion("first", UndergroundCategory::class)
-    companion object RockMinerCompanion : Building.BuildingCompanion, DisplayEntityBlock, Validated {
+    @io.github.flyingpig525.ksp.BuildingCompanion("first", UndergroundCategory::class)
+    companion object RockMinerCompanion : BuildingCompanion, DisplayEntityBlock, Validated {
         override val block: Block = Block.TRIPWIRE_HOOK
         override val identifier: String = "matter:rock_miner"
         override val playerRef: KProperty1<PlayerBuildings, Building> = PlayerBuildings::rockMiners
@@ -77,7 +75,7 @@ class RockMiner : Building {
         override fun getItem(playerData: BlockData): ItemStack =
             getItem(playerData.buildings.rockMiners.cost, playerData.buildings.rockMiners.count)
 
-        override fun getResourceUse(currentDisposableResources: Int, count: Int): Int = currentDisposableResources + 4
+        override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 4
 
         override fun checkShouldSpawn(point: Point, instance: Instance): Boolean =
             instance.getBlock(point.buildingPosition).defaultState() == block

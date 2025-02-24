@@ -27,8 +27,4 @@ interface ResearchCurrency : List<ResearchUpgrade> {
     override fun listIterator(index: Int): ListIterator<ResearchUpgrade> = upgrades.listIterator(index)
     override fun listIterator(): ListIterator<ResearchUpgrade> = upgrades.listIterator()
     override fun subList(fromIndex: Int, toIndex: Int): List<ResearchUpgrade> = upgrades.subList(fromIndex, toIndex)
-
-    companion object {
-        val currencies = mutableSetOf<ResearchCurrency>()
-    }
 }

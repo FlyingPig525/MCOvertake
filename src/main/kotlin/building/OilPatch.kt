@@ -1,7 +1,6 @@
 package io.github.flyingpig525.building
 
 import io.github.flyingpig525.*
-import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.building.category.UndergroundCategory
 import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.data.player.CurrencyCost
@@ -24,8 +23,7 @@ import net.minestom.server.tag.Tag
 import kotlin.reflect.KProperty1
 
 @Serializable
-class OilPatch : Building {
-    override var count: Int = 0
+class OilPatch : Building() {
     override val resourceUse: Int get() = 2 * count
     override val cost get() = CurrencyCost.genericOrganicMatter(count, 750.0)
 
@@ -43,8 +41,8 @@ class OilPatch : Building {
         }
     }
 
-    @BuildingCompanion("RockMiner", UndergroundCategory::class, "oilPatches")
-    companion object OilPatchCompanion : Building.BuildingCompanion, Validated {
+    @io.github.flyingpig525.ksp.BuildingCompanion("RockMiner", UndergroundCategory::class, "oilPatches")
+    companion object OilPatchCompanion : BuildingCompanion, Validated {
         override val block: Block = Block.BLACK_CARPET
         override val identifier: String = "oil:patch"
         override val playerRef: KProperty1<PlayerBuildings, Building> = PlayerBuildings::oilPatches
@@ -65,7 +63,7 @@ class OilPatch : Building {
         override fun getItem(playerData: BlockData): ItemStack =
             getItem(playerData.buildings.oilPatches.cost, playerData.buildings.oilPatches.count)
 
-        override fun getResourceUse(currentDisposableResources: Int, count: Int): Int = currentDisposableResources + 2
+        override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 2
         override fun validate(instance: Instance, point: Point): Boolean {
             return point.isUnderground
         }

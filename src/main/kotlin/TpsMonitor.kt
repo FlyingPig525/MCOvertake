@@ -17,7 +17,6 @@ import java.util.concurrent.atomic.AtomicReference
 
 // More stolen stuff
 class TpsMonitor {
-    private val TICK_RATE = 20
     private var lastTime: Long = 0
     private var tps: Double = 0.0
 
@@ -31,7 +30,7 @@ class TpsMonitor {
         scheduler.submitTask {
             val currentTime = System.nanoTime()
             val elapsedSeconds = (currentTime - lastTime) / 1_000_000_000.0
-            tps = Math.min(TICK_RATE.toDouble(), TICK_RATE.toDouble() / elapsedSeconds)
+            tps = TICK_RATE.toDouble().coerceAtMost(TICK_RATE.toDouble() / elapsedSeconds)
             lastTime = currentTime
 
             updateTpsHistory(tps)
@@ -103,5 +102,9 @@ class TpsMonitor {
 
     fun getAvgTps15Min(): Double {
         return getAvgTps(tps15Min)
+    }
+
+    companion object {
+        private const val TICK_RATE = 20
     }
 }

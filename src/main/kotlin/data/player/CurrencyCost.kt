@@ -96,6 +96,28 @@ data class CurrencyCost(
         return ApplicationResult.Success
     }
 
+    /**
+     * Floors any doubles that need to be ints
+     * @return A [CurrencyCost] with each value set to the return of the [fn] argument
+     */
+    fun modify(fn: (Double) -> Double): CurrencyCost {
+        return CurrencyCost(
+            fn(organicMatter),
+            fn(power),
+            fn(mechanicalParts.toDouble()).toInt(),
+            fn(plastic.toDouble()).toInt(),
+            fn(lubricant.toDouble()).toInt()
+        )
+    }
+
+    inline fun forEach(fn: (name: Component, value: Double) -> Unit) {
+        fn(io.github.flyingpig525.building.organicMatter.asMini(), organicMatter)
+        fn(io.github.flyingpig525.building.power.asMini(), power)
+        fn(io.github.flyingpig525.building.mechanicalPart.asMini(), mechanicalParts.toDouble())
+        fn(io.github.flyingpig525.building.plastic.asMini(), plastic.toDouble())
+        fn(io.github.flyingpig525.building.lubricant.asMini(), lubricant.toDouble())
+    }
+
     companion object {
         fun genericOrganicMatter(count: Int, cost: Double): CurrencyCost = CurrencyCost().genericOrganicMatter(count, cost)
         fun genericPower(count: Int, cost: Double): CurrencyCost = CurrencyCost().genericPower(count, cost)

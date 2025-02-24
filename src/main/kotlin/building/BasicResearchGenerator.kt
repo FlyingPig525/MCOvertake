@@ -2,7 +2,6 @@ package io.github.flyingpig525.building
 
 import io.github.flyingpig525.BUILDING_INVENTORY_SLOT
 import io.github.flyingpig525.MECHANICAL_SYMBOL
-import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.building.category.BasicCategory
 import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.player.BlockData
@@ -27,8 +26,7 @@ import net.minestom.server.tag.Tag
 import kotlin.reflect.KProperty1
 
 @Serializable
-class BasicResearchGenerator : Building {
-    override var count: Int = 0
+class BasicResearchGenerator : Building() {
     override val resourceUse: Int get() = 3 * count
     override val cost get() = CurrencyCost.genericMechanicalParts(count, 100)
     override fun place(playerTarget: Point, instance: Instance, playerData: BlockData) {
@@ -49,8 +47,8 @@ class BasicResearchGenerator : Building {
         }
     }
 
-    @BuildingCompanion(orderAfter = "MatterCompressionPlant", BasicCategory::class, "basicResearchStations")
-    companion object BasicResearchGeneratorCompanion : Building.BuildingCompanion {
+    @io.github.flyingpig525.ksp.BuildingCompanion(orderAfter = "MatterCompressionPlant", BasicCategory::class, "basicResearchStations")
+    companion object BasicResearchGeneratorCompanion : BuildingCompanion {
         override val block: Block = Block.SCULK_SENSOR
         override val identifier: String = "research:basic_research"
         override val playerRef: KProperty1<PlayerBuildings, Building> = PlayerBuildings::basicResearchStations
@@ -73,6 +71,6 @@ class BasicResearchGenerator : Building {
             return getItem(playerData.buildings.basicResearchStations.cost, playerData.buildings.basicResearchStations.count)
         }
 
-        override fun getResourceUse(currentDisposableResources: Int, count: Int): Int = currentDisposableResources + 3
+        override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 3
     }
 }

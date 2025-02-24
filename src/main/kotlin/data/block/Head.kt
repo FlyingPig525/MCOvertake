@@ -38,6 +38,5 @@ class Head(
             )
             return with(ItemComponent.PROFILE, HeadProfile(playerSkin))
         }
-        val QUESTION_MARK = Head("da99b05b9a1db4d29b5e673d77ae54a77eab66818586035c8a2005aeb810602a") // https://minecraft-heads.com/custom-heads/head/64805
     }
 }

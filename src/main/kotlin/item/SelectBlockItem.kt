@@ -43,9 +43,10 @@ object SelectBlockItem : Actionable {
         val gameInstance = instances.fromInstance(event.instance) ?: return true
         val inventory = Inventory(InventoryType.CHEST_5_ROW, "Select Block")
 
-        inventory[3, 1] = NATURAL_CATEGORY
-        inventory[5, 1] = UNDERGROUND_CATEGORY
-        inventory[4, 3] = NETHER_CATEGORY
+        inventory[4, 0] = END_CATEGORY
+        inventory[2, 2] = NATURAL_CATEGORY
+        inventory[6, 2] = UNDERGROUND_CATEGORY
+        inventory[4, 4] = NETHER_CATEGORY
 
         inventory.addInventoryCondition { player: Player, slot: Int, clickType: ClickType, res: InventoryConditionResult ->
             res.isCancel = true
@@ -56,6 +57,7 @@ object SelectBlockItem : Actionable {
                 NATURAL_CATEGORY -> openCategory(NaturalCategory.entries, arguments, gameInstance)
                 UNDERGROUND_CATEGORY -> openCategory(UndergroundCategory.entries, arguments, gameInstance)
                 NETHER_CATEGORY -> openCategory(NetherCategory.entries, arguments, gameInstance)
+                END_CATEGORY -> openCategory(EndCategory.entries, arguments, gameInstance)
                 else -> {}
             }
         }
@@ -96,7 +98,9 @@ object SelectBlockItem : Actionable {
             }
             instance.uuidParents[e.player.uuid.toString()] = e.player.uuid.toString()
             instance.dataResolver[e.player.uuid.toString()] =
-                BlockData(e.player.uuid.toString(), res.clickedItem.material().block()!!, e.player.username)
+                BlockData(e.player.uuid.toString(), res.clickedItem.material().block()!!, e.player.username).apply {
+                    if (instance.noOp) research.basicResearch.noOp = true
+                }
             e.player.closeInventory()
             for (i in 0..8) {
                 e.player.inventory[i] = ItemStack.AIR
@@ -106,10 +110,6 @@ object SelectBlockItem : Actionable {
             instance.outgoingCoopInvites[e.player.uuid] = mutableListOf()
         }
         e.player.openInventory(inventory)
-    }
-
-    fun setPlayerInventory(player: Player) {
-
     }
 
     override fun setItemSlot(player: Player) {

@@ -25,6 +25,7 @@ class BasicResearch : ResearchCurrency {
         SupriseAttack(),
         InducedGlare(),
         OnlineAttacking(),
+        QuickerCornering(),
         TestUpgrade(),
         T2(),
         TripleMatter(),
@@ -32,6 +33,7 @@ class BasicResearch : ResearchCurrency {
     )
     var adjacentWallPercentageDecrease = 0.0
     var adjacentWallPercentageIncrease = 0.0
+    var noOp = false
 
     fun validateUpgrades() {
         val fresh = BasicResearch()
@@ -51,6 +53,6 @@ class BasicResearch : ResearchCurrency {
     companion object {
         const val symbol = "\uD83E\uDDEA"
         val color = NamedTextColor.AQUA.asHexString()
-        val colorItem = Material.CYAN_WOOL
+        val colorItem: Material = Material.CYAN_WOOL
     }
 }

@@ -25,7 +25,9 @@ data class InstanceConfig(
     val generateSkyIslands: Boolean = false,
     // How long a player needs to wait before they can change the targeted attack upgrade,
     // "Induced Glare" or "Suprise Attack," in minutes
-    val sunOrMoonCooldownLength: Long = 60
+    val sunOrMoonCooldownLength: Long = 60,
+    // A player whitelist for this specific instance. An empty array turns the whitelist off
+    val whitelist: MutableSet<String> = mutableSetOf()
 ) {
     init {
         assert(noiseScale in 0.0..2.0) { "Noise scale must be within 0 and 2" }
@@ -33,6 +35,7 @@ data class InstanceConfig(
         assert(noiseSeed in Long.MIN_VALUE..Long.MAX_VALUE) { "Noise seed must be within ${Long.MIN_VALUE} and ${Long.MAX_VALUE}" }
         assert(mapSize > 0) { "Map size must be greater than 0" }
         assert(coopKickWaitTime >= 0) { "Coop kick wait time must be greater than or equal to 0" }
+        assert(sunOrMoonCooldownLength >= 0) { "Sun or Moon cooldown must be greater than or equal to 0" }
     }
     companion object : CommentContainer {
         override val comments: List<String> = listOf(
@@ -47,7 +50,8 @@ data class InstanceConfig(
                     "// Can be lowered to make inviting the wrong people less punishing, but that is not recommended. Default: 60",
             "// Whether sky islands should be generated. Default: false",
             "// How long a player needs to wait before they can change the targeted attack upgrade,\n\t" +
-                    "// \"Induced Glare\" or \"Suprise Attack,\" in minutes. Default: 60"
+                    "// \"Induced Glare\" or \"Suprise Attack,\" in minutes. Default: 60",
+            "// A player whitelist for this specific instance. An empty array turns the whitelist off. Default: []"
         )
     }
 }

@@ -29,12 +29,14 @@ import net.bladehunt.kotstom.*
 import net.bladehunt.kotstom.dsl.item.amount
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
+import net.bladehunt.kotstom.dsl.item.lore
 import net.bladehunt.kotstom.dsl.kbar
 import net.bladehunt.kotstom.dsl.kommand.buildSyntax
 import net.bladehunt.kotstom.dsl.kommand.defaultExecutor
 import net.bladehunt.kotstom.dsl.kommand.kommand
 import net.bladehunt.kotstom.dsl.listen
 import net.bladehunt.kotstom.extension.adventure.asMini
+import net.bladehunt.kotstom.extension.adventure.noItalic
 import net.bladehunt.kotstom.extension.get
 import net.bladehunt.kotstom.extension.roundToBlock
 import net.bladehunt.kotstom.extension.set
@@ -49,7 +51,6 @@ import net.minestom.server.entity.Entity
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
 import net.minestom.server.entity.PlayerHand
-import net.minestom.server.event.inventory.InventoryClickEvent
 import net.minestom.server.event.inventory.InventoryCloseEvent
 import net.minestom.server.event.inventory.InventoryOpenEvent
 import net.minestom.server.event.item.ItemDropEvent
@@ -118,7 +119,9 @@ var scoreboardTitleProgress = -1.0
 lateinit var config: Config
 lateinit var parentInstanceConfig: InstanceConfig
 
-var instances: MutableMap<String, GameInstance> = mutableMapOf()
+typealias InstanceMap = MutableMap<String, GameInstance>
+
+var instances: InstanceMap = mutableMapOf()
 lateinit var lobbyInstance: InstanceContainer
 
 lateinit var permissionManager: PermissionManager private set
@@ -189,8 +192,13 @@ fun main() = runBlocking { try {
     initBuildingCompanions()
     log("Building companions initialized...")
     for (name in config.instanceNames) {
-        instances[name] = GameInstance(Path.of("instances", name), name)
-        instances[name]?.setupInstance()
+        try {
+            instances[name] = GameInstance(Path.of("instances", name), name)
+            instances[name]?.setupInstance()
+        } catch (e: Exception) {
+            log("An exception occured during the setup of instance \"$name\"!", LogType.EXCEPTION)
+            log(e)
+        }
     }
     log("Created GameInstances")
 
@@ -282,9 +290,15 @@ fun main() = runBlocking { try {
                 else CHEST_6_ROW
             }
             val inventory = Inventory(type, "Game Instances")
-            instances.onEachIndexed { index, (name, _) ->
+            instances.onEachIndexed { index, (name, instance) ->
                 inventory[index] = item(Material.WHITE_WOOL) {
                     itemName = name.asMini()
+                    if (instance.instanceConfig.whitelist.isNotEmpty()) {
+                        lore {
+                            val color = if (e.player.username in instance.instanceConfig.whitelist) "<green>" else "<red>"
+                            +"${color}Whitelisted".asMini().noItalic()
+                        }
+                    }
                     set(Tag.String("selector"), name)
                 }
             }
@@ -293,6 +307,10 @@ fun main() = runBlocking { try {
                 if (res.clickedItem.hasTag(Tag.String("selector"))) {
                     val instance = instances[res.clickedItem.getTag(Tag.String("selector"))!!]
                     if (instance != null) {
+                        if (instance.instanceConfig.whitelist.isNotEmpty() && player.username !in instance.instanceConfig.whitelist) {
+                            player.sendMessage("<red>You are not whitelisted in this instance".asMini())
+                            return@addInventoryCondition
+                        }
                         if (player.instance == instance.instance) return@addInventoryCondition
                         player.inventory.clear()
                         player.closeInventory()
@@ -474,38 +492,50 @@ fun Entity.getTrueTarget(maxDistance: Int, onRayStep: ((pos: Point, block: Block
 val Point.buildingPosition: Point get() {
     // TODO: WHEN ADDING DIFFERENT LEVELS ADD MORE CASES
     val y = y()
-    if (y in 37.0..46.0 || y == 5.0) {
-        return withY(40.0)
-    } else if (y in 28.0..36.0 || y == 4.0) {
-        return withY(30.0)
-    } else if (y in 47.0..91.0 || y == 6.0) {
-        return withY(91.0)
+    when (y) {
+        in 37.0..46.0, 5.0 -> {
+            return withY(40.0)
+        }
+        in 28.0..36.0, 4.0 -> {
+            return withY(30.0)
+        }
+        in 47.0..91.0, 6.0 -> {
+            return withY(91.0)
+        }
+        else -> return withY(40.0)
     }
-    return withY(40.0)
 }
 
 val Point.playerPosition: Point get() {
     val y = y()
-    if (y in 37.0..46.0 || y == 5.0) {
-        return withY(5.0)
-    } else if (y in 28.0..36.0 || y == 4.0) {
-        return withY(4.0)
-    } else if (y in 47.0..91.0 || y == 6.0) {
-        return withY(6.0)
+    when (y) {
+        in 37.0..46.0, 5.0 -> {
+            return withY(5.0)
+        }
+        in 28.0..36.0, 4.0 -> {
+            return withY(4.0)
+        }
+        in 47.0..91.0, 6.0 -> {
+            return withY(6.0)
+        }
+        else -> return withY(40.0)
     }
-    return withY(40.0)
 }
 
 val Point.visiblePosition: Point get() {
     val y = y()
-    if (y in 37.0..46.0 || y == 5.0) {
-        return withY(39.0)
-    } else if (y in 28.0..36.0 || y == 4.0) {
-        return withY(29.0)
-    } else if (y in 47.0..91.0 || y == 6.0) {
-        return withY(90.0)
+    when (y) {
+        in 37.0..46.0, 5.0 -> {
+            return withY(39.0)
+        }
+        in 28.0..36.0, 4.0 -> {
+            return withY(29.0)
+        }
+        in 47.0..91.0, 6.0 -> {
+            return withY(90.0)
+        }
+        else -> return withY(39.0)
     }
-    return withY(39.0)
 }
 
 val Point.isUnderground: Boolean get() {
@@ -593,11 +623,6 @@ val Player.config: PlayerConfig? get() {
         instance.gameInstance!!.playerConfigs[uuid.toString()] = PlayerConfig()
     }
     return instance.gameInstance?.playerConfigs?.get(uuid.toString())
-}
-
-fun InventoryClickEvent.cancel() {
-    inventory[slot] = clickedItem
-    player.inventory.cursorItem = cursorItem
 }
 
 fun Player.removeBossBars() {

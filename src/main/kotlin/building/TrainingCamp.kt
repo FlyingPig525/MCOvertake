@@ -2,7 +2,6 @@ package io.github.flyingpig525.building
 
 import io.github.flyingpig525.MATTER_SYMBOL
 import io.github.flyingpig525.POWER_SYMBOL
-import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.building.category.BasicCategory
 import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.player.BlockData
@@ -26,8 +25,7 @@ import net.minestom.server.tag.Tag
 import kotlin.reflect.KProperty1
 
 @Serializable
-class TrainingCamp : Building {
-    override var count: Int = 0
+class TrainingCamp : Building() {
     override val resourceUse: Int get() = count * 3
     override val cost get() = CurrencyCost.genericOrganicMatter(count, 25.0)
 
@@ -44,8 +42,8 @@ class TrainingCamp : Building {
         data.power += count * 0.5 + 0.5
     }
 
-    @BuildingCompanion("first", BasicCategory::class)
-    companion object TrainingCampCompanion : Building.BuildingCompanion {
+    @io.github.flyingpig525.ksp.BuildingCompanion("first", BasicCategory::class)
+    companion object TrainingCampCompanion : BuildingCompanion {
         override val block: Block = Block.POLISHED_BLACKSTONE_BUTTON.withProperty("face", "floor")
         override val identifier: String = "power:generator"
         override val playerRef: KProperty1<PlayerBuildings, Building> = PlayerBuildings::trainingCamps
@@ -68,6 +66,6 @@ class TrainingCamp : Building {
             return getItem(playerData.buildings.trainingCamps.cost, playerData.buildings.trainingCamps.count)
         }
 
-        override fun getResourceUse(currentDisposableResources: Int, count: Int): Int = currentDisposableResources + 3
+        override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 3
     }
 }

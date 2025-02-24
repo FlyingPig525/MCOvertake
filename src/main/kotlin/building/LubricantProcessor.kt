@@ -3,7 +3,6 @@ package io.github.flyingpig525.building
 import io.github.flyingpig525.BUILDING_INVENTORY_SLOT
 import io.github.flyingpig525.LUBRICANT_SYMBOL
 import io.github.flyingpig525.MATTER_SYMBOL
-import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.building.category.UndergroundCategory
 import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.player.BlockData
@@ -27,9 +26,8 @@ import net.minestom.server.tag.Tag
 import kotlin.reflect.KProperty1
 
 @Serializable
-class LubricantProcessor : Building {
-    override var count: Int = 0
-    override val resourceUse: Int get() = 3 * count
+class LubricantProcessor : Building() {
+    override val resourceUse: Int = 3 * count
     override val cost get() = CurrencyCost.genericOrganicMatter(count, 400.0)
 
     override fun place(playerTarget: Point, instance: Instance, data: BlockData) {
@@ -45,8 +43,8 @@ class LubricantProcessor : Building {
         data.lubricant += 5 * count
     }
 
-    @BuildingCompanion("PlasticPlant", UndergroundCategory::class)
-    companion object LubricantProcessorCompanion : Building.BuildingCompanion, Validated {
+    @io.github.flyingpig525.ksp.BuildingCompanion("PlasticPlant", UndergroundCategory::class)
+    companion object LubricantProcessorCompanion : BuildingCompanion, Validated {
         override val block: Block = Block.SOUL_CAMPFIRE
         override val identifier: String = "oil:lubricant_processor"
         override val playerRef: KProperty1<PlayerBuildings, Building> = PlayerBuildings::lubricantProcessors
@@ -67,7 +65,7 @@ class LubricantProcessor : Building {
         override fun getItem(playerData: BlockData): ItemStack =
             getItem(playerData.buildings.lubricantProcessors.cost, playerData.buildings.lubricantProcessors.count)
 
-        override fun getResourceUse(currentDisposableResources: Int, count: Int): Int = currentDisposableResources + 3
+        override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 3
 
         override fun validate(instance: Instance, point: Point): Boolean = PlasticPlant.validate(instance, point)
 

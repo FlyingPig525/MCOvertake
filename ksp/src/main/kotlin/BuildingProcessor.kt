@@ -84,6 +84,7 @@ fun createBuildingContainerClass(buildings: Set<KSClassDeclaration>, codeGenerat
     file += "import kotlinx.serialization.Serializable\n\n"
     file += "@Serializable\n"
     file += "class PlayerBuildings {\n"
+    val names = mutableListOf<String>()
     for (building in buildings) {
         val annotation: KSAnnotation = building.annotations.first {
             it.shortName.asString() == "BuildingCompanion"
@@ -95,8 +96,16 @@ fun createBuildingContainerClass(buildings: Set<KSClassDeclaration>, codeGenerat
             else building.simpleName.getShortName().let {
                 it[0].lowercase() + it.drop(1).replace("Companion", "s")
             }
+        names += lowerName
         file += "\tval $lowerName = ${building.simpleName.getShortName().replace("Companion", "")}()\n"
     }
+    file += "\n\toverride fun toString(): String {\n"
+    file += "\t\tvar str = \"[\"\n"
+    for (name in names) {
+        file += "\t\tstr += \"\$$name,\"\n"
+    }
+    file += "\t\treturn \"\$str]\"\n"
+    file += "\t}\n"
     file += "}"
     file.close()
 }

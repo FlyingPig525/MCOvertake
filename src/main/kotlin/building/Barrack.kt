@@ -3,7 +3,6 @@ package io.github.flyingpig525.building
 import io.github.flyingpig525.BUILDING_INVENTORY_SLOT
 import io.github.flyingpig525.MATTER_SYMBOL
 import io.github.flyingpig525.POWER_SYMBOL
-import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.building.category.BasicCategory
 import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.player.BlockData
@@ -27,8 +26,7 @@ import net.minestom.server.tag.Tag
 import kotlin.reflect.KProperty1
 
 @Serializable
-class Barrack : Building {
-    override var count: Int = 0
+class Barrack : Building() {
     override val resourceUse: Int get() = count * 2
     override val cost get() = CurrencyCost.genericOrganicMatter(count, 25.0)
     override fun place(playerTarget: Point, instance: Instance, playerData: BlockData) {
@@ -40,8 +38,8 @@ class Barrack : Building {
         player.inventory[BUILDING_INVENTORY_SLOT] = getItem(cost, count)
     }
 
-    @BuildingCompanion("TrainingCamp", BasicCategory::class)
-    companion object BarrackCompanion : Building.BuildingCompanion {
+    @io.github.flyingpig525.ksp.BuildingCompanion("TrainingCamp", BasicCategory::class)
+    companion object BarrackCompanion : BuildingCompanion {
         override val block: Block = Block.SOUL_LANTERN
         override val identifier: String = "power:container"
         override val playerRef: KProperty1<PlayerBuildings, Building> = PlayerBuildings::barracks
@@ -63,6 +61,6 @@ class Barrack : Building {
             return getItem(playerData.buildings.barracks.cost, playerData.buildings.barracks.count)
         }
 
-        override fun getResourceUse(currentDisposableResources: Int, count: Int): Int = currentDisposableResources + 2
+        override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 2
     }
 }

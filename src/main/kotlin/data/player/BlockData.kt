@@ -1,5 +1,7 @@
 package io.github.flyingpig525.data.player
 
+import cz.lukynka.prettylog.LogType
+import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
 import io.github.flyingpig525.building.Building
 import io.github.flyingpig525.building.lubricantColor
@@ -149,29 +151,47 @@ class BlockData(val uuid: String, @Serializable(BlockSerializer::class) val bloc
     }
 
     fun playerTick(instance: Instance) {
-        buildings.matterExtractors.tick(this)
-        buildings.rockMiners.tick(this)
-        val player = instance.getPlayerByUuid(UUID.fromString(uuid))
-        if (player != null) {
-            if (playerDisplayName == "") playerDisplayName = player.username
-            updateBossBars()
+        try {
+            buildings.matterExtractors.tick(this)
+            buildings.rockMiners.tick(this)
+            val player = instance.getPlayerByUuid(UUID.fromString(uuid))
+            if (player != null) {
+                if (playerDisplayName == "") playerDisplayName = player.username
+                updateBossBars()
+            }
+        } catch (e: Exception) {
+            log("Something went wrong in ${block.name()}'s player tick!", LogType.EXCEPTION)
+            log("Dumping buildings: $buildings", LogType.EXCEPTION)
+            log(e)
         }
     }
 
     fun powerTick() {
-        buildings.trainingCamps.tick(this)
-        buildings.armsManufacturers.tick(this)
+        try {
+            buildings.trainingCamps.tick(this)
+            buildings.armsManufacturers.tick(this)
+        } catch (e: Exception) {
+            log("Something went wrong in ${block.name()}'s power tick!", LogType.EXCEPTION)
+            log("Dumping buildings: $buildings", LogType.EXCEPTION)
+            log(e)
+        }
     }
 
     fun researchTick() {
-        // Intermediary Producers
-        buildings.matterCompressors.tick(this)
-        buildings.plasticPlants.tick(this)
-        buildings.lubricantProcessors.tick(this)
-        // Currency Producers
-        buildings.basicResearchStations.tick(this)
-        // Consumers
-        buildings.elevatedBiospheres.tick(this)
+        try {
+            // Intermediary Producers
+            buildings.matterCompressors.tick(this)
+            buildings.plasticPlants.tick(this)
+            buildings.lubricantProcessors.tick(this)
+            // Currency Producers
+            buildings.basicResearchStations.tick(this)
+            // Consumers
+            buildings.elevatedBiospheres.tick(this)
+        } catch (e: Exception) {
+            log("Something went wrong in ${block.name()}'s research tick!", LogType.EXCEPTION)
+            log("Dumping buildings: $buildings", LogType.EXCEPTION)
+            log(e)
+        }
     }
 
     fun updateBossBars(player: Player? = null) {
@@ -234,7 +254,7 @@ class BlockData(val uuid: String, @Serializable(BlockSerializer::class) val bloc
         player.helmet = item(Material.fromNamespaceId(block.namespace())!!)
     }
 
-    fun sendCooldowns(player: Player) {
+    fun sendCooldowns() {
         sendPackets(
             SetCooldownPacket(
                 ClaimItem.itemMaterial.cooldownIdentifier,
@@ -269,18 +289,18 @@ class BlockData(val uuid: String, @Serializable(BlockSerializer::class) val bloc
 
     companion object {
         val NONE = BlockData("", Block.AIR, "")
-        fun Map<String, BlockData>.getDataByBlock(block: Block): BlockData? {
+        fun DataMap.getDataByBlock(block: Block): BlockData? {
             return values.find { it.block == block }
         }
-        fun Map<String, BlockData>.getDataByPoint(point: Point, instance: Instance): BlockData? {
+        fun DataMap.getDataByPoint(point: Point, instance: Instance): BlockData? {
             val block = instance.getBlock(point.playerPosition)
 
             return values.find { it.block == block}
         }
-        fun Map<String, BlockData>.toBlockSortedList(): List<BlockData> {
+        fun DataMap.toBlockSortedList(): List<BlockData> {
             return values.sortedByDescending { it.blocks }
         }
-        fun Map<String, BlockData>.toBlockList(): List<Block> {
+        fun DataMap.toBlockList(): List<Block> {
             return values.map { it.block }
         }
     }

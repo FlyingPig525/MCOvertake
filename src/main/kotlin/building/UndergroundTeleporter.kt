@@ -1,7 +1,6 @@
 package io.github.flyingpig525.building
 
 import io.github.flyingpig525.*
-import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.building.category.BasicCategory
 import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.data.player.CurrencyCost
@@ -30,9 +29,8 @@ import java.util.*
 import kotlin.reflect.KProperty1
 
 @Serializable
-class UndergroundTeleporter : Building, Interactable {
-    override var count: Int = 0
-    override val resourceUse: Int get() = count * 20
+class UndergroundTeleporter : Building(), Interactable {
+    override val resourceUse: Int = count * 20
     override val cost get() = CurrencyCost.genericOrganicMatter(count, 750.0)
 
     override fun place(playerTarget: Point, instance: Instance, playerData: BlockData) {
@@ -54,8 +52,8 @@ class UndergroundTeleporter : Building, Interactable {
         return false
     }
 
-    @BuildingCompanion("BasicResearchGenerator", BasicCategory::class)
-    companion object UndergroundTeleporterCompanion : Building.BuildingCompanion, DisplayEntityBlock, Validated {
+    @io.github.flyingpig525.ksp.BuildingCompanion("BasicResearchGenerator", BasicCategory::class)
+    companion object UndergroundTeleporterCompanion : BuildingCompanion, DisplayEntityBlock, Validated {
         override val block: Block = Block.END_GATEWAY
         override val identifier: String = "underground:teleport"
         override val playerRef: KProperty1<PlayerBuildings, Building> = PlayerBuildings::undergroundTeleporters
@@ -75,7 +73,7 @@ class UndergroundTeleporter : Building, Interactable {
         override fun getItem(playerData: BlockData): ItemStack =
             getItem(playerData.buildings.undergroundTeleporters.cost, playerData.buildings.undergroundTeleporters.count)
 
-        override fun getResourceUse(currentDisposableResources: Int, count: Int): Int {
+        override fun getResourceUse(currentDisposableResources: Int): Int {
             return currentDisposableResources + 20
         }
 

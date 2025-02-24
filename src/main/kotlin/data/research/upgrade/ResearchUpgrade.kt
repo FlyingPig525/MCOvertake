@@ -19,8 +19,7 @@ import net.minestom.server.item.Material
 /**
  * @property [name] - Unique (to currency) identifier
  */
-sealed class ResearchUpgrade {
-    open var level: Int = 0
+sealed class ResearchUpgrade(open var level: Int = 0) {
 
     abstract var maxLevel: Int
     abstract val name: String
@@ -54,7 +53,7 @@ sealed class ResearchUpgrade {
     open fun onAttacked(eventData: Attacked): Attacked? = null
     open fun onMatterBuildingTick(eventData: MatterBuildingTick): MatterBuildingTick? = null
 
-    abstract fun item(): ItemStack
+    abstract fun item(currency: ResearchCurrency): ItemStack
 
     open fun onPurchase(clickEvent: InventoryConditionResult, currency: ResearchCurrency, player: Player): PurchaseState {
         if (level == maxLevel) return PurchaseState.MaxLevel(currency, this)

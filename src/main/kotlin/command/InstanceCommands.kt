@@ -51,8 +51,9 @@ val createInstanceCommand = kommand("createInstance") {
     val researchArg = ArgumentBoolean("research")
     val skyIslandsArg = ArgumentBoolean("sky_islands")
     val mapSizeArg = ArgumentInteger("map_size").min(1).max(1000).setDefaultValue(300)
+    val noOpArg = ArgumentBoolean("no_op_research")
 
-    buildSyntax(nameArg, researchArg, skyIslandsArg, mapSizeArg) {
+    buildSyntax(nameArg, researchArg, skyIslandsArg, mapSizeArg, noOpArg) {
         condition { player, ctx ->
             permissionManager.hasPermission((player as Player), Permission("instance.creation"))
         }
@@ -62,6 +63,7 @@ val createInstanceCommand = kommand("createInstance") {
             val research = ctx.get(researchArg)
             val skyIslands = ctx.get(skyIslandsArg)
             val mapSize = ctx.get(mapSizeArg)
+            val noOp = ctx.get(noOpArg)
             try {
                 player.sendMessage("<green>Attempting to create instance $name".asMini())
                 if (name == "") {
@@ -81,7 +83,8 @@ val createInstanceCommand = kommand("createInstance") {
                         generateSkyIslands = skyIslands,
                         mapSize = mapSize
                     )).apply {
-                    totalInit((player as Player))
+                    totalInit(player as Player)
+                    this.noOp = noOp
                 }
                 config.instanceNames += name
                 File("config.json5").writeText(getCommentString(config))

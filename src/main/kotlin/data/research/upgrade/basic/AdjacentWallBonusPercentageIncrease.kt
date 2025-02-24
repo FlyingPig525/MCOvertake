@@ -23,7 +23,7 @@ class AdjacentWallBonusPercentageIncrease : ResearchUpgrade() {
         return (60000L * (1.25.pow(level)) / 10).toLong() * 10L
     }
 
-    override fun item(): ItemStack = researchItem(Material.NETHERITE_SCRAP, this) {
+    override fun item(currency: ResearchCurrency): ItemStack = researchItem(Material.NETHERITE_SCRAP, this) {
         lore {
             +"<dark_gray>Increases the exponential wall attack cost percentage".asMini().noItalic()
             +"<dark_gray>given from adjacent walls by 2% for each level".asMini().noItalic()
