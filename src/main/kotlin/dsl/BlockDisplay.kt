@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package io.github.flyingpig525.dsl
 
 import net.kyori.adventure.text.Component

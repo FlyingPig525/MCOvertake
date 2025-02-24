@@ -53,6 +53,6 @@ class BasicResearch : ResearchCurrency {
     companion object {
         const val symbol = "\uD83E\uDDEA"
         val color = NamedTextColor.AQUA.asHexString()
-        val colorItem = Material.CYAN_WOOL
+        val colorItem: Material = Material.CYAN_WOOL
     }
 }

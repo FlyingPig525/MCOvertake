@@ -8,7 +8,7 @@ interface Command {
     val names: List<String>
 
     fun validate(arguments: List<String>): Boolean
-    fun execute(arguments: List<String>): Unit
+    fun execute(arguments: List<String>)
 
     companion object {
         val registry: MutableSet<Command> = mutableSetOf()

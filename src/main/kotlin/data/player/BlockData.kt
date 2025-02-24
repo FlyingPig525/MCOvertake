@@ -201,7 +201,6 @@ class BlockData(val uuid: String, @Serializable(BlockSerializer::class) val bloc
         resourcesBossBar.name("<${if (overflow) "light_purple" else "aqua"}>$RESOURCE_SYMBOL Disposable Resources <gray>- <${if (overflow) "light_purple" else "aqua"}>$disposableResourcesUsed/$maxDisposableResources".asMini())
         resourcesBossBar.progress((disposableResourcesUsed.toFloat() / maxDisposableResources.toFloat()).coerceIn(0f..1f))
         resourcesBossBar.color(if (disposableResourcesUsed > maxDisposableResources) BossBar.Color.PURPLE else BossBar.Color.BLUE)
-
     }
 
     fun actionBar(player: Player) {

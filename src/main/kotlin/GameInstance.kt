@@ -220,10 +220,6 @@ class GameInstance(
                 val canAccess = playerPoint.anyAdjacentBlocksMatch(playerData.block, instance)
                 val attackFromWater = playerPoint.repeatDirection { point, dir ->
                     val block = instance.getBlock(point.playerPosition.add(0.0, 1.0, 0.0)).defaultState()
-                    if (point.y() == 6.0) {
-                    }
-
-
                     block == Block.SAND || block == Block.AIR
                 }
                 when (playerBlock) {

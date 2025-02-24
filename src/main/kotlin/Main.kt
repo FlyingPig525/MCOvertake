@@ -50,7 +50,6 @@ import net.minestom.server.entity.Entity
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
 import net.minestom.server.entity.PlayerHand
-import net.minestom.server.event.inventory.InventoryClickEvent
 import net.minestom.server.event.inventory.InventoryCloseEvent
 import net.minestom.server.event.inventory.InventoryOpenEvent
 import net.minestom.server.event.item.ItemDropEvent
@@ -496,38 +495,50 @@ fun Entity.getTrueTarget(maxDistance: Int, onRayStep: ((pos: Point, block: Block
 val Point.buildingPosition: Point get() {
     // TODO: WHEN ADDING DIFFERENT LEVELS ADD MORE CASES
     val y = y()
-    if (y in 37.0..46.0 || y == 5.0) {
-        return withY(40.0)
-    } else if (y in 28.0..36.0 || y == 4.0) {
-        return withY(30.0)
-    } else if (y in 47.0..91.0 || y == 6.0) {
-        return withY(91.0)
+    when (y) {
+        in 37.0..46.0, 5.0 -> {
+            return withY(40.0)
+        }
+        in 28.0..36.0, 4.0 -> {
+            return withY(30.0)
+        }
+        in 47.0..91.0, 6.0 -> {
+            return withY(91.0)
+        }
+        else -> return withY(40.0)
     }
-    return withY(40.0)
 }
 
 val Point.playerPosition: Point get() {
     val y = y()
-    if (y in 37.0..46.0 || y == 5.0) {
-        return withY(5.0)
-    } else if (y in 28.0..36.0 || y == 4.0) {
-        return withY(4.0)
-    } else if (y in 47.0..91.0 || y == 6.0) {
-        return withY(6.0)
+    when (y) {
+        in 37.0..46.0, 5.0 -> {
+            return withY(5.0)
+        }
+        in 28.0..36.0, 4.0 -> {
+            return withY(4.0)
+        }
+        in 47.0..91.0, 6.0 -> {
+            return withY(6.0)
+        }
+        else -> return withY(40.0)
     }
-    return withY(40.0)
 }
 
 val Point.visiblePosition: Point get() {
     val y = y()
-    if (y in 37.0..46.0 || y == 5.0) {
-        return withY(39.0)
-    } else if (y in 28.0..36.0 || y == 4.0) {
-        return withY(29.0)
-    } else if (y in 47.0..91.0 || y == 6.0) {
-        return withY(90.0)
+    when (y) {
+        in 37.0..46.0, 5.0 -> {
+            return withY(39.0)
+        }
+        in 28.0..36.0, 4.0 -> {
+            return withY(29.0)
+        }
+        in 47.0..91.0, 6.0 -> {
+            return withY(90.0)
+        }
+        else -> return withY(39.0)
     }
-    return withY(39.0)
 }
 
 val Point.isUnderground: Boolean get() {
@@ -611,11 +622,6 @@ val Player.config: PlayerConfig? get() {
         instance.gameInstance!!.playerConfigs[uuid.toString()] = PlayerConfig()
     }
     return instance.gameInstance?.playerConfigs?.get(uuid.toString())
-}
-
-fun InventoryClickEvent.cancel() {
-    inventory[slot] = clickedItem
-    player.inventory.cursorItem = cursorItem
 }
 
 fun Player.removeBossBars() {

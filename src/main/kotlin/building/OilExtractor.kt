@@ -1,7 +1,6 @@
 package io.github.flyingpig525.building
 
 import io.github.flyingpig525.*
-import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.building.category.UndergroundCategory
 import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.data.player.CurrencyCost
@@ -44,7 +43,7 @@ class OilExtractor : Building() {
     }
 
     @io.github.flyingpig525.ksp.BuildingCompanion("OilPatch", UndergroundCategory::class)
-    companion object OilExtractorCompanion : Building.BuildingCompanion, Validated {
+    companion object OilExtractorCompanion : BuildingCompanion, Validated {
         override val block: Block = Block.BLACK_CANDLE.withProperty("candles", "4")
         override val identifier: String = "oil:extractor"
         override val playerRef: KProperty1<PlayerBuildings, Building> = PlayerBuildings::oilExtractors
@@ -72,9 +71,7 @@ class OilExtractor : Building() {
             if (!point.isUnderground) return false
             return point.buildingPosition.repeatDirection { point, _ ->
                 val block = instance.getBlock(point)
-                if (Building.getBuildingByBlock(block) == OilPatch) {
-                    true
-                } else false
+                Building.getBuildingByBlock(block) == OilPatch
             }
         }
     }

@@ -1,7 +1,6 @@
 package io.github.flyingpig525.building
 
 import io.github.flyingpig525.*
-import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.building.category.UndergroundCategory
 import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.data.player.CurrencyCost
@@ -56,7 +55,7 @@ class RockMiner : Building() {
     }
 
     @io.github.flyingpig525.ksp.BuildingCompanion("first", UndergroundCategory::class)
-    companion object RockMinerCompanion : Building.BuildingCompanion, DisplayEntityBlock, Validated {
+    companion object RockMinerCompanion : BuildingCompanion, DisplayEntityBlock, Validated {
         override val block: Block = Block.TRIPWIRE_HOOK
         override val identifier: String = "matter:rock_miner"
         override val playerRef: KProperty1<PlayerBuildings, Building> = PlayerBuildings::rockMiners
@@ -95,9 +94,7 @@ class RockMiner : Building() {
         }
 
         override fun validate(instance: Instance, point: Point): Boolean = point.isUnderground && point.buildingPosition.repeatDirection { point, dir ->
-            if (instance.getBlock(point).defaultState() == Block.DEEPSLATE) {
-                true
-            } else false
+            instance.getBlock(point).defaultState() == Block.DEEPSLATE
         }
     }
 }

@@ -14,7 +14,7 @@ import net.minestom.server.tag.Tag
 import kotlin.reflect.KProperty1
 
 @Serializable
-abstract class Building() {
+abstract class Building {
     var count: Int = 0
     abstract val resourceUse: Int
     abstract val cost: CurrencyCost
@@ -69,15 +69,5 @@ abstract class Building() {
         fun getBuildingIdentifier(block: Block): String? = block.getTag(Tag.String(ID_TAG))
 
         fun Block.building(identifier: String): Block = withTag(Tag.String(ID_TAG), identifier)
-
-        fun genericBuildingCost(count: Int, cost: Int): Int {
-            val generalCost = (count * cost) + cost
-            if (generalCost > 10000) {
-                return (generalCost/1000) * 1000
-            } else if (generalCost > 1000) {
-                return (generalCost/100) * 100
-            }
-            return generalCost
-        }
     }
 }

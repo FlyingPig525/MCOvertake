@@ -1,7 +1,6 @@
 package io.github.flyingpig525.building
 
 import io.github.flyingpig525.*
-import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.building.category.UndergroundCategory
 import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.data.player.CurrencyCost
@@ -42,7 +41,7 @@ class ArmsManufacturer : Building() {
     }
 
     @io.github.flyingpig525.ksp.BuildingCompanion(orderAfter = "LubricantProcessor", category = UndergroundCategory::class)
-    companion object ArmsManufacturerCompanion : Building.BuildingCompanion {
+    companion object ArmsManufacturerCompanion : BuildingCompanion {
         override val block: Block = Block.SEA_PICKLE.withProperty("pickles", "2")
         override val identifier: String = "power:generator_2"
 

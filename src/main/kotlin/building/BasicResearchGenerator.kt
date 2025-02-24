@@ -2,7 +2,6 @@ package io.github.flyingpig525.building
 
 import io.github.flyingpig525.BUILDING_INVENTORY_SLOT
 import io.github.flyingpig525.MECHANICAL_SYMBOL
-import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.building.category.BasicCategory
 import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.player.BlockData
@@ -49,7 +48,7 @@ class BasicResearchGenerator : Building() {
     }
 
     @io.github.flyingpig525.ksp.BuildingCompanion(orderAfter = "MatterCompressionPlant", BasicCategory::class, "basicResearchStations")
-    companion object BasicResearchGeneratorCompanion : Building.BuildingCompanion {
+    companion object BasicResearchGeneratorCompanion : BuildingCompanion {
         override val block: Block = Block.SCULK_SENSOR
         override val identifier: String = "research:basic_research"
         override val playerRef: KProperty1<PlayerBuildings, Building> = PlayerBuildings::basicResearchStations

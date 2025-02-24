@@ -39,7 +39,7 @@ class Barrack : Building() {
     }
 
     @io.github.flyingpig525.ksp.BuildingCompanion("TrainingCamp", BasicCategory::class)
-    companion object BarrackCompanion : Building.BuildingCompanion {
+    companion object BarrackCompanion : BuildingCompanion {
         override val block: Block = Block.SOUL_LANTERN
         override val identifier: String = "power:container"
         override val playerRef: KProperty1<PlayerBuildings, Building> = PlayerBuildings::barracks

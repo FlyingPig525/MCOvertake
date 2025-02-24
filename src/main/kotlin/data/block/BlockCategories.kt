@@ -5,12 +5,13 @@ package io.github.flyingpig525.data.block
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.extension.adventure.asMini
+import net.minestom.server.instance.block.Block
 import net.minestom.server.item.Material
 import net.minestom.server.item.Material.*
 
 interface CategoryBlock {
     val material: Material
-    val block get() = material.block()
+    val block: Block get() = material.block()
 }
 
 val NATURAL_CATEGORY = item(OAK_LEAVES) { itemName = "<green><bold>Natural Blocks".asMini() }

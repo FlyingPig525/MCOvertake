@@ -2,7 +2,6 @@ package io.github.flyingpig525.building
 
 import io.github.flyingpig525.BUILDING_INVENTORY_SLOT
 import io.github.flyingpig525.MATTER_SYMBOL
-import io.github.flyingpig525.building.Building.Companion.building
 import io.github.flyingpig525.building.category.BasicCategory
 import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.player.BlockData
@@ -40,7 +39,7 @@ class MatterContainer : Building() {
     }
 
     @io.github.flyingpig525.ksp.BuildingCompanion("MatterExtractor", BasicCategory::class)
-    companion object MatterContainerCompanion : Building.BuildingCompanion {
+    companion object MatterContainerCompanion : BuildingCompanion {
         override val block: Block = Block.LANTERN
         override val identifier: String = "matter:container"
         override val playerRef: KProperty1<PlayerBuildings, Building> = PlayerBuildings::matterContainers
