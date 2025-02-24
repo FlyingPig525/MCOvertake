@@ -27,8 +27,7 @@ import java.util.*
 import kotlin.reflect.KProperty1
 
 @Serializable
-class RockMiner : Building {
-    override var count: Int = 0
+class RockMiner : Building() {
     override val resourceUse: Int get() = 4 * count
     override val cost get() = CurrencyCost.genericMechanicalParts(count, 40)
 
@@ -56,7 +55,7 @@ class RockMiner : Building {
         data.organicMatter += 4 * count
     }
 
-    @BuildingCompanion("first", UndergroundCategory::class)
+    @io.github.flyingpig525.ksp.BuildingCompanion("first", UndergroundCategory::class)
     companion object RockMinerCompanion : Building.BuildingCompanion, DisplayEntityBlock, Validated {
         override val block: Block = Block.TRIPWIRE_HOOK
         override val identifier: String = "matter:rock_miner"

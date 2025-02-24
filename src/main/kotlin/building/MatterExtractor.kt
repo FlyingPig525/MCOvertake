@@ -27,8 +27,7 @@ import net.minestom.server.tag.Tag
 import kotlin.reflect.KProperty1
 
 @Serializable
-class MatterExtractor : Building {
-    override var count: Int = 0
+class MatterExtractor : Building() {
     override val resourceUse: Int get() = count * 3
     override val cost get() = CurrencyCost.genericOrganicMatter(count, 25.0)
 
@@ -50,7 +49,7 @@ class MatterExtractor : Building {
         data.organicMatter += action.increase
     }
 
-    @BuildingCompanion("Barrack", BasicCategory::class)
+    @io.github.flyingpig525.ksp.BuildingCompanion("Barrack", BasicCategory::class)
     companion object MatterExtractorCompanion : Building.BuildingCompanion {
         override val block: Block = Block.BREWING_STAND
         override val identifier: String = "matter:generator"

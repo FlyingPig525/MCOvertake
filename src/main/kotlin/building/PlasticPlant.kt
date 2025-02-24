@@ -24,8 +24,7 @@ import net.minestom.server.tag.Tag
 import kotlin.reflect.KProperty1
 
 @Serializable
-class PlasticPlant : Building {
-    override var count: Int = 0
+class PlasticPlant : Building() {
     override val resourceUse: Int get() = 3 * count
     override val cost get() = CurrencyCost.genericOrganicMatter(count, 400.0)
 
@@ -42,7 +41,7 @@ class PlasticPlant : Building {
         data.plastic += 20 * count
     }
 
-    @BuildingCompanion("OilExtractor", UndergroundCategory::class)
+    @io.github.flyingpig525.ksp.BuildingCompanion("OilExtractor", UndergroundCategory::class)
     companion object PlasticPlantCompanion : Building.BuildingCompanion, Validated {
         override val block: Block = Block.CAMPFIRE
         override val identifier: String = "oil:plastic_plant"

@@ -24,8 +24,7 @@ import net.minestom.server.tag.Tag
 import kotlin.reflect.KProperty1
 
 @Serializable
-class ArmsManufacturer : Building {
-    override var count: Int = 0
+class ArmsManufacturer : Building() {
     override val resourceUse: Int get() = 5 * count
     override val cost: CurrencyCost get() = CurrencyCost.genericMechanicalParts(count, 75).genericPlastic(count, 50)
 
@@ -42,7 +41,7 @@ class ArmsManufacturer : Building {
         player.inventory[BUILDING_INVENTORY_SLOT] = getItem(player.data ?: return)
     }
 
-    @BuildingCompanion(orderAfter = "LubricantProcessor", category = UndergroundCategory::class)
+    @io.github.flyingpig525.ksp.BuildingCompanion(orderAfter = "LubricantProcessor", category = UndergroundCategory::class)
     companion object ArmsManufacturerCompanion : Building.BuildingCompanion {
         override val block: Block = Block.SEA_PICKLE.withProperty("pickles", "2")
         override val identifier: String = "power:generator_2"

@@ -30,8 +30,7 @@ import java.util.*
 import kotlin.reflect.KProperty1
 
 @Serializable
-class UndergroundTeleporter : Building, Interactable {
-    override var count: Int = 0
+class UndergroundTeleporter : Building(), Interactable {
     override val resourceUse: Int = count * 20
     override val cost get() = CurrencyCost.genericOrganicMatter(count, 750.0)
 
@@ -54,7 +53,7 @@ class UndergroundTeleporter : Building, Interactable {
         return false
     }
 
-    @BuildingCompanion("BasicResearchGenerator", BasicCategory::class)
+    @io.github.flyingpig525.ksp.BuildingCompanion("BasicResearchGenerator", BasicCategory::class)
     companion object UndergroundTeleporterCompanion : Building.BuildingCompanion, DisplayEntityBlock, Validated {
         override val block: Block = Block.END_GATEWAY
         override val identifier: String = "underground:teleport"

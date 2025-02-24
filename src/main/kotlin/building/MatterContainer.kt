@@ -26,8 +26,7 @@ import net.minestom.server.tag.Tag
 import kotlin.reflect.KProperty1
 
 @Serializable
-class MatterContainer : Building {
-    override var count: Int = 0
+class MatterContainer : Building() {
     override val resourceUse: Int get() = count * 2
     override val cost get() = CurrencyCost.genericOrganicMatter(count, 20.0)
 
@@ -40,7 +39,7 @@ class MatterContainer : Building {
         player.inventory[BUILDING_INVENTORY_SLOT] = getItem(cost, count)
     }
 
-    @BuildingCompanion("MatterExtractor", BasicCategory::class)
+    @io.github.flyingpig525.ksp.BuildingCompanion("MatterExtractor", BasicCategory::class)
     companion object MatterContainerCompanion : Building.BuildingCompanion {
         override val block: Block = Block.LANTERN
         override val identifier: String = "matter:container"

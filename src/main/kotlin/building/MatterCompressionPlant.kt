@@ -27,8 +27,7 @@ import net.minestom.server.tag.Tag
 import kotlin.reflect.KProperty1
 
 @Serializable
-class MatterCompressionPlant : Building {
-    override var count: Int = 0
+class MatterCompressionPlant : Building() {
     override val resourceUse: Int get() = count * 4
     override val cost get() = CurrencyCost.genericOrganicMatter(count, 50.0)
 
@@ -49,7 +48,7 @@ class MatterCompressionPlant : Building {
         }
     }
 
-    @BuildingCompanion("MatterContainer", BasicCategory::class, "matterCompressors")
+    @io.github.flyingpig525.ksp.BuildingCompanion("MatterContainer", BasicCategory::class, "matterCompressors")
     companion object MatterCompressionPlantCompanion : Building.BuildingCompanion {
         override val block: Block = Block.HEAVY_CORE
         override val identifier: String = "mechanical:generator"

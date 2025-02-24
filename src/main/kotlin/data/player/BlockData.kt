@@ -1,5 +1,7 @@
 package io.github.flyingpig525.data.player
 
+import cz.lukynka.prettylog.LogType
+import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
 import io.github.flyingpig525.building.Building
 import io.github.flyingpig525.building.lubricantColor
@@ -149,25 +151,43 @@ class BlockData(val uuid: String, @Serializable(BlockSerializer::class) val bloc
     }
 
     fun playerTick(instance: Instance) {
-        buildings.matterExtractors.tick(this)
-        buildings.rockMiners.tick(this)
-        val player = instance.getPlayerByUuid(UUID.fromString(uuid))
-        if (player != null) {
-            if (playerDisplayName == "") playerDisplayName = player.username
-            updateBossBars()
+        try {
+            buildings.matterExtractors.tick(this)
+            buildings.rockMiners.tick(this)
+            val player = instance.getPlayerByUuid(UUID.fromString(uuid))
+            if (player != null) {
+                if (playerDisplayName == "") playerDisplayName = player.username
+                updateBossBars()
+            }
+        } catch (e: Exception) {
+            log("Something went wrong in ${block.name()}'s player tick!", LogType.EXCEPTION)
+            log("Dumping buildings: $buildings", LogType.EXCEPTION)
+            log(e)
         }
     }
 
     fun powerTick() {
-        buildings.trainingCamps.tick(this)
-        buildings.armsManufacturers.tick(this)
+        try {
+            buildings.trainingCamps.tick(this)
+            buildings.armsManufacturers.tick(this)
+        } catch (e: Exception) {
+            log("Something went wrong in ${block.name()}'s power tick!", LogType.EXCEPTION)
+            log("Dumping buildings: $buildings", LogType.EXCEPTION)
+            log(e)
+        }
     }
 
     fun researchTick() {
-        buildings.matterCompressors.tick(this)
-        buildings.basicResearchStations.tick(this)
-        buildings.plasticPlants.tick(this)
-        buildings.lubricantProcessors.tick(this)
+        try {
+            buildings.matterCompressors.tick(this)
+            buildings.basicResearchStations.tick(this)
+            buildings.plasticPlants.tick(this)
+            buildings.lubricantProcessors.tick(this)
+        } catch (e: Exception) {
+            log("Something went wrong in ${block.name()}'s research tick!", LogType.EXCEPTION)
+            log("Dumping buildings: $buildings", LogType.EXCEPTION)
+            log(e)
+        }
     }
 
     fun updateBossBars(player: Player? = null) {

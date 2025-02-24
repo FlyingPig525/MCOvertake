@@ -4,6 +4,7 @@ import io.github.flyingpig525.building.Building.BuildingCompanion.Companion.regi
 import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.data.player.CurrencyCost
 import io.github.flyingpig525.ksp.PlayerBuildings
+import kotlinx.serialization.Serializable
 import net.minestom.server.coordinate.Point
 import net.minestom.server.entity.Player
 import net.minestom.server.instance.Instance
@@ -12,19 +13,24 @@ import net.minestom.server.item.ItemStack
 import net.minestom.server.tag.Tag
 import kotlin.reflect.KProperty1
 
-interface Building {
-    var count: Int
-    val resourceUse: Int
-    val cost: CurrencyCost
+@Serializable
+abstract class Building() {
+    var count: Int = 0
+    abstract val resourceUse: Int
+    abstract val cost: CurrencyCost
 
-    fun place(playerTarget: Point, instance: Instance, data: BlockData)
+    abstract fun place(playerTarget: Point, instance: Instance, data: BlockData)
 
     /**
      * @return Whether this building should be destroyed or not
      */
-    fun onDestruction(point: Point, instance: Instance, data: BlockData): Boolean = true
-    fun select(player: Player)
-    fun tick(data: BlockData) {}
+    open fun onDestruction(point: Point, instance: Instance, data: BlockData): Boolean = true
+    abstract fun select(player: Player)
+    open fun tick(data: BlockData) {}
+
+    override fun toString(): String {
+        return "${this::class.simpleName}[count=$count, resourceUse=$resourceUse, cost=$cost]"
+    }
 
     interface BuildingCompanion {
         val block: Block

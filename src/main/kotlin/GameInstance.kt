@@ -1,5 +1,6 @@
 package io.github.flyingpig525
 
+import cz.lukynka.prettylog.LogType
 import cz.lukynka.prettylog.log
 import de.articdive.jnoise.generators.noise_parameters.simplex_variants.Simplex2DVariant
 import de.articdive.jnoise.generators.noise_parameters.simplex_variants.Simplex3DVariant
@@ -157,7 +158,7 @@ class GameInstance(
         return ret
     }
 
-    fun save() {
+    fun save() = runBlocking { withContext(Dispatchers.IO) { launch {
         try {
             if (!path.exists()) {
                 path.createDirectories()
@@ -188,7 +189,7 @@ class GameInstance(
         } catch (e: Exception) {
             e.printStackTrace()
         }
-    }
+    }}}
 
     fun registerTickEvents() {
         instance.eventNode().listen<PlayerTickEvent> { e ->
@@ -374,18 +375,7 @@ class GameInstance(
 
 
         instance.eventNode().listen<PlayerDisconnectEvent> { e ->
-            runBlocking {
-                withContext(Dispatchers.IO) {
-                    launch {
-                        val file = path.resolve("block-data.json5").toFile()
-                        if (!file.exists()) {
-                            file.createNewFile()
-                        }
-                        file.writeText(Json.encodeToString(blockData))
-                        instance.saveChunksToStorage()
-                    }
-                }
-            }
+            save()
         }
 
         instance.eventNode().listen<PlayerHandAnimationEvent> {
@@ -404,7 +394,7 @@ class GameInstance(
     }
 
     fun registerTasks() {
-        // General player tick/extractor tick
+        // General player tick/matter tick
         instance.scheduler().scheduleTask({
             try {
                 for (uuid in blockData.keys) {
@@ -412,12 +402,12 @@ class GameInstance(
                     data.playerTick(instance)
                 }
             } catch (e: Exception) {
-                log("A")
+                log("An exception occurred in the matter tick task!", LogType.EXCEPTION)
                 log(e)
             }
         }, TaskSchedule.tick(30), TaskSchedule.tick(30))
 
-        // Camp tick
+        // Power tick
         instance.scheduler().scheduleTask({
             try {
                 for (uuid in blockData.keys) {
@@ -426,7 +416,7 @@ class GameInstance(
                     data.updateBossBars()
                 }
             } catch (e: Exception) {
-                log("AA")
+                log("An exception occurred in the power tick task!", LogType.EXCEPTION)
                 log(e)
             }
         }, TaskSchedule.tick(70), TaskSchedule.tick(70))
@@ -435,18 +425,23 @@ class GameInstance(
     fun setupScoreboard() {
         // Every tick
         SchedulerManager.scheduleTask({
-            kbar("<gradient:green:gold:$scoreboardTitleProgress><bold>MCOvertake - $SERVER_VERSION".asMini()) {
-                for ((i, player) in blockData.toBlockSortedList().withIndex()) {
-                    if (player.playerDisplayName == "") player.playerDisplayName =
-                        instance.getPlayerByUuid(player.uuid.toUUID())?.username ?: continue
-                    if (player.blocks == 0) continue
-                    line("<dark_green><bold>${player.playerDisplayName}".asMini()) {
-                        isVisible = true
-                        line = player.blocks
-                        id = player.playerDisplayName + "$i"
+            try {
+                kbar("<gradient:green:gold:$scoreboardTitleProgress><bold>MCOvertake - $SERVER_VERSION".asMini()) {
+                    for ((i, player) in blockData.toBlockSortedList().withIndex()) {
+                        if (player.playerDisplayName == "") player.playerDisplayName =
+                            instance.getPlayerByUuid(player.uuid.toUUID())?.username ?: continue
+                        if (player.blocks == 0) continue
+                        line("<dark_green><bold>${player.playerDisplayName}".asMini()) {
+                            isVisible = true
+                            line = player.blocks
+                            id = player.playerDisplayName + "$i"
+                        }
                     }
+                    instance.players.onEach { addViewer(it) }
                 }
-                instance.players.onEach { addViewer(it) }
+            } catch (e: Exception) {
+                log("An exception occurred in the scoreboard task!", LogType.EXCEPTION)
+                log(e)
             }
         }, TaskSchedule.tick(1), TaskSchedule.tick(1))
     }
@@ -619,49 +614,101 @@ class GameInstance(
     }
 
     fun totalInit(player: Player? = null) = runBlocking {
-        setupInstance(player)
-        setupSpawning()
+        try {
+            setupInstance(player)
+        } catch (e: Exception) {
+            player?.sendMessage("<red>An exception occurred during instance setup!")
+            log("An exception occurred during instance setup!", LogType.EXCEPTION)
+            log(e)
+            return@runBlocking
+        }
+        try {
+            setupSpawning()
+        } catch (e: Exception) {
+            player?.sendMessage("<red>An exception occurred during spawning setup!")
+            log("An exception occurred during spawning setup!", LogType.EXCEPTION)
+            log(e)
+            return@runBlocking
+        }
         player?.sendMessage("<green>Instance spawning setup".asMini())
-        setupScoreboard()
+        try {
+            setupScoreboard()
+        } catch (e: Exception) {
+            player?.sendMessage("<red>An exception occurred during scoreboard setup!")
+            log("An exception occurred during scoreboard setup!", LogType.EXCEPTION)
+            log(e)
+            return@runBlocking
+        }
         player?.sendMessage("<green>Instance scoreboard logic setup".asMini())
-        registerInteractionEvents()
+        try {
+            registerInteractionEvents()
+        } catch (e: Exception) {
+            player?.sendMessage("<red>An exception occurred during interaction event registration!")
+            log("An exception occurred during interaction event registration!", LogType.EXCEPTION)
+            log(e)
+            return@runBlocking
+        }
         player?.sendMessage("<green>Instance events registered".asMini())
-        registerTasks()
+        try {
+            registerTasks()
+        } catch (e: Exception) {
+            player?.sendMessage("<red>An exception occurred during task registration!")
+            log("An exception occurred during task registration!", LogType.EXCEPTION)
+            log(e)
+            return@runBlocking
+        }
         player?.sendMessage("<green>Instance tasks registered".asMini())
-        registerTickEvents()
+        try {
+            registerTickEvents()
+        } catch (e: Exception) {
+            player?.sendMessage("<red>An exception occurred during tick event registration!")
+            log("An exception occurred during  tick event registration!", LogType.EXCEPTION)
+            log(e)
+            return@runBlocking
+        }
         player?.sendMessage("<green>Instance player tick handler registered".asMini())
     }
 
     fun clearBlock(block: Block) {
         scheduleImmediately {
-            for (x in 0..instanceConfig.mapSize) {
-                for (z in 0..instanceConfig.mapSize) {
-                    instance.loadChunk(Vec(x.toDouble(), z.toDouble())).thenRun {
-                        onAllBuildingPositions(Vec(x.toDouble(), 1.0, z.toDouble())) {
-                            if (instance.getBlock(it.playerPosition) == block) {
-                                if (instance.getBlock(it.visiblePosition) == Block.WATER) {
-                                    ClaimWaterItem.destroyPlayerRaft(it.buildingPosition, instance)
-                                    instance.setBlock(it.playerPosition, Block.SAND)
-                                } else {
-                                    instance.setBlock(it.visiblePosition, Block.GRASS_BLOCK)
-                                    instance.setBlock(it.playerPosition, Block.GRASS_BLOCK)
-                                }
-                                instance.setBlock(it.buildingPosition, Block.AIR)
-                                instance.getNearbyEntities(it.buildingPosition, 0.2).onEach {
-                                    if (it !is Player) it.remove()
+            try {
+                for (x in 0..instanceConfig.mapSize) {
+                    for (z in 0..instanceConfig.mapSize) {
+                        instance.loadChunk(Vec(x.toDouble(), z.toDouble())).thenRun {
+                            onAllBuildingPositions(Vec(x.toDouble(), 1.0, z.toDouble())) {
+                                if (instance.getBlock(it.playerPosition) == block) {
+                                    if (instance.getBlock(it.visiblePosition) == Block.WATER) {
+                                        ClaimWaterItem.destroyPlayerRaft(it.buildingPosition, instance)
+                                        instance.setBlock(it.playerPosition, Block.SAND)
+                                    } else {
+                                        instance.setBlock(it.visiblePosition, Block.GRASS_BLOCK)
+                                        instance.setBlock(it.playerPosition, Block.GRASS_BLOCK)
+                                    }
+                                    instance.setBlock(it.buildingPosition, Block.AIR)
+                                    instance.getNearbyEntities(it.buildingPosition, 0.2).onEach {
+                                        if (it !is Player) it.remove()
+                                    }
                                 }
                             }
                         }
                     }
                 }
+            } catch (e: Exception) {
+                log("An error occurred during block clearing!", LogType.EXCEPTION)
+                log(e)
             }
         }
     }
 
     @OptIn(ExperimentalPathApi::class)
     fun delete() {
-        if (path.exists()) {
-            path.deleteRecursively()
+        try {
+            if (path.exists()) {
+                path.deleteRecursively()
+            }
+        } catch (e: Exception) {
+            log("An exception occurred during instance deletion!", LogType.EXCEPTION)
+            log(e)
         }
     }
 
@@ -682,7 +729,7 @@ class GameInstance(
     companion object {
         fun InstanceMap.fromInstance(instance: Instance): GameInstance? {
             // Random string so it doesn't return anything on accident
-            return this[instance.getTag(Tag.String("name")) ?: "189271890379012837uoahwd-8127"]
+            return this[instance.getTag(Tag.String("name")) ?: return null]
         }
 
         val Entity.gameInstance get() = instance.gameInstance

@@ -191,8 +191,13 @@ fun main() = runBlocking { try {
     initBuildingCompanions()
     log("Building companions initialized...")
     for (name in config.instanceNames) {
-        instances[name] = GameInstance(Path.of("instances", name), name)
-        instances[name]?.setupInstance()
+        try {
+            instances[name] = GameInstance(Path.of("instances", name), name)
+            instances[name]?.setupInstance()
+        } catch (e: Exception) {
+            log("An exception occured during the setup of instance \"$name\"!", LogType.EXCEPTION)
+            log(e)
+        }
     }
     log("Created GameInstances")
 
