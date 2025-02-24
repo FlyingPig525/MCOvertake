@@ -17,7 +17,7 @@ interface CategoryBlock {
 val NATURAL_CATEGORY = item(OAK_LEAVES) { itemName = "<green><bold>Natural Blocks".asMini() }
 val NETHER_CATEGORY = item(NETHERRACK) { itemName = "<red><bold>Nether Blocks".asMini() }
 val UNDERGROUND_CATEGORY = item(COBBLESTONE) { itemName = "<gray><bold>Underground Blocks".asMini() }
-val END_CATEGORY = item(END_STONE) { itemName = "<purple><bold>End Blocks".asMini() }
+val END_CATEGORY = item(END_STONE) { itemName = "<light_purple><bold>End Blocks".asMini() }
 
 enum class NaturalCategory(override val material: Material) : CategoryBlock {
     Dirt(DIRT),

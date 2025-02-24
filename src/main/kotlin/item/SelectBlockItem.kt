@@ -43,9 +43,9 @@ object SelectBlockItem : Actionable {
         val gameInstance = instances.fromInstance(event.instance) ?: return true
         val inventory = Inventory(InventoryType.CHEST_5_ROW, "Select Block")
 
-        inventory[4, 1] = END_CATEGORY
-        inventory[3, 2] = NATURAL_CATEGORY
-        inventory[5, 2] = UNDERGROUND_CATEGORY
+        inventory[4, 0] = END_CATEGORY
+        inventory[2, 2] = NATURAL_CATEGORY
+        inventory[6, 2] = UNDERGROUND_CATEGORY
         inventory[4, 4] = NETHER_CATEGORY
 
         inventory.addInventoryCondition { player: Player, slot: Int, clickType: ClickType, res: InventoryConditionResult ->
