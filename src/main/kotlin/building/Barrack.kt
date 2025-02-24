@@ -61,6 +61,6 @@ class Barrack : Building() {
             return getItem(playerData.buildings.barracks.cost, playerData.buildings.barracks.count)
         }
 
-        override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 2
+        override fun getResourceUse(currentDisposableResources: Int, count: Int): Int = currentDisposableResources + 2
     }
 }

@@ -64,6 +64,6 @@ class ArmsManufacturer : Building() {
 
         override fun getItem(playerData: BlockData): ItemStack = getItem(playerData.buildings.armsManufacturers.cost, playerData.buildings.armsManufacturers.count)
 
-        override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 5
+        override fun getResourceUse(currentDisposableResources: Int, count: Int): Int = currentDisposableResources + 5
     }
 }

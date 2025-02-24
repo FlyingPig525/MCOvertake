@@ -72,6 +72,6 @@ class MatterCompressionPlant : Building() {
             return getItem(playerData.buildings.matterCompressors.cost, playerData.buildings.matterCompressors.count)
         }
 
-        override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 4
+        override fun getResourceUse(currentDisposableResources: Int, count: Int): Int = currentDisposableResources + 4
     }
 }

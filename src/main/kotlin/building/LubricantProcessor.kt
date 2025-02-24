@@ -65,7 +65,7 @@ class LubricantProcessor : Building() {
         override fun getItem(playerData: BlockData): ItemStack =
             getItem(playerData.buildings.lubricantProcessors.cost, playerData.buildings.lubricantProcessors.count)
 
-        override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 3
+        override fun getResourceUse(currentDisposableResources: Int, count: Int): Int = currentDisposableResources + 3
 
         override fun validate(instance: Instance, point: Point): Boolean = PlasticPlant.validate(instance, point)
 

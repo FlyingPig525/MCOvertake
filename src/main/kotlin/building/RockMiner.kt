@@ -75,7 +75,7 @@ class RockMiner : Building() {
         override fun getItem(playerData: BlockData): ItemStack =
             getItem(playerData.buildings.rockMiners.cost, playerData.buildings.rockMiners.count)
 
-        override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 4
+        override fun getResourceUse(currentDisposableResources: Int, count: Int): Int = currentDisposableResources + 4
 
         override fun checkShouldSpawn(point: Point, instance: Instance): Boolean =
             instance.getBlock(point.buildingPosition).defaultState() == block

@@ -27,8 +27,7 @@ import net.minestom.server.tag.Tag
 import kotlin.reflect.KProperty1
 
 @Serializable
-class ElevatedBiosphere : Building {
-    override var count: Int = 0
+class ElevatedBiosphere : Building() {
     override val resourceUse: Int get() = if (count > 0) 32 + ((count-1) * 10) else 0
 //    override val cost: CurrencyCost
 //        get() = CurrencyCost.genericMechanicalParts(count, 2000).genericPlastic(count, 300)
@@ -49,8 +48,6 @@ class ElevatedBiosphere : Building {
     }
 
     override fun tick(data: BlockData) {
-        enabledPositions = positions
-        return
         val canHandleList = mutableListOf<Point>()
         for (pos in positions.sortedBy { it.y }) {
             if (data.lubricant >= (canHandleList.size + 1) * 40) {
@@ -65,7 +62,7 @@ class ElevatedBiosphere : Building {
         player.inventory[BUILDING_INVENTORY_SLOT] = getItem(player.data ?: return)
     }
 
-    @BuildingCompanion(orderAfter = "first", category = SkyCategory::class)
+    @io.github.flyingpig525.ksp.BuildingCompanion(orderAfter = "first", category = SkyCategory::class)
     companion object ElevatedBiosphereCompanion : Building.BuildingCompanion {
         override val block: Block = Block.BEACON
         override val identifier: String = "sky:biosphere"
