@@ -25,6 +25,7 @@ import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import net.minestom.server.tag.Tag
+import net.minestom.server.timer.TaskSchedule
 import java.util.*
 import kotlin.reflect.KProperty1
 
@@ -34,9 +35,16 @@ class UndergroundTeleporter : Building(), Interactable {
     override val cost get() = CurrencyCost.genericOrganicMatter(count, 750.0)
 
     override fun place(playerTarget: Point, instance: Instance, playerData: BlockData) {
-        instance.setBlock(playerTarget.buildingPosition, block.building(identifier))
+        instance.setBlock(playerTarget.buildingPosition, block.building(identifier).withTag(Tag.Boolean("fresh"), true))
         spawn(playerTarget.buildingPosition, instance, playerData.uuid.toUUID()!!)
         count++
+        instance.scheduler().scheduleTask({
+            instance.setBlock(
+                playerTarget.buildingPosition,
+                instance.getBlock(playerTarget.buildingPosition).withTag(Tag.Boolean("fresh"), false)
+            )
+            TaskSchedule.stop()
+        }, TaskSchedule.tick(10))
     }
 
     override fun select(player: Player) {
@@ -44,6 +52,7 @@ class UndergroundTeleporter : Building(), Interactable {
     }
 
     override fun onInteract(e: PlayerBlockInteractEvent): Boolean {
+        if (e.block.getTag(Tag.Boolean("fresh")) == true) return false
         val data = e.player.data ?: return true
         val pos = e.blockPosition.add(0.5, 0.0, 0.5)
         if (e.instance.getBlock(pos.playerPosition) != data.block) return true

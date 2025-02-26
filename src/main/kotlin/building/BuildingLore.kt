@@ -32,3 +32,6 @@ fun ItemLore.amountOwned(count: Int) {
 fun ItemLore.resourcesConsumed(amount: Int, count: Int) {
     +"<gray>Consumes $amount $disposableResources <dark_gray>(${count * amount})".asMini().noItalic()
 }
+fun ItemLore.pollutant() {
+    +"<gray>Produces pollution".asMini().noItalic()
+}

@@ -29,10 +29,8 @@ import kotlin.reflect.KProperty1
 @Serializable
 class ElevatedBiosphere : Building() {
     override val resourceUse: Int get() = if (count > 0) 32 + ((count-1) * 10) else 0
-//    override val cost: CurrencyCost
-//        get() = CurrencyCost.genericMechanicalParts(count, 2000).genericPlastic(count, 300)
     override val cost: CurrencyCost
-        get() = CurrencyCost.NONE
+        get() = CurrencyCost.genericMechanicalParts(count, 2000).genericPlastic(count, 300)
     val positions: MutableList<@Serializable(PointSerializer::class) Point> = mutableListOf()
     @Transient var enabledPositions: MutableList<Point> = mutableListOf()
 

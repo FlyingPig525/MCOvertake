@@ -26,7 +26,7 @@ import net.minestom.server.tag.Tag
 import kotlin.reflect.KProperty1
 
 @Serializable
-class LubricantProcessor : Building() {
+class LubricantProcessor : Building(producesPollution = true) {
     override val resourceUse: Int = 3 * count
     override val cost get() = CurrencyCost.genericOrganicMatter(count, 400.0)
 
@@ -56,6 +56,7 @@ class LubricantProcessor : Building() {
                 +"<dark_gray>to create Lubricant"
                 +"<gray>Generates 5 $lubricant".asMini().noItalic()
                 +"<gray>Must be placed directly next to an Oil Extractor".asMini().noItalic()
+                pollutant()
                 resourcesConsumed(3, count)
                 amountOwned(count)
             }

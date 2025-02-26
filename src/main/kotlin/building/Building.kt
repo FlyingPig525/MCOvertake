@@ -14,7 +14,7 @@ import net.minestom.server.tag.Tag
 import kotlin.reflect.KProperty1
 
 @Serializable
-abstract class Building {
+abstract class Building(val producesPollution: Boolean = false) {
     var count: Int = 0
     abstract val resourceUse: Int
     abstract val cost: CurrencyCost
@@ -40,6 +40,12 @@ abstract class Building {
         fun getItem(cost: CurrencyCost, count: Int): ItemStack
         fun getItem(playerData: BlockData): ItemStack
 
+        /**
+         * @param [currentDisposableResources] The current total
+         * @param [count] The amount of this building the player owns
+         *
+         * @return The amount of disposable resources another one of this building would make the total be
+         */
         fun getResourceUse(currentDisposableResources: Int, count: Int): Int
 
         fun shouldCallItemUse(): Boolean = false

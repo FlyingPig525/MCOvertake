@@ -23,7 +23,7 @@ import net.minestom.server.tag.Tag
 import kotlin.reflect.KProperty1
 
 @Serializable
-class ArmsManufacturer : Building() {
+class ArmsManufacturer : Building(producesPollution = true) {
     override val resourceUse: Int get() = 5 * count
     override val cost: CurrencyCost get() = CurrencyCost.genericMechanicalParts(count, 75).genericPlastic(count, 50)
 
@@ -55,6 +55,7 @@ class ArmsManufacturer : Building() {
                     +"<dark_gray>Manufactures essential equipment".asMini()
                     +"<dark_gray>for invading land".asMini()
                     +"<gray>Generates 1.5 $power every 70 ticks".asMini().noItalic()
+                    pollutant()
                     resourcesConsumed(5, count)
                     amountOwned(count)
                 }

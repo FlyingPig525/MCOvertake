@@ -26,7 +26,7 @@ import net.minestom.server.tag.Tag
 import kotlin.reflect.KProperty1
 
 @Serializable
-class MatterExtractor : Building() {
+class MatterExtractor : Building(producesPollution = true) {
     override val resourceUse: Int get() = count * 3
     override val cost get() = CurrencyCost.genericOrganicMatter(count, 25.0)
 
@@ -60,6 +60,7 @@ class MatterExtractor : Building() {
                 lore {
                     +"<dark_gray>Digs deep into the ground to extract organic materials".asMini()
                     +"<gray>Generates 0.5 $organicMatter every 30 ticks".asMini().noItalic()
+                    pollutant()
                     resourcesConsumed(3, count)
                     amountOwned(count)
                 }

@@ -99,6 +99,9 @@ class TestUpgrade : ResearchUpgrade() {
         eventData.cost = 0
         eventData.cooldown = Cooldown(Duration.ofMillis(50))
         eventData.playerData.organicMatter += 1000000
+        eventData.playerData.mechanicalParts += 10000
+        eventData.playerData.plastic += 10000
+        eventData.playerData.lubricant += 10000
         return eventData
     }
 }

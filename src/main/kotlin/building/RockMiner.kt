@@ -26,7 +26,7 @@ import java.util.*
 import kotlin.reflect.KProperty1
 
 @Serializable
-class RockMiner : Building() {
+class RockMiner : Building(producesPollution = true) {
     override val resourceUse: Int get() = 4 * count
     override val cost get() = CurrencyCost.genericMechanicalParts(count, 40)
 
@@ -57,7 +57,7 @@ class RockMiner : Building() {
     @io.github.flyingpig525.ksp.BuildingCompanion("first", UndergroundCategory::class)
     companion object RockMinerCompanion : BuildingCompanion, DisplayEntityBlock, Validated {
         override val block: Block = Block.TRIPWIRE_HOOK
-        override val identifier: String = "matter:rock_miner"
+        override val identifier: String = "matter:generator_2"
         override val playerRef: KProperty1<PlayerBuildings, Building> = PlayerBuildings::rockMiners
 
         override fun getItem(cost: CurrencyCost, count: Int): ItemStack = item(Material.TRIPWIRE_HOOK) {
@@ -66,6 +66,7 @@ class RockMiner : Building() {
                 +"<dark_gray>Breaks down adjacent rock walls".asMini()
                 +"<dark_gray>to create organic matter".asMini()
                 +"<gray>Generates 2 $organicMatter every 30 ticks".asMini().noItalic()
+                pollutant()
                 resourcesConsumed(4, count)
                 amountOwned(count)
             }

@@ -26,7 +26,7 @@ import net.minestom.server.tag.Tag
 import kotlin.reflect.KProperty1
 
 @Serializable
-class MatterCompressionPlant : Building() {
+class MatterCompressionPlant : Building(producesPollution = true) {
     override val resourceUse: Int get() = count * 4
     override val cost get() = CurrencyCost.genericOrganicMatter(count, 50.0)
 
@@ -60,6 +60,7 @@ class MatterCompressionPlant : Building() {
                     +"<dark_gray>Separates and compresses metallic materials found in".asMini()
                     +"<dark_gray>organic matter".asMini()
                     +"<gray>Uses 5 $organicMatter to generate 1 $mechanicalPart".asMini().noItalic()
+                    pollutant()
                     resourcesConsumed(4, count)
                     amountOwned(count)
                 }
