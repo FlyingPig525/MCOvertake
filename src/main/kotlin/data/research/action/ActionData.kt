@@ -2,6 +2,8 @@ package io.github.flyingpig525.data.research.action
 
 import io.github.flyingpig525.building.Building
 import io.github.flyingpig525.data.player.BlockData
+import net.minestom.server.coordinate.Point
+import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.Player
 import net.minestom.server.instance.Instance
 import net.minestom.server.utils.time.Cooldown
@@ -14,6 +16,7 @@ sealed class ActionData(val playerData: BlockData, val instance: Instance?, val 
     ) {
         var attackerData: BlockData = BlockData.NONE
         var attackerPlayer: Player? = null
+        var location: Pos? = null
     }
 
     class BuildWall(playerData: BlockData, instance: Instance, player: Player) : ActionData(

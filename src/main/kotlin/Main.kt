@@ -395,7 +395,8 @@ fun main() = runBlocking { try {
         setGrass,
         setAllCommand,
         tpCommand,
-        forceInvite
+        forceInvite,
+        tpAlertCommand
     )
 
     // Save loop

@@ -18,6 +18,7 @@ import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.kyori.adventure.bossbar.BossBar
 import net.minestom.server.coordinate.Point
+import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.Player
 import net.minestom.server.event.instance.InstanceTickEvent
 import net.minestom.server.instance.Instance
@@ -127,6 +128,7 @@ class BlockData(val uuid: String, @Serializable(BlockSerializer::class) val bloc
     @Transient var bulkWallQueueFirstPos: Point? = null
     @Transient var bulkWallQueueFirstPosJustReset = false
     @Transient var sunOrMoonChangeCooldown: Cooldown = Cooldown(Duration.ZERO)
+    @Transient var alertLocation: Pos? = null
     var hasUnlockedMechanicalParts = false
     var hasUnlockedPlastic = false
     var hasUnlockedLubricant = false
@@ -278,6 +280,14 @@ class BlockData(val uuid: String, @Serializable(BlockSerializer::class) val bloc
 
     fun sendPackets(vararg packets: SendablePacket) {
         packets.forEach { sendPacket(it) }
+    }
+
+    fun onPlayers(fn: (p: Player) -> Unit) {
+        val uuids = gameInstance?.uuidParentsInverse?.get(uuid) ?: return
+        for (uuid in uuids) {
+            val p = gameInstance!!.instance.getPlayerByUuid(uuid.toUUID()) ?: continue
+            fn(p)
+        }
     }
 
     val research = ResearchContainer()
