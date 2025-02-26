@@ -394,7 +394,8 @@ fun main() = runBlocking { try {
         noOpCommand,
         setGrass,
         setAllCommand,
-        tpCommand
+        tpCommand,
+        forceInvite
     )
 
     // Save loop
@@ -418,10 +419,8 @@ fun main() = runBlocking { try {
 
     minecraftServer.start(config.serverAddress, config.serverPort)
     log("GameServer online!")
-    if (packServer != null) {
-        packServer.start()
-        log("PackServer online!")
-    }
+    packServer.start()
+    log("PackServer online!")
 
     initConsoleCommands()
     log("Console commands initialized...")
