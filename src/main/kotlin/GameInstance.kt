@@ -223,7 +223,7 @@ class GameInstance(
                 val playerBlock = instance.getBlock(playerPoint).defaultState()
                 val canAccess = playerPoint.anyAdjacentBlocksMatch(playerData.block, instance)
                 val attackFromWater = playerPoint.repeatDirection { point, dir ->
-                    val block = instance.getBlock(point.playerPosition.add(0.0, 1.0, 0.0)).defaultState()
+                    val block = instance.getBlock(point.playerPosition).defaultState()
                     block == Block.SAND || block == Block.AIR
                 }
                 if (playerBlock != lookedAtBlock) {
