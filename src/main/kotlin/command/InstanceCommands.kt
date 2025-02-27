@@ -156,12 +156,6 @@ val tpCommand = kommand("tp") {
         singleEntity(true)
     }
 
-    buildSyntax {
-        condition {
-            permissionManager.hasPermission(player, Permission("instance.tp"))
-        }
-    }
-
     buildSyntax(targetArg) {
         condition { player, ctx ->
             permissionManager.hasPermission(player as Player, Permission("instance.tp"))
@@ -180,13 +174,6 @@ val tpCommand = kommand("tp") {
 val setGrass = kommand("setGrass") {
 
     val loc = ArgumentRelativeVec3("pos")
-
-    buildSyntax {
-        condition {
-            permissionManager.hasPermission(player, Permission("instance.set"))
-        }
-    }
-
     buildSyntax(loc) {
         condition { player, ctx ->
             permissionManager.hasPermission(player as Player, Permission("instance.set"))
@@ -200,12 +187,6 @@ val setGrass = kommand("setGrass") {
     }
 }
 val setAllCommand = kommand("setAll") {
-
-    buildSyntax {
-        condition {
-            permissionManager.hasPermission(player, Permission("instance.set"))
-        }
-    }
 
     val block = ArgumentBlockState("block")
     buildSyntax(block) {

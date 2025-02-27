@@ -2,7 +2,6 @@ package io.github.flyingpig525.item
 
 import io.github.flyingpig525.*
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
-import io.github.flyingpig525.building.organicMatter
 import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.data.research.action.ActionData
 import io.github.flyingpig525.dsl.blockDisplay
@@ -134,20 +133,17 @@ object UpgradeWallItem : Actionable {
         if (!data.wallUpgradeCooldown.isReady(Instant.now().toEpochMilli())) return true
         val block = instance.getBlock(target).defaultState()
         if (!block.canUpgradeWall) return true
-        upgradeWall(block, target, data, instance, event.player)
+        upgradeWall(block, target, data, instance)
         return true
     }
 
-    fun upgradeWall(block: Block, position: Point, data: BlockData, instance: Instance, player: Player? = null): Boolean {
+    fun upgradeWall(block: Block, position: Point, data: BlockData, instance: Instance): Boolean {
         val cost = getWallUpgradeCost(block) ?: return false
         val actionData = ActionData.UpgradeWall(data, instance).apply {
             this.cost = cost
             this.cooldown = Cooldown(Duration.ofSeconds(1))
         }.also { data.research.onUpgradeWall(it) }
-        if (data.organicMatter < actionData.cost) {
-            player?.sendMessage("<red><bold>Not enough Organic Matter</bold> (${data.organicMatter}/$${actionData.cost})".asMini())
-            return false
-        }
+        if (data.organicMatter < actionData.cost) return false
         data.organicMatter -= actionData.cost
         data.wallUpgradeCooldown = actionData.cooldown
         data.sendPacket(
@@ -246,11 +242,7 @@ object UpgradeWallItem : Actionable {
                     targetLevel = targetLevel.coerceIn(1, maxWallLevel)
                     val targetMaterial = wall(targetLevel).registry().material()!!
                     (player.openInventory!! as Inventory)[4, 1] = item(targetMaterial) {
-                        var cost = 0
-                        for (i in 0..targetLevel) {
-                            cost += getWallUpgradeCost(i)
-                        }
-                        itemName = "<green>Target Level: <gold><bold>$targetLevel <gray>- <green> $cost $organicMatter".asMini()
+                        itemName = "<green>Target Level: <gold><bold>$targetLevel".asMini()
                         lore {
                             +"<dark_gray>${targetMaterial.name().replace("minecraft:", "")}".asMini().noItalic()
                         }

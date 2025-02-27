@@ -12,7 +12,6 @@ import io.github.flyingpig525.wall.lastWall
 import io.github.flyingpig525.wall.wallLevel
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.extension.adventure.asMini
-import net.bladehunt.kotstom.extension.asPos
 import net.bladehunt.kotstom.extension.set
 import net.minestom.server.coordinate.Point
 import net.minestom.server.entity.Player
@@ -224,7 +223,6 @@ object AttackItem : Actionable {
         ActionData.Attacked(attackData.targetData, instance, targetPlayer).apply {
             this.attackerData = data
             this.attackerPlayer = event.player
-            this.location = target.visiblePosition.asPos()
         }.also { targetData.research.onAttacked(it) }
         data.updateBossBars()
         targetData.updateBossBars()

@@ -1,6 +1,5 @@
 package io.github.flyingpig525.data.research.currency
 
-import io.github.flyingpig525.data.research.upgrade.MessageWhenAttacked
 import io.github.flyingpig525.data.research.upgrade.RefundResourcesOnDestruction
 import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade
 import kotlinx.serialization.Serializable
@@ -16,7 +15,6 @@ class HiddenResearch : ResearchCurrency {
     override var internalLevel: Int = 1
     override var count: Long = 0
     override val upgrades: List<ResearchUpgrade> = listOf(
-        RefundResourcesOnDestruction(),
-        MessageWhenAttacked()
+        RefundResourcesOnDestruction()
     )
 }

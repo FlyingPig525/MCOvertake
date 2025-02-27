@@ -61,8 +61,7 @@ object BreakBuildingItem : Actionable {
                         }
                     }
                 } else {
-                    val block = if (groundPos.isUnderground) instance.gameInstance!!.instanceConfig.undergroundBlock else Block.GRASS_BLOCK
-                    instance.setBlock(groundPos, block)
+                    instance.setBlock(groundPos, Block.GRASS_BLOCK)
                 }
                 data.blocks--
             } else if (event.player.gameInstance?.removingPlayerBlock?.get(event.player.uuid) == null) {

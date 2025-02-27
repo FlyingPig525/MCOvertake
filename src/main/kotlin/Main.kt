@@ -99,7 +99,7 @@ const val SKY_SYMBOL = "INSERT SYMBOL"
 
 const val BUILDING_INVENTORY_SLOT = 4
 
-const val SERVER_VERSION = "v0.4.3"
+const val SERVER_VERSION = "v0.4"
 
 const val PIXEL_SIZE = 1.0 / 16.0
 
@@ -129,7 +129,7 @@ lateinit var permissionManager: PermissionManager private set
 val tpsMonitor = TpsMonitor()
 
 fun main() = runBlocking { try {
-    System.setProperty("minestom.chunk-view-distance", "16")
+    System.setProperty("minestom.chunk-view-distance", "32")
     LoggerSettings.saveToFile = true
     LoggerSettings.saveDirectoryPath = "./logs/"
     LoggerSettings.logFileNameFormat = "yyyy-MM-dd-Hms"
@@ -397,9 +397,7 @@ fun main() = runBlocking { try {
         noOpCommand,
         setGrass,
         setAllCommand,
-        tpCommand,
-        forceInvite,
-        tpAlertCommand
+        tpCommand
     )
 
     // Save loop

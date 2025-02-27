@@ -2,9 +2,7 @@ package io.github.flyingpig525.command
 
 import io.github.flyingpig525.GameInstance.Companion.gameInstance
 import io.github.flyingpig525.data
-import io.github.flyingpig525.data.player.permission.Permission
 import io.github.flyingpig525.item.SelectBlockItem
-import io.github.flyingpig525.permissionManager
 import io.github.flyingpig525.removeBossBars
 import io.github.flyingpig525.toUUID
 import net.bladehunt.kotstom.dsl.kommand.buildSyntax
@@ -179,62 +177,6 @@ val coopCommand = kommand("coop") {
                     TaskSchedule.stop()
                 }, TaskSchedule.minutes(gameInstance.instanceConfig.coopKickWaitTime))
             }
-        }
-    }
-}
-
-val forceInvite = kommand {
-    name = "forceInvite"
-
-    buildSyntax {
-        condition { permissionManager.hasPermission(player, Permission("instance.coop.force_invite")) }
-    }
-
-    val playerArg = ArgumentString("player").apply {
-        setSuggestionCallback { sender, ctx, suggestion ->
-            val player = sender as Player
-            val instance = player.gameInstance ?: return@setSuggestionCallback
-            val childUUIDs = instance.uuidParents.keys.filter { it != player.uuid.toString() }
-            for (uuid in childUUIDs) {
-                val name = MojangUtils.getUsername(uuid.toUUID())
-                val current = ctx.getRaw("player")
-                if (current in name) {
-                    suggestion.addEntry(SuggestionEntry(name))
-                }
-            }
-            if (suggestion.entries.size == 0) {
-                suggestion.entries += childUUIDs.map { SuggestionEntry(MojangUtils.getUsername(it.toUUID())) }
-            }
-        }
-    }
-
-    buildSyntax(playerArg) {
-        onlyPlayers()
-        condition { permissionManager.hasPermission(player, Permission("instance.coop.force_invite")) }
-
-        executor {
-            val targetName = context.get(playerArg)
-            val targetUUID = MojangUtils.getUUID(targetName)
-            val target = player
-            val instance = player.gameInstance ?: return@executor
-            val data = instance.dataResolver[targetUUID] ?: return@executor
-            if (instance.outgoingCoopInvites[targetUUID] == null) {
-                instance.outgoingCoopInvites[targetUUID] = mutableListOf(target.uuid to target.username)
-            } else {
-                instance.outgoingCoopInvites[targetUUID]!! += target.uuid to target.username
-            }
-            if (instance.incomingCoopInvites[player.uuid] == null) {
-                instance.incomingCoopInvites[player.uuid] = mutableListOf(data.uuid.toUUID()!! to data.playerDisplayName)
-            } else {
-                instance.incomingCoopInvites[player.uuid]!! += data.uuid.toUUID()!! to data.playerDisplayName
-            }
-            var targetMessage = "<aqua><bold>Incoming co-op invite from <green>${data.playerDisplayName}<aqua>!".asMini()
-            targetMessage = targetMessage.append("\n<reset><aqua>To accept run <green>/coop accept ${data.playerDisplayName}<aqua>, or click ".asMini())
-            targetMessage = targetMessage.append {
-                "<light_purple>[here]".asMini()
-                    .clickEvent(ClickEvent.runCommand("/coop accept ${data.playerDisplayName}"))
-            }
-            target.sendMessage(targetMessage)
         }
     }
 }
