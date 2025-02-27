@@ -363,30 +363,24 @@ fun main() = runBlocking { try {
     }
     val refreshConfig = kommand("refreshConfig") {
 
-        buildSyntax {
-            condition { permissionManager.hasPermission(player, Permission("process.config.refresh")) }
-            executor {
-                val game = player.gameInstance
-                if (game == null) {
-                    player.sendMessage("<red><bold>You must be in a game instance to run this command!".asMini())
-                    return@executor
-                }
-                val data = player.data
-                if (data == null /* || game.uuidParents[player.uuid.toString()] != player.uuid.toString() */) {
-                    player.sendMessage("<red><bold>You must own a block to run this command!".asMini())
-                    return@executor
-                }
-                data.blockConfig = BlockConfig()
+        defaultExecutor { player, ctx ->
+            val game = (player as Player).gameInstance
+            if (game == null) {
+                player.sendMessage("<red><bold>You must be in a game instance to run this command!".asMini())
+                return@defaultExecutor
             }
+            val data = player.data
+            if (data == null /* || game.uuidParents[player.uuid.toString()] != player.uuid.toString() */) {
+                player.sendMessage("<red><bold>You must own a block to run this command!".asMini())
+                return@defaultExecutor
+            }
+            data.blockConfig = BlockConfig()
         }
-
     }
     val noOpCommand = kommand("removeOp") {
-        buildSyntax {
-            condition { permissionManager.hasPermission(player, Permission("data.research.set")) }
-            executor {
-                player.data?.research?.basicResearch?.upgradeByName("Test")?.level = 0
-            }
+
+        defaultExecutor { player, ctx ->
+            (player as Player).data?.research?.basicResearch?.upgradeByName("Test")?.level = 0
         }
     }
 
