@@ -176,6 +176,10 @@ fun main() = runBlocking { try {
     log("Resource pack loaded...", MCOvertakeLogType.FILESYSTEM)
 
     val permissionsFile = File(config.permissionFilePath)
+    val parent = permissionsFile.parentFile
+    if (!parent.exists()) {
+        parent.mkdir()
+    }
     if (!permissionsFile.exists()) {
         permissionsFile.createNewFile()
         permissionsFile.writeText("{}")

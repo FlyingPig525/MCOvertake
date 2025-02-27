@@ -32,6 +32,8 @@ import net.bladehunt.kotstom.extension.adventure.asMini
 import net.bladehunt.kotstom.extension.get
 import net.bladehunt.kotstom.extension.set
 import net.hollowcube.polar.PolarLoader
+import net.kyori.adventure.key.Key
+import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.color.Color
 import net.minestom.server.coordinate.Pos
@@ -193,6 +195,8 @@ class GameInstance(
     }}}
 
     fun registerTickEvents() {
+        val armorEquipSound = Sound.sound(Key.key("item.armor.equip_generic"), Sound.Source.PLAYER, 10f, 1f)
+        var lookedAtBlock: Block = Block.AIR
         instance.eventNode().listen<PlayerTickEvent> { e ->
             val playerData = e.player.data ?: return@listen
             playerData.actionBar(e.player)
@@ -222,7 +226,12 @@ class GameInstance(
                     val block = instance.getBlock(point.playerPosition.add(0.0, 1.0, 0.0)).defaultState()
                     block == Block.SAND || block == Block.AIR
                 }
+                if (playerBlock != lookedAtBlock) {
+                    lookedAtBlock = playerBlock
+                    e.player.playSound(armorEquipSound, e.player.position)
+                }
                 when (playerBlock) {
+
                     Block.GRASS_BLOCK -> {
                         if (canAccess) {
                             ClaimItem.setItemSlot(e.player)
@@ -347,12 +356,14 @@ class GameInstance(
             }
         }
 
+        val anvilRepair = Sound.sound(Key.key("block.anvil.break"), Sound.Source.BLOCK, 10f, 1f)
         instance.eventNode().listen<PlayerBlockInteractEvent> { e ->
             val item = e.player.getItemInHand(e.hand)
             val building = Building.getBuildingByBlock(e.block)
             var callItemUse = building?.shouldCallItemUse() ?: false
             val data = e.player.data
             if (building != null && data != null) {
+                e.player.playSound(anvilRepair, e.player.position)
                 val ref = building.playerRef.get(data.buildings)
                 if (ref is Interactable) {
                     ref.onInteract(e)
