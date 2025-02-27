@@ -39,7 +39,10 @@ object WallItem : Actionable {
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
         val instance = event.instance
         val data = event.player.data ?: return true
-        if (data.organicMatter < 15) return true
+        if (data.organicMatter < 15) {
+            event.player.sendMessage("<red><bold>Not enough Organic Matter</bold> (${data.organicMatter}/15)".asMini())
+            return true
+        }
         if (!data.wallCooldown.isReady(Instant.now().toEpochMilli())) return true
         val target = event.player.getTrueTarget(20) ?: return true
         if (!checkBlockAvailable(data, target, instance)) return true

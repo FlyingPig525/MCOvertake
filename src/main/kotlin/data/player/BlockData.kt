@@ -142,7 +142,7 @@ class BlockData(val uuid: String, @Serializable(BlockSerializer::class) val bloc
             val currentLevel = wall.wallLevel
             if (currentLevel == 0 || currentLevel >= targetLevel) {
                 wallUpgradeQueue.removeFirst()
-                e.instance.getNearbyEntities(wallPos, 0.2).onEach { it.remove() }
+                e.instance.getNearbyEntities(wallPos, 0.2).onEach { if (it.hasTag(Tag.Boolean("wallUpgrade"))) it.remove() }
                 return@run
             }
             if (UpgradeWallItem.upgradeWall(wall, wallPos, this, e.instance) && currentLevel + 1 == targetLevel) {

@@ -97,7 +97,7 @@ const val LUBRICANT_SYMBOL = "₴"
 
 const val BUILDING_INVENTORY_SLOT = 4
 
-const val SERVER_VERSION = "v0.4"
+const val SERVER_VERSION = "v0.4.3"
 
 const val PIXEL_SIZE = 1.0 / 16.0
 
@@ -127,7 +127,7 @@ lateinit var permissionManager: PermissionManager private set
 val tpsMonitor = TpsMonitor()
 
 fun main() = runBlocking { try {
-    System.setProperty("minestom.chunk-view-distance", "32")
+    System.setProperty("minestom.chunk-view-distance", "16")
     LoggerSettings.saveToFile = true
     LoggerSettings.saveDirectoryPath = "./logs/"
     LoggerSettings.logFileNameFormat = "yyyy-MM-dd-Hms"
@@ -359,25 +359,32 @@ fun main() = runBlocking { try {
     val refreshConfig = kommand {
         name = "refreshConfig"
 
-        defaultExecutor {
-            val game = player.gameInstance
-            if (game == null) {
-                player.sendMessage("<red><bold>You must be in a game instance to run this command!".asMini())
-                return@defaultExecutor
+        buildSyntax {
+            condition { permissionManager.hasPermission(player, Permission("process.config.refresh")) }
+            executor {
+                val game = player.gameInstance
+                if (game == null) {
+                    player.sendMessage("<red><bold>You must be in a game instance to run this command!".asMini())
+                    return@executor
+                }
+                val data = player.data
+                if (data == null /* || game.uuidParents[player.uuid.toString()] != player.uuid.toString() */) {
+                    player.sendMessage("<red><bold>You must own a block to run this command!".asMini())
+                    return@executor
+                }
+                data.blockConfig = BlockConfig()
             }
-            val data = player.data
-            if (data == null /* || game.uuidParents[player.uuid.toString()] != player.uuid.toString() */) {
-                player.sendMessage("<red><bold>You must own a block to run this command!".asMini())
-                return@defaultExecutor
-            }
-            data.blockConfig = BlockConfig()
         }
+
     }
     val noOpCommand = kommand {
         name = "removeOp"
 
-        defaultExecutor {
-            player.data?.research?.basicResearch?.upgradeByName("Test")?.level = 0
+        buildSyntax {
+            condition { permissionManager.hasPermission(player, Permission("data.research.set")) }
+            executor {
+                player.data?.research?.basicResearch?.upgradeByName("Test")?.level = 0
+            }
         }
     }
 

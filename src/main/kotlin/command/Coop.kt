@@ -191,6 +191,10 @@ val coopCommand = kommand {
 val forceInvite = kommand {
     name = "forceInvite"
 
+    buildSyntax {
+        condition { permissionManager.hasPermission(player, Permission("instance.coop.force_invite")) }
+    }
+
     val playerArg = ArgumentString("player").apply {
         setSuggestionCallback { sender, ctx, suggestion ->
             val player = sender as Player

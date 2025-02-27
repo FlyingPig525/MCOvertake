@@ -66,6 +66,8 @@ class TrainingCamp : Building() {
             return getItem(playerData.buildings.trainingCamps.cost, playerData.buildings.trainingCamps.count)
         }
 
+        override fun shouldCallItemUse(): Boolean = true
+
         override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 3
     }
 }
