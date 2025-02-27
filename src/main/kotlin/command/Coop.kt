@@ -109,12 +109,11 @@ val coopCommand = kommand {
                 instance.incomingCoopInvites[player.uuid]!! -= targetUUID
                 instance.outgoingCoopInvites[targetUUID.first]!! -= player.uuid to player.username
                 val data = player.data
+                val ownsBlock = instance.uuidParents[player.uuid.toString()] == player.uuid.toString()
                 instance.uuidParents[player.uuid.toString()] = targetUUID.first.toString()
                 instance.blockData.remove(player.uuid.toString())
-                if (data != null) {
-                    instance.clearBlock(data.block)
-                    player.removeBossBars()
-                }
+                if (ownsBlock) instance.clearBlock(data.block)
+                if (data != null) player.removeBossBars()
                 player.data!!.setupPlayer(player)
                 player.sendMessage("<aqua><bold>Successfully joined $targetUsername's co-op!".asMini())
                 player.instance.getPlayerByUuid(targetUUID.first)
