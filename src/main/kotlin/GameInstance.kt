@@ -46,6 +46,7 @@ import net.minestom.server.instance.InstanceContainer
 import net.minestom.server.instance.LightingChunk
 import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
+import net.minestom.server.network.packet.client.play.ClientUpdateSignPacket
 import net.minestom.server.network.packet.server.SendablePacket
 import net.minestom.server.network.packet.server.play.ParticlePacket
 import net.minestom.server.particle.Particle
@@ -184,7 +185,6 @@ class GameInstance(
                 pCFile.createNewFile()
             }
             pCFile.writeText(Json.encodeToString(playerConfigs))
-            instance.saveChunksToStorage()
             instance.saveInstance()
         } catch (e: Exception) {
             log("An exception occurred during $name instance saving!", LogType.EXCEPTION)
@@ -371,15 +371,29 @@ class GameInstance(
         }
 
         instance.eventNode().listen<PlayerHandAnimationEvent> {
-            val item = it.player.getItemInHand(it.hand)
-            for (actionable in Actionable.registry) {
-                if (item.getTag(Tag.String("identifier")) == actionable.identifier) {
-                    try {
-                        actionable.onHandAnimation(it)
-                    } catch (e: Exception) {
-                        log(e)
+            val target = it.player.getTrueTarget(20)
+            var callItem = true
+            if (target != null) {
+                val building = Building.getBuildingByBlock(it.instance.getBlock(target.buildingPosition))
+                val data = it.player.data
+                if (building != null && data != null) {
+                    val ref = building.playerRef.get(data.buildings)
+                    if (ref is Interactable) {
+                        callItem = ref.onHandAnimation(it, target.buildingPosition)
                     }
-                    break
+                }
+            }
+            if (callItem) {
+                val item = it.player.getItemInHand(it.hand)
+                for (actionable in Actionable.registry) {
+                    if (item.getTag(Tag.String("identifier")) == actionable.identifier) {
+                        try {
+                            actionable.onHandAnimation(it)
+                        } catch (e: Exception) {
+                            log(e)
+                        }
+                        break
+                    }
                 }
             }
         }
@@ -577,8 +591,8 @@ class GameInstance(
                     for (z in 0..instanceConfig.mapSize) {
                         val point = Vec(x.toDouble(), 39.0, z.toDouble())
                         instance.loadChunk(point).thenRun {
-                            val playerBlock = instance.getBlock(x, 38, z)
-                            if (instance.getBlock(x, 39, z) == Block.WATER && instance.getBlock(x, 38, z) != Block.SAND) {
+                            val playerBlock = instance.getBlock(point.playerPosition)
+                            if (instance.getBlock(x, 39, z) == Block.WATER && playerBlock != Block.SAND) {
                                 ClaimWaterItem.spawnPlayerRaft(
                                     playerBlock,
                                     Vec(x.toDouble(), 40.0, z.toDouble()),

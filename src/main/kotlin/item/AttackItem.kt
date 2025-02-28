@@ -158,6 +158,7 @@ object AttackItem : Actionable {
         val waterBlock = instance.getBlock(target.visiblePosition)
         val buildingBlock = instance.getBlock(buildingPoint)
 
+        var couldAttack = true
         val taken = when(buildingBlock) {
             Block.AIR -> { true }
             Block.LILY_PAD -> {
@@ -172,6 +173,11 @@ object AttackItem : Actionable {
             else -> run {
                 if (Building.blockIsBuilding(buildingBlock)) {
                     val building = Building.getBuildingByBlock(buildingBlock)!!
+                    if (building.getResourceUse(data.disposableResourcesUsed) > data.maxDisposableResources * 1.5) {
+                        player.sendMessage("<red>Max extra disposable resources reached".asMini())
+                        couldAttack = false
+                        return@run false
+                    }
                     val buildingRef = building.playerRef.get(data.buildings)
                     val targetRef = building.playerRef.get(targetData.buildings)
                     targetRef.count--
@@ -213,14 +219,16 @@ object AttackItem : Actionable {
                 claimWithParticle(event.player, target, attackData.playerData.block, instance)
             }
         }
-        data.attackCooldown = attackData.attackCooldown
-        data.sendPacket(
-            SetCooldownPacket(
-                itemMaterial.cooldownIdentifier,
-                data.attackCooldown.ticks
+        if (couldAttack) {
+            data.attackCooldown = attackData.attackCooldown
+            data.sendPacket(
+                SetCooldownPacket(
+                    itemMaterial.cooldownIdentifier,
+                    data.attackCooldown.ticks
+                )
             )
-        )
-        data.power -= attackData.attackCost
+            data.power -= attackData.attackCost
+        }
         ActionData.Attacked(attackData.targetData, instance, targetPlayer).apply {
             this.attackerData = data
             this.attackerPlayer = event.player

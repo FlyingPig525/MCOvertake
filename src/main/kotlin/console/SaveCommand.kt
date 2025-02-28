@@ -1,5 +1,6 @@
 package io.github.flyingpig525.console
 
+import cz.lukynka.prettylog.LogType
 import cz.lukynka.prettylog.log
 import io.github.flyingpig525.config
 import io.github.flyingpig525.data.config.getCommentString
@@ -22,16 +23,21 @@ object SaveCommand : Command {
         return (arguments.size == 1 || arguments[1] == "config") && arguments[0] in names
     }
 
-    override fun execute(arguments: List<String>): Unit = runBlocking {
+    override fun execute(arguments: List<String>) {
         if (arguments.size == 1) {
-            launch(Dispatchers.IO) {
-                log("Saving...")
-                instances.values.onEach {
-                    it.save()
-                    System.gc()
+            log("Saving...")
+            Thread { runBlocking {
+                try {
+                    instances.values.onEach {
+                        it.save()
+                        System.gc()
+                    }
+                } catch (e: Exception) {
+                    log("An exception has occurred during game saving!", LogType.EXCEPTION)
+                    log(e)
                 }
-                log("Game data saved")
-            }
+            }}
+            log("Game data saved")
         } else {
             log("Saving main config")
             val configFile = File("config.json5")

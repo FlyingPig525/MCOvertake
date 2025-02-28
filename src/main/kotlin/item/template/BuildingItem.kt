@@ -38,7 +38,8 @@ open class BuildingItem(
             event.player.sendMessage("<red><bold>Invalid building position".asMini())
             return true
         }
-        if (building.getResourceUse(playerData.disposableResourcesUsed) > playerData.maxDisposableResources) {
+        val newResources = building.getResourceUse(playerData.disposableResourcesUsed)
+        if (newResources != playerData.disposableResourcesUsed && newResources > playerData.maxDisposableResources) {
             event.player.sendMessage("<red><bold>Reached Disposable Resources cap".asMini())
             return true
         }

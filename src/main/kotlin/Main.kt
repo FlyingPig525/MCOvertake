@@ -66,6 +66,8 @@ import net.minestom.server.inventory.condition.InventoryConditionResult
 import net.minestom.server.item.ItemComponent
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
+import net.minestom.server.network.packet.client.play.ClientEditBookPacket
+import net.minestom.server.network.packet.client.play.ClientUpdateSignPacket
 import net.minestom.server.tag.Tag
 import net.minestom.server.timer.TaskSchedule
 import net.minestom.server.utils.time.Cooldown
@@ -247,6 +249,11 @@ fun main() = runBlocking { try {
         )
     }
 
+    PacketListenerManager.setPlayListener(ClientUpdateSignPacket::class.java) { packet, player ->
+        val data = player.data ?: return@setPlayListener
+        if (player.instance.getBlock(packet.blockPosition) != data.block) return@setPlayListener
+    }
+
     lobbyInstance.eventNode().listen<PlayerSpawnEvent> { e ->
         e.player.teleport(Pos(5.0, 11.0, 5.0))
         e.player.gameMode = GameMode.ADVENTURE
@@ -418,8 +425,7 @@ fun main() = runBlocking { try {
     )
 
     // Save loop
-    SchedulerManager.scheduleTask({ runBlocking {
-        launch(Dispatchers.IO) {
+    SchedulerManager.scheduleTask({ Thread { runBlocking {
             try {
                 instances.values.onEach {
                     it.save()
