@@ -20,9 +20,7 @@ import io.github.flyingpig525.item.SelectBlockItem
 import io.github.flyingpig525.ksp.initBuildingCompanions
 import io.github.flyingpig525.ksp.initItems
 import io.github.flyingpig525.log.MCOvertakeLogType
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import net.bladehunt.kotstom.*
@@ -126,6 +124,7 @@ lateinit var permissionManager: PermissionManager private set
 
 val tpsMonitor = TpsMonitor()
 
+@OptIn(ExperimentalCoroutinesApi::class)
 fun main() = runBlocking { try {
     System.setProperty("minestom.chunk-view-distance", "16")
     LoggerSettings.saveToFile = true
@@ -388,6 +387,17 @@ fun main() = runBlocking { try {
         }
     }
 
+    val addOpCommand = kommand {
+        name = "addOp"
+
+        buildSyntax {
+            condition { permissionManager.hasPermission(player, Permission("data.research.set")) }
+            executor {
+                player.data?.research?.basicResearch?.upgradeByName("Test")?.level = 1
+            }
+        }
+    }
+
     CommandManager.register(
         createInstanceCommand,
         lobbyCommand,
@@ -403,20 +413,28 @@ fun main() = runBlocking { try {
         setAllCommand,
         tpCommand,
         forceInvite,
-        tpAlertCommand
+        tpAlertCommand,
+        addOpCommand
     )
 
     // Save loop
-    SchedulerManager.scheduleTask({
-        launch {
-            instances.values.onEach {
-                it.save()
+    SchedulerManager.scheduleTask({ runBlocking {
+        launch(Dispatchers.IO) {
+            try {
+                instances.values.onEach {
+                    it.save()
+                    System.gc()
+                }
+                if (config.printSaveMessages) {
+                    log("Game data saved")
+                }
+            } catch (e: Exception) {
+                log("An exception has occurred during game saving!", LogType.EXCEPTION)
+                log(e)
             }
-            if (config.printSaveMessages) {
-                log("Game data saved")
-            }
-        }
-    }, TaskSchedule.minutes(1), TaskSchedule.minutes(1))
+        }}
+        TaskSchedule.minutes(5)
+    }, TaskSchedule.minutes(5))
 
     instances.values.onEach { it.registerTasks() }
     log("Game loops scheduled...")
@@ -468,6 +486,9 @@ fun main() = runBlocking { try {
         log("Console loop failed! || ${it?.cause?.message}", LogType.ERROR)
     }
     log("Console loop running!")
+    if (config.printSaveMessages) {
+        log("Printing save messages")
+    }
 } catch (e: Exception) {
     log(e)
 }}

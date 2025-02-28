@@ -4,6 +4,10 @@ import cz.lukynka.prettylog.log
 import io.github.flyingpig525.config
 import io.github.flyingpig525.data.config.getCommentString
 import io.github.flyingpig525.instances
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import java.io.File
 
 object SaveCommand : Command {
@@ -18,11 +22,16 @@ object SaveCommand : Command {
         return (arguments.size == 1 || arguments[1] == "config") && arguments[0] in names
     }
 
-    override fun execute(arguments: List<String>) {
+    override fun execute(arguments: List<String>): Unit = runBlocking {
         if (arguments.size == 1) {
-            log("Saving...")
-            instances.values.onEach { it.save() }
-            log("Game data saved")
+            launch(Dispatchers.IO) {
+                log("Saving...")
+                instances.values.onEach {
+                    it.save()
+                    System.gc()
+                }
+                log("Game data saved")
+            }
         } else {
             log("Saving main config")
             val configFile = File("config.json5")

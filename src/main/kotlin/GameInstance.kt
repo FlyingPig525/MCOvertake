@@ -158,7 +158,7 @@ class GameInstance(
         return ret
     }
 
-    fun save() = runBlocking { withContext(Dispatchers.IO) { launch {
+    suspend fun save() = withContext(Dispatchers.IO) {
         try {
             if (!path.exists()) {
                 path.createDirectories()
@@ -187,9 +187,10 @@ class GameInstance(
             instance.saveChunksToStorage()
             instance.saveInstance()
         } catch (e: Exception) {
-            e.printStackTrace()
+            log("An exception occurred during $name instance saving!", LogType.EXCEPTION)
+            log(e)
         }
-    }}}
+    }
 
     fun registerTickEvents() {
         instance.eventNode().listen<PlayerTickEvent> { e ->
@@ -367,11 +368,6 @@ class GameInstance(
 
         instance.eventNode().listen<PlayerSwapItemEvent> {
             it.isCancelled = true
-        }
-
-
-        instance.eventNode().listen<PlayerDisconnectEvent> { e ->
-            save()
         }
 
         instance.eventNode().listen<PlayerHandAnimationEvent> {

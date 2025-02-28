@@ -162,6 +162,7 @@ val tpCommand = kommand {
         condition {
             permissionManager.hasPermission(player, Permission("instance.tp"))
         }
+        executor { player.sendMessage("<red>Missing required arguments".asMini()) }
     }
 
     buildSyntax(targetArg) {
@@ -188,6 +189,8 @@ val setGrass = kommand {
         condition {
             permissionManager.hasPermission(player, Permission("instance.set"))
         }
+        executor { player.sendMessage("<red>Missing required arguments".asMini()) }
+
     }
 
     buildSyntax(loc) {
@@ -209,6 +212,7 @@ val setAllCommand = kommand {
         condition {
             permissionManager.hasPermission(player, Permission("instance.set"))
         }
+        executor { player.sendMessage("<red>Missing required arguments".asMini()) }
     }
 
     val block = ArgumentBlockState("block")
@@ -246,7 +250,7 @@ val setTimeCommand = kommand {
         condition {
             permissionManager.hasPermission(player, Permission("instance.time"))
         }
-        executor {  }
+        executor { player.sendMessage("<red>Missing required arguments".asMini()) }
     }
 
     buildSyntax(tick) {

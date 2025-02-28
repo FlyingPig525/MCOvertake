@@ -112,8 +112,10 @@ val coopCommand = kommand {
                 val ownsBlock = instance.uuidParents[player.uuid.toString()] == player.uuid.toString()
                 instance.uuidParents[player.uuid.toString()] = targetUUID.first.toString()
                 instance.blockData.remove(player.uuid.toString())
-                if (ownsBlock) instance.clearBlock(data.block)
-                if (data != null) player.removeBossBars()
+                if (data != null) {
+                    if (ownsBlock) instance.clearBlock(data.block)
+                    if (data != null) player.removeBossBars()
+                }
                 player.data!!.setupPlayer(player)
                 player.sendMessage("<aqua><bold>Successfully joined $targetUsername's co-op!".asMini())
                 player.instance.getPlayerByUuid(targetUUID.first)
@@ -192,6 +194,7 @@ val forceInvite = kommand {
 
     buildSyntax {
         condition { permissionManager.hasPermission(player, Permission("instance.coop.force_invite")) }
+        executor { player.sendMessage("<red>Missing required arguments".asMini()) }
     }
 
     val playerArg = ArgumentString("player").apply {
