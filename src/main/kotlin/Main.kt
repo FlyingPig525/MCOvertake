@@ -355,16 +355,23 @@ fun main() = runBlocking { try {
     val bar = kbar(scoreboardTitleList[0]) {
         lobbyInstance.players.onEach { addViewer(it) }
     }
-    SchedulerManager.scheduleTask({
+    SchedulerManager.scheduleTask({ try {
         tick++
         scoreboardTitleIndex++
         if (scoreboardTitleIndex >= scoreboardTitleList.size) {
             scoreboardTitleIndex = 0
         }
         bar.setTitle(scoreboardTitleList[scoreboardTitleIndex])
+    } catch(e: Exception) {
+        log("An exception occurred in the lobby scoreboard task!", LogType.EXCEPTION)
+        log(e)
+    }
     }, TaskSchedule.tick(1), TaskSchedule.tick(1))
 
-    SchedulerManager.scheduleTask({ System.gc() }, TaskSchedule.seconds(30), TaskSchedule.seconds(30))
+    SchedulerManager.scheduleTask({ try { System.gc() } catch (e: Exception) {
+        log("An exception occurred while garbage collecting!", LogType.EXCEPTION)
+        log(e)
+    } }, TaskSchedule.seconds(30), TaskSchedule.seconds(30))
 
     instances.values.onEach { it.setupSpawning() }
     log("Player spawning setup...")

@@ -70,7 +70,6 @@ object BreakBuildingItem : Actionable {
                 event.player.gameInstance?.removingPlayerBlock?.set(event.player.uuid, false)
                 instance.scheduler().scheduleTask({
                     event.player.gameInstance?.removingPlayerBlock?.set(event.player.uuid, true)
-
                 }, TaskSchedule.seconds(1), TaskSchedule.stop())
                 instance.scheduler().scheduleTask({
                     event.player.gameInstance?.removingPlayerBlock?.remove(event.player.uuid)

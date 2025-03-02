@@ -1,5 +1,7 @@
 package io.github.flyingpig525.item
 
+import cz.lukynka.prettylog.LogType
+import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.building.organicMatter
@@ -36,6 +38,7 @@ import net.minestom.server.particle.Particle
 import net.minestom.server.tag.Tag
 import net.minestom.server.timer.TaskSchedule
 import net.minestom.server.utils.time.Cooldown
+import java.lang.Exception
 import java.time.Duration
 import java.time.Instant
 import java.util.*
@@ -99,9 +102,9 @@ object UpgradeWallItem : Actionable {
             instance.scheduleNextTick {
                 data.bulkWallQueueFirstPos = target
             }
-            instance.scheduler().scheduleTask({
+            instance.scheduler().scheduleTask({ try {
                 if (data.bulkWallQueueFirstPos == null) return@scheduleTask TaskSchedule.stop()
-                val player = instance.getPlayerByUuid(event.player.uuid) ?: return@scheduleTask  TaskSchedule.stop()
+                val player = instance.getPlayerByUuid(event.player.uuid) ?: return@scheduleTask TaskSchedule.stop()
                 val target = player.getTrueTarget(20)?.buildingPosition ?: return@scheduleTask TaskSchedule.tick(1)
                 val lowX = min(data.bulkWallQueueFirstPos!!.x, target.x)
                 val lowZ = min(data.bulkWallQueueFirstPos!!.z, target.z)
@@ -127,6 +130,10 @@ object UpgradeWallItem : Actionable {
                     trailParticle.withTarget(y40), zeroOne, Vec.ZERO, 1f, 10
                 )
                 player.sendPackets(targetParticles)
+            } catch (e: Exception) {
+                log("An exception occurred during the mass selection task!", LogType.EXCEPTION)
+                log(e)
+            }
                 TaskSchedule.tick(1)
             }, TaskSchedule.nextTick())
             return true
