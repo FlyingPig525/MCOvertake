@@ -42,7 +42,7 @@ class ArmsManufacturer : Building() {
 
     @io.github.flyingpig525.ksp.BuildingCompanion(orderAfter = "LubricantProcessor", category = UndergroundCategory::class)
     companion object ArmsManufacturerCompanion : BuildingCompanion {
-        override val block: Block = Block.SEA_PICKLE.withProperty("pickles", "2")
+        override val block: Block = Block.SEA_PICKLE.withProperty("pickles", "2").withProperty("waterlogged", "false")
         override val identifier: String = "power:generator_2"
 
         override val playerRef: KProperty1<PlayerBuildings, Building> = PlayerBuildings::armsManufacturers

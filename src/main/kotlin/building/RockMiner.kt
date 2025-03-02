@@ -80,7 +80,7 @@ class RockMiner : Building() {
         override fun checkShouldSpawn(point: Point, instance: Instance): Boolean =
             instance.getBlock(point.buildingPosition).defaultState() == block
                     && !instance.getNearbyEntities(point.buildingPosition, 0.2).any {
-                it is DisplayEntityBlock && (it.entityMeta as BlockDisplayMeta).blockStateId == Block.FLOWER_POT
+                it.getTag(Tag.String("identifier")) == identifier
             }
 
         override fun spawn(point: Point, instance: Instance, uuid: UUID) {
@@ -89,8 +89,15 @@ class RockMiner : Building() {
                 block = Block.FLOWER_POT
                 entity {
                     setTag(Tag.UUID("player"), uuid)
+                    setTag(Tag.String("identifier"), identifier)
                 }
             }.setInstance(instance, point)
+        }
+
+        override fun remove(point: Point, instance: Instance, uuid: UUID) {
+            instance.getNearbyEntities(point.buildingPosition, 0.2).filter {
+                it.getTag(Tag.String("identifier")) == identifier
+            }.onEach { it.remove() }
         }
 
         override fun validate(instance: Instance, point: Point): Boolean = point.isUnderground && point.buildingPosition.repeatDirection { point, dir ->

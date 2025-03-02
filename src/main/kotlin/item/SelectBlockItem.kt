@@ -32,6 +32,10 @@ object SelectBlockItem : Actionable {
     override val itemMaterial: Material = Material.STRUCTURE_VOID
     val item = item(itemMaterial) {
         itemName = "<green>$COLONY_SYMBOL <bold>Select Block</bold> $COLONY_SYMBOL".asMini()
+        lore {
+            +"<red>Selecting a new block will clear your current block".asMini()
+            +"<red>and you will start at the beginning".asMini()
+        }
         set(Tag.String("identifier"), identifier)
     }
 
@@ -77,6 +81,8 @@ object SelectBlockItem : Actionable {
                     lore {
                         if (cBlock.block !in instance.blockData.toBlockList()) {
                             +"<gray>-| <green><bold><i>Click to Select<reset> <gray>|-".asMini().noItalic()
+                            +"<red>Selecting a new block will clear your current block".asMini()
+                            +"<red>and you will start at the beginning".asMini()
                         } else {
                             +"<gray>-| <red><bold><i>Block already in use<reset> <gray>|-".asMini().noItalic()
                         }

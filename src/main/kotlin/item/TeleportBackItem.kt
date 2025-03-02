@@ -31,6 +31,11 @@ object TeleportBackItem : Actionable {
 
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
         val data = event.player.data ?: return true
+        if (data.lastTeleporterPos.isEmpty()) {
+            event.player.teleport(event.player.position.withY(48.0))
+            event.player.inventory[2] = ItemStack.AIR
+            return true
+        }
         event.player.teleport(data.lastTeleporterPos.last().asPos())
         data.lastTeleporterPos.remove(data.lastTeleporterPos.last())
         if (data.lastTeleporterPos.isEmpty()) {

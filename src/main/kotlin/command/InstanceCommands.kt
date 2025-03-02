@@ -156,6 +156,15 @@ val tpCommand = kommand("tp") {
         singleEntity(true)
     }
 
+    buildSyntax {
+        condition { player, ctx ->
+            permissionManager.hasPermission(player as Player, Permission("instance.tp"))
+        }
+        executor { player, ctx ->
+            player.sendMessage("<red>Missing required arguments".asMini())
+        }
+    }
+
     buildSyntax(targetArg) {
         condition { player, ctx ->
             permissionManager.hasPermission(player as Player, Permission("instance.tp"))
@@ -174,6 +183,15 @@ val tpCommand = kommand("tp") {
 val setGrass = kommand("setGrass") {
 
     val loc = ArgumentRelativeVec3("pos")
+
+    buildSyntax {
+        condition { player, ctx ->
+            permissionManager.hasPermission(player as Player, Permission("instance.set"))
+        }
+        executor { player.sendMessage("<red>Missing required arguments".asMini()) }
+
+    }
+
     buildSyntax(loc) {
         condition { player, ctx ->
             permissionManager.hasPermission(player as Player, Permission("instance.set"))
@@ -187,6 +205,15 @@ val setGrass = kommand("setGrass") {
     }
 }
 val setAllCommand = kommand("setAll") {
+
+    buildSyntax {
+        condition { player, ctx ->
+            permissionManager.hasPermission(player as Player, Permission("instance.set"))
+        }
+        executor { player, ctx ->
+            player.sendMessage("<red>Missing required arguments".asMini())
+        }
+    }
 
     val block = ArgumentBlockState("block")
     buildSyntax(block) {
@@ -222,7 +249,9 @@ val setTimeCommand = kommand("setTime") {
         condition { player, ctx ->
             permissionManager.hasPermission(player as Player, Permission("instance.time"))
         }
-        executor { player, ctx -> }
+        executor { player, ctx ->
+            player.sendMessage("<red>Missing required arguments".asMini())
+        }
     }
 
     buildSyntax(tick) {

@@ -7,10 +7,7 @@ import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data
 import io.github.flyingpig525.data.player.CurrencyCost
 import io.github.flyingpig525.getTrueTarget
-import io.github.flyingpig525.item.Actionable
-import io.github.flyingpig525.item.ERROR_ITEM
-import io.github.flyingpig525.item.checkBlockAvailable
-import io.github.flyingpig525.item.sneakCheck
+import io.github.flyingpig525.item.*
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerUseItemEvent
@@ -39,7 +36,8 @@ open class BuildingItem(
             return true
         }
         val buildingInst = building.playerRef.get(playerData.buildings)
-        if (building.getResourceUse(playerData.disposableResourcesUsed, buildingInst.count) > playerData.maxDisposableResources) {
+        val newResources = building.getResourceUse(playerData.disposableResourcesUsed, buildingInst.count)
+        if (newResources != playerData.disposableResourcesUsed && newResources > playerData.maxDisposableResources) {
             event.player.sendMessage("<red><bold>Reached Disposable Resources cap".asMini())
             return true
         }

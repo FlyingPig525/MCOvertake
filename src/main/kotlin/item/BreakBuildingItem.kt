@@ -61,7 +61,8 @@ object BreakBuildingItem : Actionable {
                         }
                     }
                 } else {
-                    instance.setBlock(groundPos, Block.GRASS_BLOCK)
+                    val block = if (groundPos.isUnderground) instance.gameInstance!!.instanceConfig.undergroundBlock else Block.GRASS_BLOCK
+                    instance.setBlock(groundPos, block)
                 }
                 data.blocks--
             } else if (event.player.gameInstance?.removingPlayerBlock?.get(event.player.uuid) == null) {
@@ -69,7 +70,6 @@ object BreakBuildingItem : Actionable {
                 event.player.gameInstance?.removingPlayerBlock?.set(event.player.uuid, false)
                 instance.scheduler().scheduleTask({
                     event.player.gameInstance?.removingPlayerBlock?.set(event.player.uuid, true)
-
                 }, TaskSchedule.seconds(1), TaskSchedule.stop())
                 instance.scheduler().scheduleTask({
                     event.player.gameInstance?.removingPlayerBlock?.remove(event.player.uuid)
@@ -95,9 +95,9 @@ object BreakBuildingItem : Actionable {
             instance.setBlock(buildingPos, Block.LILY_PAD)
         } else {
             instance.setBlock(buildingPos, Block.AIR)
-            buildingPos.repeatAdjacent {
-                UpgradeWallItem.updateWall(it, instance)
-            }
+        }
+        buildingPos.repeatAdjacent {
+            UpgradeWallItem.updateWall(it, instance)
         }
         return true
     }

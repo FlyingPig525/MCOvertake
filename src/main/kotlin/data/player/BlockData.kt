@@ -17,7 +17,9 @@ import kotlinx.serialization.Transient
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.kyori.adventure.bossbar.BossBar
+import net.kyori.adventure.text.Component
 import net.minestom.server.coordinate.Point
+import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.Player
 import net.minestom.server.event.instance.InstanceTickEvent
 import net.minestom.server.instance.Instance
@@ -78,16 +80,19 @@ class BlockData(val uuid: String, @Serializable(BlockSerializer::class) val bloc
         set(value) {
             field = value
             if (value != 0) hasUnlockedMechanicalParts = true
+            reprocessActionBar()
         }
     var plastic: Int = 0
         set(value) {
             field = value
             if (value != 0) hasUnlockedPlastic = true
+            reprocessActionBar()
         }
     var lubricant: Int = 0
         set(value) {
             field = value
             if (value != 0) hasUnlockedLubricant = true
+            reprocessActionBar()
         }
     val disposableResourcesUsed: Int get() {
         var acc = 0
@@ -127,6 +132,8 @@ class BlockData(val uuid: String, @Serializable(BlockSerializer::class) val bloc
     @Transient var bulkWallQueueFirstPos: Point? = null
     @Transient var bulkWallQueueFirstPosJustReset = false
     @Transient var sunOrMoonChangeCooldown: Cooldown = Cooldown(Duration.ZERO)
+    @Transient var alertLocation: Pos? = null
+    @Transient var actionBarText: Component = "".asMini()
     var hasUnlockedMechanicalParts = false
     var hasUnlockedPlastic = false
     var hasUnlockedLubricant = false
@@ -140,7 +147,7 @@ class BlockData(val uuid: String, @Serializable(BlockSerializer::class) val bloc
             val currentLevel = wall.wallLevel
             if (currentLevel == 0 || currentLevel >= targetLevel) {
                 wallUpgradeQueue.removeFirst()
-                e.instance.getNearbyEntities(wallPos, 0.2).onEach { it.remove() }
+                e.instance.getNearbyEntities(wallPos, 0.2).onEach { if (it.hasTag(Tag.Boolean("wallUpgrade"))) it.remove() }
                 return@run
             }
             if (UpgradeWallItem.upgradeWall(wall, wallPos, this, e.instance) && currentLevel + 1 == targetLevel) {
@@ -156,7 +163,6 @@ class BlockData(val uuid: String, @Serializable(BlockSerializer::class) val bloc
             buildings.rockMiners.tick(this)
             val player = instance.getPlayerByUuid(UUID.fromString(uuid))
             if (player != null) {
-                if (playerDisplayName == "") playerDisplayName = player.username
                 updateBossBars()
             }
         } catch (e: Exception) {
@@ -194,6 +200,7 @@ class BlockData(val uuid: String, @Serializable(BlockSerializer::class) val bloc
         }
     }
 
+    // TODO: uses 7mb of ram, should refactor to not create new components each tick
     fun updateBossBars(player: Player? = null) {
         powerBossBar.name("<red>$POWER_SYMBOL Power <gray>-<red> $power/$maxPower".asMini())
         powerBossBar.progress((power / maxPower).toFloat().coerceIn(0f..1f))
@@ -208,7 +215,7 @@ class BlockData(val uuid: String, @Serializable(BlockSerializer::class) val bloc
 
     }
 
-    fun actionBar(player: Player) {
+    private fun reprocessActionBar() {
         var str = "<dark_gray>| ".asMini()
         fun AAA() { str = str.append(" <reset><dark_gray>| ".asMini()) }
         if (hasUnlockedMechanicalParts) {
@@ -223,8 +230,11 @@ class BlockData(val uuid: String, @Serializable(BlockSerializer::class) val bloc
             str = str.append("$lubricantColor$LUBRICANT_SYMBOL <bold>$lubricant".asMini())
             AAA()
         }
-        // for each intermediary resource run AAA() before appending it
-        player.sendPacket(ActionBarPacket(str))
+        actionBarText = str
+    }
+
+    fun actionBar(player: Player) {
+        player.sendPacket(ActionBarPacket(actionBarText))
     }
 
     private fun showBossBars(player: Player) {
@@ -283,6 +293,14 @@ class BlockData(val uuid: String, @Serializable(BlockSerializer::class) val bloc
 
     fun sendPackets(vararg packets: SendablePacket) {
         packets.forEach { sendPacket(it) }
+    }
+
+    fun onPlayers(fn: (p: Player) -> Unit) {
+        val uuids = gameInstance?.uuidParentsInverse?.get(uuid) ?: return
+        for (uuid in uuids) {
+            val p = gameInstance!!.instance.getPlayerByUuid(uuid.toUUID()) ?: continue
+            fn(p)
+        }
     }
 
     val research = ResearchContainer()
