@@ -140,9 +140,16 @@ object UpgradeWallItem : Actionable {
 
     fun upgradeWall(block: Block, position: Point, data: BlockData, instance: Instance, player: Player? = null): Boolean {
         val cost = getWallUpgradeCost(block) ?: return false
+        var cooldownMs = 1000L
+        position.playerPosition.repeatAdjacent {
+            val block = instance.getBlock(it)
+            if (block != Block.GRASS_BLOCK || block != Block.SAND || block != data.block || block != Block.AIR) {
+                cooldownMs = 2000L
+            }
+        }
         val actionData = ActionData.UpgradeWall(data, instance).apply {
             this.cost = cost
-            this.cooldown = Cooldown(Duration.ofMillis(1000L + (100 * (block.wallLevel - 1))))
+            this.cooldown = Cooldown(Duration.ofMillis(cooldownMs))
         }.also { data.research.onUpgradeWall(it) }
         if (data.organicMatter < actionData.cost) {
             player?.sendMessage("<red><bold>Not enough Organic Matter</bold> (${data.organicMatter}/${actionData.cost})".asMini())

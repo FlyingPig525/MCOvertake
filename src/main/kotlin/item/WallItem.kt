@@ -46,9 +46,18 @@ object WallItem : Actionable {
         if (!data.wallCooldown.isReady(Instant.now().toEpochMilli())) return true
         val target = event.player.getTrueTarget(20) ?: return true
         if (!checkBlockAvailable(data, target, instance)) return true
+        var cooldownMs = 500L
+
+        target.playerPosition.repeatAdjacent {
+            val block = instance.getBlock(it)
+            if (block != Block.GRASS_BLOCK || block != Block.SAND || block != data.block) {
+                cooldownMs = 1500L
+            }
+        }
+
         val actionData = ActionData.BuildWall(data, instance, event.player).apply {
             cost = 15
-            cooldown = Cooldown(Duration.ofMillis(500))
+            cooldown = Cooldown(Duration.ofMillis(cooldownMs))
         }.also { data.research.onBuildWall(it) }
         data.organicMatter -= actionData.cost
         data.wallCooldown = actionData.cooldown

@@ -9,6 +9,7 @@ import io.github.flyingpig525.data.research.action.ActionData
 import io.github.flyingpig525.ksp.Item
 import io.github.flyingpig525.wall.getWallAttackCost
 import io.github.flyingpig525.wall.lastWall
+import io.github.flyingpig525.wall.wall
 import io.github.flyingpig525.wall.wallLevel
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.extension.adventure.asMini
@@ -93,7 +94,7 @@ object AttackItem : Actionable {
         if (wallLevel <= 10) {
             cooldownTicks += 3 * wallLevel
         } else {
-            cooldownTicks += (wallLevel * wallLevel) / 3
+            cooldownTicks += 5 * wallLevel
         }
         return Cooldown(Duration.ofMillis(cooldownTicks*50))
     }
