@@ -188,7 +188,9 @@ val setGrass = kommand("setGrass") {
         condition { player, ctx ->
             permissionManager.hasPermission(player as Player, Permission("instance.set"))
         }
-        executor { player.sendMessage("<red>Missing required arguments".asMini()) }
+        executor { player, ctx ->
+            player.sendMessage("<red>Missing required arguments".asMini())
+        }
 
     }
 

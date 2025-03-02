@@ -79,7 +79,7 @@ class Sign : Building(), Interactable {
         override fun getItem(playerData: BlockData): ItemStack =
             getItem(playerData.buildings.signs.cost, playerData.buildings.signs.count)
 
-        override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources
+        override fun getResourceUse(currentDisposableResources: Int, count: Int): Int = currentDisposableResources
 
 
     }

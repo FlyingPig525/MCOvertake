@@ -174,7 +174,7 @@ object AttackItem : Actionable {
             else -> run {
                 if (Building.blockIsBuilding(buildingBlock)) {
                     val building = Building.getBuildingByBlock(buildingBlock)!!
-                    if (building.getResourceUse(data.disposableResourcesUsed) > data.maxDisposableResources * 1.5) {
+                    if (building.getResourceUse(data.disposableResourcesUsed, building.playerRef.get(data.buildings).count) > data.maxDisposableResources * 1.5) {
                         player.sendMessage("<red>Max extra disposable resources reached".asMini())
                         couldAttack = false
                         return@run false

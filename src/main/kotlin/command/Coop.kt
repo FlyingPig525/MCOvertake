@@ -184,12 +184,15 @@ val coopCommand = kommand("coop") {
     }
 }
 
-val forceInvite = kommand {
-    name = "forceInvite"
+val forceInvite = kommand("forceInvite") {
 
     buildSyntax {
-        condition { permissionManager.hasPermission(player, Permission("instance.coop.force_invite")) }
-        executor { player.sendMessage("<red>Missing required arguments".asMini()) }
+        condition { player, ctx ->
+            permissionManager.hasPermission(player as Player, Permission("instance.coop.force_invite"))
+        }
+        executor { player, ctx ->
+            player.sendMessage("<red>Missing required arguments".asMini())
+        }
     }
 
     val playerArg = ArgumentString("player").apply {
@@ -212,10 +215,13 @@ val forceInvite = kommand {
 
     buildSyntax(playerArg) {
         onlyPlayers()
-        condition { permissionManager.hasPermission(player, Permission("instance.coop.force_invite")) }
+        condition { player, ctx ->
+            permissionManager.hasPermission(player as Player, Permission("instance.coop.force_invite"))
+        }
 
-        executor {
-            val targetName = context.get(playerArg)
+        executor { player, ctx ->
+            if (player !is Player) return@executor
+            val targetName = ctx.get(playerArg)
             val targetUUID = MojangUtils.getUUID(targetName)
             val target = player
             val instance = player.gameInstance ?: return@executor
