@@ -101,9 +101,9 @@ object AttackItem : Actionable {
     fun attackRaft(targetData: BlockData, point: Point, instance: Instance) {
         ClaimWaterItem.destroyPlayerRaft(point.withY(40.0), instance)
         targetData.blocks--
-        instance.setBlock(point.withY(38.0), Block.SAND)
+        instance.setBlock(point.playerPosition, Block.SAND)
         instance.setBlock(point.buildingPosition, Block.AIR)
-        val pos = visualWaterBlock(point, instance)
+        val pos = visualWaterBlock(point.visiblePosition, instance)
         instance.setBlock(pos, listOf(Block.SAND, Block.SAND, Block.SAND, Block.SANDSTONE).random())
         // TODO: PARTICLES
     }

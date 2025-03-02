@@ -1,6 +1,7 @@
 package io.github.flyingpig525.building
 
 import io.github.flyingpig525.*
+import io.github.flyingpig525.building.RockMiner.RockMinerCompanion
 import io.github.flyingpig525.building.category.BasicCategory
 import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.data.player.CurrencyCost
@@ -80,7 +81,7 @@ class UndergroundTeleporter : Building(), Interactable {
         override fun checkShouldSpawn(point: Point, instance: Instance): Boolean =
             instance.getBlock(point.buildingPosition).defaultState() == block
                     && !instance.getNearbyEntities(point.buildingPosition, 0.2).any {
-                it is DisplayEntityBlock && (it.entityMeta as BlockDisplayMeta).blockStateId == Block.COPPER_GRATE
+                it.getTag(Tag.String("identifier")) == identifier
             }
 
         override fun spawn(point: Point, instance: Instance, uuid: UUID) {
@@ -91,8 +92,15 @@ class UndergroundTeleporter : Building(), Interactable {
                 block = Block.COPPER_GRATE
                 entity {
                     setTag(Tag.UUID("player"), uuid)
+                    setTag(Tag.String("identifier"), identifier)
                 }
             }.setInstance(instance, point)
+        }
+
+        override fun remove(point: Point, instance: Instance, uuid: UUID) {
+            instance.getNearbyEntities(point.buildingPosition, 0.2).filter {
+                it.getTag(Tag.String("identifier")) == identifier
+            }.onEach { it.remove() }
         }
 
         override fun validate(instance: Instance, point: Point): Boolean {

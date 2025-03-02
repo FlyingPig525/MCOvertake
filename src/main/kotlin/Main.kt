@@ -252,6 +252,20 @@ fun main() = runBlocking { try {
             .prompt("<green>This resource pack provides \"crucial\" visual changes that allow for a better and more <i>smooth</i> experience.".asMini())
             .build()
         )
+
+        MinecraftServer.getInstanceManager().instances.onEach {
+            it.players.onEach {
+                it.sendMessage("<red>- ${player.username}")
+            }
+        }
+    }
+
+    GlobalEventHandler.listen<PlayerDisconnectEvent> { e ->
+        MinecraftServer.getInstanceManager().instances.onEach {
+            it.players.onEach {
+                it.sendMessage("<red>- ${e.player.username}")
+            }
+        }
     }
 
     lobbyInstance.eventNode().listen<PlayerSpawnEvent> { e ->

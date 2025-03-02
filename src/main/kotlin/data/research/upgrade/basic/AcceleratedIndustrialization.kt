@@ -6,6 +6,7 @@ import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade
 import io.github.flyingpig525.getTrueTarget
 import io.github.flyingpig525.playerPosition
 import io.github.flyingpig525.repeatAdjacent
+import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.lore
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.bladehunt.kotstom.extension.adventure.noItalic
@@ -15,6 +16,7 @@ import net.minestom.server.utils.time.Cooldown
 import java.time.Duration
 import kotlin.math.pow
 
+@Serializable
 class AcceleratedIndustrialization : ResearchUpgrade() {
     override var maxLevel: Int = 3
     override val name: String = "Accelerated Industrialization"
