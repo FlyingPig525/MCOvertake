@@ -148,14 +148,20 @@ object UpgradeWallItem : Actionable {
     }
 
     fun upgradeWall(block: Block, position: Point, data: BlockData, instance: Instance, player: Player? = null): Boolean {
+        println(tick)
         val cost = getWallUpgradeCost(block) ?: return false
-        var cooldownMs = 1000L
+        var cooldownMs = 600L
         position.playerPosition.repeatAdjacent {
-            val block = instance.getBlock(it)
-            if (block != Block.GRASS_BLOCK || block != Block.SAND || block != data.block || block != Block.AIR) {
-                cooldownMs = 2000L
+            val block = instance.getBlock(it).defaultState()
+            println("block")
+            println(block.name())
+            if (block != Block.GRASS_BLOCK && block != Block.SAND && block != data.block && block != Block.AIR && block != Block.DIAMOND_BLOCK) {
+                println("bad block")
+                println(block.name())
+                cooldownMs = 1400L
             }
         }
+        println(cooldownMs)
         val actionData = ActionData.UpgradeWall(data, instance).apply {
             this.cost = cost
             this.cooldown = Cooldown(Duration.ofMillis(cooldownMs))
