@@ -96,7 +96,7 @@ const val LUBRICANT_SYMBOL = "₴"
 
 const val BUILDING_INVENTORY_SLOT = 4
 
-const val SERVER_VERSION = "v0.4.3"
+const val SERVER_VERSION = "v0.4.4"
 
 const val PIXEL_SIZE = 1.0 / 16.0
 
@@ -351,7 +351,7 @@ fun main() = runBlocking { try {
         }
         scoreboardTitleProgress += 0.025
     }
-    println(scoreboardTitleList.size)
+
     val bar = kbar(scoreboardTitleList[0]) {
         lobbyInstance.players.onEach { addViewer(it) }
     }
