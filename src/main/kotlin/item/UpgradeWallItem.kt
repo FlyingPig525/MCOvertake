@@ -153,11 +153,7 @@ object UpgradeWallItem : Actionable {
         var cooldownMs = 600L
         position.playerPosition.repeatAdjacent {
             val block = instance.getBlock(it).defaultState()
-            println("block")
-            println(block.name())
             if (block != Block.GRASS_BLOCK && block != Block.SAND && block != data.block && block != Block.AIR && block != Block.DIAMOND_BLOCK) {
-                println("bad block")
-                println(block.name())
                 cooldownMs = 1400L
             }
         }
