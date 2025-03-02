@@ -38,12 +38,9 @@ class AcceleratedIndustrialization : ResearchUpgrade() {
         target.playerPosition.repeatAdjacent {
             if (eventData.instance!!.getBlock(it).defaultState() == eventData.playerData.block) blocks++
         }
-        if (blocks >= 3) {
-            var cooldownMillis = eventData.claimCooldown.duration.toMillis()
-            cooldownMillis = ((cooldownMillis * (1 - (0.015 + (0.005 * (level - 1)) * (blocks - 3)))).toLong())
-            eventData.claimCooldown = Cooldown(Duration.ofMillis(cooldownMillis))
-            return eventData
-        }
-        return null
+        var cooldownMillis = eventData.claimCooldown.duration.toMillis()
+        cooldownMillis = ((cooldownMillis * (1 - (0.015 + (0.005 * (level - 1)) * blocks))).toLong())
+        eventData.claimCooldown = Cooldown(Duration.ofMillis(cooldownMillis))
+        return eventData
     }
 }
