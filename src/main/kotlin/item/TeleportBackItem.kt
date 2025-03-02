@@ -39,7 +39,6 @@ object TeleportBackItem : Actionable {
             event.player.inventory[2] = ItemStack.AIR
             return true
         }
-        val data = event.player.data ?: return true
         event.player.teleport(data.lastTeleporterPos.last().asPos())
         data.lastTeleporterPos.remove(data.lastTeleporterPos.last())
         if (data.lastTeleporterPos.isEmpty()) {
