@@ -142,7 +142,7 @@ object UpgradeWallItem : Actionable {
         val cost = getWallUpgradeCost(block) ?: return false
         val actionData = ActionData.UpgradeWall(data, instance).apply {
             this.cost = cost
-            this.cooldown = Cooldown(Duration.ofSeconds(1))
+            this.cooldown = Cooldown(Duration.ofMillis(1000L + (100 * (block.wallLevel - 1))))
         }.also { data.research.onUpgradeWall(it) }
         if (data.organicMatter < actionData.cost) {
             player?.sendMessage("<red><bold>Not enough Organic Matter</bold> (${data.organicMatter}/${actionData.cost})".asMini())
