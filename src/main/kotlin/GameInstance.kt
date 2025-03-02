@@ -540,8 +540,10 @@ class GameInstance(
                         if (y == 39) {
                             if (eval > instanceConfig.noiseThreshold) return@setAll Block.GRASS_BLOCK
                         } else if (y == 5) {
+                            // Ground player blocks
                             return@setAll if (eval > instanceConfig.noiseThreshold) Block.GRASS_BLOCK else Block.SAND
                         } else if (y == 4) {
+                            // Underground player blocks
                             return@setAll if (eval > instanceConfig.noiseThreshold) Block.DIAMOND_BLOCK else Block.GRASS_BLOCK
                         } else if (y == 38) {
                             if (eval > instanceConfig.noiseThreshold) return@setAll upperRiverBlocks[random.nextInt(upperRiverBlocks.size)]
@@ -594,8 +596,9 @@ class GameInstance(
                                         else return@setAll Block.SHORT_GRASS
                                     }
                                 }
+                                // Sky island player blocks
                                 if (y == 6) return@setAll Block.GRASS_BLOCK
-                            }
+                            } else if (y == 6) return@setAll Block.AIR
                         }
                     }
                     if (x in -1..instanceConfig.mapSize + 1 && z in -1..instanceConfig.mapSize + 1 && y < 40) {
@@ -633,6 +636,11 @@ class GameInstance(
                                         break
                                     }
                                 }
+                            }
+                            // Process old worlds with broken sky generation
+                            val skyPoint = point.withY(6.0)
+                            if (instance.getBlock(skyPoint) == Block.DIAMOND_BLOCK) {
+                                instance.setBlock(skyPoint, Block.AIR)
                             }
                         }
                     }
