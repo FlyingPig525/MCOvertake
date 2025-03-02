@@ -754,7 +754,8 @@ class GameInstance(
                                         ClaimWaterItem.destroyPlayerRaft(it.buildingPosition, instance)
                                         instance.setBlock(it.playerPosition, Block.SAND)
                                     } else {
-                                        instance.setBlock(it.visiblePosition, Block.GRASS_BLOCK)
+                                        val visible = if (it.visiblePosition.isUnderground) instanceConfig.undergroundBlock else Block.GRASS_BLOCK
+                                        instance.setBlock(it.visiblePosition, visible)
                                         instance.setBlock(it.playerPosition, Block.GRASS_BLOCK)
                                     }
                                     instance.setBlock(it.buildingPosition, Block.AIR)
