@@ -255,7 +255,7 @@ fun main() = runBlocking { try {
 
         MinecraftServer.getInstanceManager().instances.onEach {
             it.players.onEach {
-                it.sendMessage("<red>- ${player.username}")
+                it.sendMessage("<green>+ ${player.username}".asMini())
             }
         }
     }
@@ -263,7 +263,7 @@ fun main() = runBlocking { try {
     GlobalEventHandler.listen<PlayerDisconnectEvent> { e ->
         MinecraftServer.getInstanceManager().instances.onEach {
             it.players.onEach {
-                it.sendMessage("<red>- ${e.player.username}")
+                it.sendMessage("<red>- ${e.player.username}".asMini())
             }
         }
     }
