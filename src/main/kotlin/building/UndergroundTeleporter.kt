@@ -3,11 +3,11 @@ package io.github.flyingpig525.building
 import io.github.flyingpig525.*
 import io.github.flyingpig525.building.RockMiner.RockMinerCompanion
 import io.github.flyingpig525.building.category.BasicCategory
+import io.github.flyingpig525.data.Sounds
 import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.data.player.CurrencyCost
 import io.github.flyingpig525.data.player.PlayerData.Companion.playerData
 import io.github.flyingpig525.dsl.blockDisplay
-import io.github.flyingpig525.ksp.BuildingCompanion
 import io.github.flyingpig525.ksp.PlayerBuildings
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item
@@ -51,6 +51,7 @@ class UndergroundTeleporter : Building(), Interactable {
         if (e.instance.getBlock(pos.playerPosition) != data.block) return true
         e.player.teleport(pos.sub(0.0, 9.0, 0.0).asPos())
         (e.player.playerData ?: return false).lastTeleporterPos += pos
+        e.player.playSound(Sounds.UNDERGROUND_ENTER)
         return false
     }
 

@@ -5,6 +5,7 @@ import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.building.organicMatter
+import io.github.flyingpig525.data.Sounds
 import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.data.player.PlayerData.Companion.playerData
 import io.github.flyingpig525.data.research.action.ActionData
@@ -164,8 +165,10 @@ object UpgradeWallItem : Actionable {
         }.also { data.research.onUpgradeWall(it) }
         if (data.organicMatter < actionData.cost) {
             player?.sendMessage("<red><bold>Not enough Organic Matter</bold> (${data.organicMatter}/${actionData.cost})".asMini())
+            player?.playSound(Sounds.ERROR)
             return false
         }
+        player?.playSound(Sounds.UPGRADE_WALL)
         data.organicMatter -= actionData.cost
         data.wallUpgradeCooldown = actionData.cooldown
         data.sendPacket(

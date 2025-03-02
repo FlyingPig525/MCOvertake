@@ -3,6 +3,7 @@ package io.github.flyingpig525.item
 import io.github.flyingpig525.*
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.building.Building
+import io.github.flyingpig525.data.Sounds
 import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.data.player.BlockData.Companion.getDataByPoint
 import io.github.flyingpig525.data.research.action.ActionData
@@ -139,6 +140,7 @@ object AttackItem : Actionable {
         }.also { data_.research.onPostAttack(it) }
         val data = postAttack.playerData
         if (data.power < postAttack.attackCost) {
+            event.player.playSound(Sounds.ERROR)
             event.player.sendMessage("<red><bold>Not enough Power </bold>(${data.power}/${postAttack.attackCost})".asMini())
             return true
         }
@@ -230,6 +232,7 @@ object AttackItem : Actionable {
             )
             data.power -= attackData.attackCost
         }
+        event.player.playSound(Sounds.ATTACK)
         ActionData.Attacked(attackData.targetData, instance, targetPlayer).apply {
             this.attackerData = data
             this.attackerPlayer = event.player

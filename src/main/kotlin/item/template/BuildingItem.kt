@@ -5,6 +5,7 @@ import io.github.flyingpig525.building.Building
 import io.github.flyingpig525.building.Validated
 import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data
+import io.github.flyingpig525.data.Sounds
 import io.github.flyingpig525.data.player.CurrencyCost
 import io.github.flyingpig525.getTrueTarget
 import io.github.flyingpig525.item.*
@@ -32,11 +33,13 @@ open class BuildingItem(
         val playerData = event.player.data ?: return true
         if (!checkBlockAvailable(playerData, target, instance)) return true
         if (building is Validated && !building.validate(event.instance, target.buildingPosition))  {
+            event.player.playSound(Sounds.ERROR)
             event.player.sendMessage("<red><bold>Invalid building position".asMini())
             return true
         }
         val newResources = building.getResourceUse(playerData.disposableResourcesUsed)
         if (newResources != playerData.disposableResourcesUsed && newResources > playerData.maxDisposableResources) {
+            event.player.playSound(Sounds.ERROR)
             event.player.sendMessage("<red><bold>Reached Disposable Resources cap".asMini())
             return true
         }
@@ -44,12 +47,14 @@ open class BuildingItem(
         val cost = building.cost
         when (val res = cost.apply(playerData)) {
             is CurrencyCost.ApplicationResult.Success -> {
+                event.player.playSound(Sounds.PLACE_BUILDING)
                 building.place(target, instance, playerData)
                 building.select(event.player)
                 playerData.updateBossBars()
             }
 
             is CurrencyCost.ApplicationResult.Fail -> {
+                event.player.playSound(Sounds.ERROR)
                 event.player.sendMessage(res.message)
             }
         }

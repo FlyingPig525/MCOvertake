@@ -4,6 +4,7 @@ import io.github.flyingpig525.*
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.GameInstance.Companion.gameInstance
 import io.github.flyingpig525.building.Building
+import io.github.flyingpig525.data.Sounds
 import io.github.flyingpig525.data.research.action.ActionData
 import io.github.flyingpig525.ksp.Item
 import io.github.flyingpig525.wall.blockIsWall
@@ -84,6 +85,7 @@ object BreakBuildingItem : Actionable {
         } else {
             val ref = Building.getBuildingByIdentifier(identifier)?.playerRef?.get(data.buildings) ?: return true
             if (!ref.onDestruction(buildingPos, instance, data)) return true
+            event.player.playSound(Sounds.DESTROY_BUILDING)
             ref.count--
             ref.select(event.player)
             ActionData.DestroyBuilding(data, instance, event.player).apply {

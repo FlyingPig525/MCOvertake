@@ -3,6 +3,7 @@ package io.github.flyingpig525.item
 import io.github.flyingpig525.GameInstance
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.data
+import io.github.flyingpig525.data.Sounds
 import io.github.flyingpig525.data.block.Head.Companion.withHead
 import io.github.flyingpig525.data.player.PlayerData.Companion.playerData
 import io.github.flyingpig525.instances
@@ -32,11 +33,13 @@ object TeleportBackItem : Actionable {
 
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
         val data = event.player.playerData ?: return true
+        event.player.playSound(Sounds.UNDERGROUND_LEAVE)
         if (data.lastTeleporterPos.isEmpty()) {
             event.player.teleport(event.player.position.withY(48.0))
             event.player.inventory[2] = ItemStack.AIR
             return true
         }
+        val data = event.player.data ?: return true
         event.player.teleport(data.lastTeleporterPos.last().asPos())
         data.lastTeleporterPos.remove(data.lastTeleporterPos.last())
         if (data.lastTeleporterPos.isEmpty()) {

@@ -2,6 +2,7 @@ package io.github.flyingpig525.item
 
 import io.github.flyingpig525.*
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
+import io.github.flyingpig525.data.Sounds
 import io.github.flyingpig525.data.research.action.ActionData
 import io.github.flyingpig525.ksp.Item
 import net.bladehunt.kotstom.dsl.item.amount
@@ -44,10 +45,12 @@ object ClaimItem : Actionable {
         claimData = data.research.onClaimLand(claimData)
         if (data.power < claimData.claimCost) {
             event.player.sendMessage("<red><bold>Not enough Power </bold>(${data.power}/${claimData.claimCost})".asMini())
+            event.player.playSound(Sounds.ERROR)
             return true
         }
         val target = event.player.getTrueTarget(20) ?: return true
         if (event.instance.getBlock(target.playerPosition) == Block.GRASS_BLOCK) {
+            event.player.playSound(Sounds.EXPAND)
             claimWithParticle(event.player, target, Block.GRASS_BLOCK, data.block, gameInstance.instance)
             data.blocks++
             data.power -= claimData.claimCost
