@@ -40,7 +40,7 @@ class QuickerCornering : ResearchUpgrade() {
         }
         if (blocks >= 3) {
             var cooldownMillis = eventData.attackCooldown.duration.toMillis()
-            cooldownMillis = ((cooldownMillis * (1 - (0.015 + (0.005 * (level - 1)) * (blocks - 3)))).toLong())
+            cooldownMillis = ((cooldownMillis * (1 - ((0.015 + (0.005 * (level - 1))) * (blocks - 3)))).toLong())
             eventData.attackCooldown = Cooldown(Duration.ofMillis(cooldownMillis))
             return eventData
         }
