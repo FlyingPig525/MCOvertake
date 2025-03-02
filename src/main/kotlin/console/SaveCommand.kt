@@ -26,7 +26,7 @@ object SaveCommand : Command {
     override fun execute(arguments: List<String>) {
         if (arguments.size == 1) {
             log("Saving...")
-            Thread { runBlocking {
+            runBlocking { launch(Dispatchers.IO) {
                 try {
                     instances.values.onEach {
                         it.save()

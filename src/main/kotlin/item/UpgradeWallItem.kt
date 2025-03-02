@@ -145,7 +145,7 @@ object UpgradeWallItem : Actionable {
             this.cooldown = Cooldown(Duration.ofSeconds(1))
         }.also { data.research.onUpgradeWall(it) }
         if (data.organicMatter < actionData.cost) {
-            player?.sendMessage("<red><bold>Not enough Organic Matter</bold> (${data.organicMatter}/$${actionData.cost})".asMini())
+            player?.sendMessage("<red><bold>Not enough Organic Matter</bold> (${data.organicMatter}/${actionData.cost})".asMini())
             return false
         }
         data.organicMatter -= actionData.cost

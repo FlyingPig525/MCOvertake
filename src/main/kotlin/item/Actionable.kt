@@ -6,6 +6,7 @@ import net.bladehunt.kotstom.dsl.item.ItemDsl
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.extension.adventure.asMini
+import net.bladehunt.kotstom.extension.get
 import net.minestom.server.coordinate.Point
 import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.Player
@@ -98,3 +99,6 @@ inline fun gameItem(material: Material, identifier: String, fn: @ItemDsl ItemSta
     fn()
     setTag(Tag.String("identifier"), identifier)
 }
+
+fun itemCheck(player: Player, actionable: Actionable) =
+    player.inventory[0].getTag(Tag.String("identifier")) == actionable.identifier

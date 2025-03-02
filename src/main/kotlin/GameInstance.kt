@@ -25,13 +25,10 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.bladehunt.kotstom.InstanceManager
 import net.bladehunt.kotstom.SchedulerManager
-import net.bladehunt.kotstom.dsl.kbar
-import net.bladehunt.kotstom.dsl.line
 import net.bladehunt.kotstom.dsl.listen
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.bladehunt.kotstom.extension.get
 import net.bladehunt.kotstom.extension.set
-import net.hollowcube.polar.PolarLoader
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.color.Color
 import net.minestom.server.coordinate.Pos
@@ -43,23 +40,20 @@ import net.minestom.server.event.instance.InstanceTickEvent
 import net.minestom.server.event.player.*
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.InstanceContainer
-import net.minestom.server.instance.LightingChunk
+import net.minestom.server.instance.anvil.AnvilLoader
 import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
-import net.minestom.server.network.packet.client.play.ClientUpdateSignPacket
 import net.minestom.server.network.packet.server.SendablePacket
 import net.minestom.server.network.packet.server.play.ParticlePacket
 import net.minestom.server.particle.Particle
 import net.minestom.server.potion.Potion
 import net.minestom.server.potion.PotionEffect
+import net.minestom.server.scoreboard.Sidebar
 import net.minestom.server.tag.Tag
 import net.minestom.server.timer.TaskSchedule
 import java.nio.file.Path
 import java.util.*
-import kotlin.io.path.ExperimentalPathApi
-import kotlin.io.path.createDirectories
-import kotlin.io.path.deleteRecursively
-import kotlin.io.path.exists
+import kotlin.io.path.*
 import kotlin.math.pow
 import kotlin.random.Random
 
@@ -141,6 +135,10 @@ class GameInstance(
             pdFile.createNewFile()
             pdFile.writeText("{}")
         }
+        val worldFolder = path.resolve("world")
+        if (!worldFolder.exists()) {
+            worldFolder.createDirectory()
+        }
         log("GameInstance $name created...", MCOvertakeLogType.FILESYSTEM)
     }
 
@@ -186,6 +184,7 @@ class GameInstance(
             }
             pCFile.writeText(Json.encodeToString(playerConfigs))
             instance.saveInstance()
+            instance.saveChunksToStorage()
         } catch (e: Exception) {
             log("An exception occurred during $name instance saving!", LogType.EXCEPTION)
             log(e)
@@ -197,6 +196,7 @@ class GameInstance(
             val playerData = e.player.data ?: return@listen
             playerData.actionBar(e.player)
             if (playerData.showResearchTick) {
+                // TODO: make this just a global bossbar and not per-data, uses 21mb of ram in 1 min
                 playerData.researchTickProgress.name("<white>Research Tick <gray>-<white> ${tick % 400uL}/400".asMini())
                 val perc = ((tick % 400uL).toFloat() / 400f).coerceIn(0f..1f)
                 playerData.researchTickProgress.progress(perc)
@@ -428,22 +428,47 @@ class GameInstance(
         }, TaskSchedule.tick(70), TaskSchedule.tick(70))
     }
 
+    private val scoreboard = Sidebar(
+        "<gradient:green:gold:$scoreboardTitleIndex><bold>MCOvertake - $SERVER_VERSION".asMini()
+    )
     fun setupScoreboard() {
         // Every tick
         SchedulerManager.scheduleTask({
             try {
-                kbar("<gradient:green:gold:$scoreboardTitleProgress><bold>MCOvertake - $SERVER_VERSION".asMini()) {
-                    for ((i, player) in blockData.toBlockSortedList().withIndex()) {
-                        if (player.playerDisplayName == "") player.playerDisplayName =
-                            instance.getPlayerByUuid(player.uuid.toUUID())?.username ?: continue
-                        if (player.blocks == 0) continue
-                        line("<dark_green><bold>${player.playerDisplayName}".asMini()) {
-                            isVisible = true
-                            line = player.blocks
-                            id = player.playerDisplayName + "$i"
+//                kbar("<gradient:green:gold:$scoreboardTitleProgress><bold>MCOvertake - $SERVER_VERSION".asMini()) {
+//                    for ((i, player) in blockData.toBlockSortedList().withIndex()) {
+//                        if (player.playerDisplayName == "") player.playerDisplayName =
+//                            instance.getPlayerByUuid(player.uuid.toUUID())?.username ?: continue
+//                        if (player.blocks == 0) continue
+//                        line("<dark_green><bold>${player.playerDisplayName}".asMini()) {
+//                            isVisible = true
+//                            line = player.blocks
+//                            id = player.playerDisplayName + "$i"
+//                        }
+//                    }
+//                    instance.players.onEach { addViewer(it) }
+//                }
+                scoreboard.setTitle(
+                    scoreboardTitleList[scoreboardTitleIndex]
+                )
+                for (player in blockData.toBlockSortedList()) {
+                    if (player.blocks == 0) continue
+                    if (player.playerDisplayName == "") player.playerDisplayName =
+                        instance.getPlayerByUuid(player.uuid.toUUID())?.username ?: continue
+                    val line = scoreboard.getLine(player.playerDisplayName)
+                    if (line != null) {
+                        if (line.line != player.blocks) {
+                            scoreboard.updateLineScore(line.id, player.blocks)
                         }
+                    } else {
+                        scoreboard.createLine(
+                            Sidebar.ScoreboardLine(
+                                player.playerDisplayName,
+                                "<dark_green><bold>${player.playerDisplayName}".asMini(),
+                                player.blocks
+                            )
+                        )
                     }
-                    instance.players.onEach { addViewer(it) }
                 }
             } catch (e: Exception) {
                 log("An exception occurred in the scoreboard task!", LogType.EXCEPTION)
@@ -470,6 +495,7 @@ class GameInstance(
                 }
             }
             e.player.config
+            scoreboard.addViewer(e.player)
         }
     }
 
@@ -499,7 +525,7 @@ class GameInstance(
             .clamp(-1.0, 1.0)
             .build()
         instance = InstanceManager.createInstanceContainer().apply {
-            chunkLoader = PolarLoader(path.resolve("world.polar"))
+            chunkLoader = AnvilLoader(path.resolve("world"))
             val upperSkyBlocks = arrayOf(Block.DIRT, Block.COARSE_DIRT, Block.ROOTED_DIRT, Block.GRAVEL, Block.COBBLESTONE)
             val middleSkyBlocks = arrayOf(Block.DIRT, Block.STONE, Block.GRAVEL, Block.COBBLESTONE)
             val lowerSkyBlocks = arrayOf(Block.STONE, Block.STONE, Block.STONE, Block.GRAVEL, Block.COBBLESTONE)
@@ -580,7 +606,6 @@ class GameInstance(
                     Block.AIR
                 }
             }
-            setChunkSupplier(::LightingChunk)
         }
         player?.sendMessage("<green>Created instance world".asMini())
         // Player only exists on first creation through commands

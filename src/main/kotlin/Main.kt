@@ -39,6 +39,7 @@ import net.bladehunt.kotstom.extension.roundToBlock
 import net.bladehunt.kotstom.extension.set
 import net.kyori.adventure.resource.ResourcePackInfo
 import net.kyori.adventure.resource.ResourcePackRequest
+import net.kyori.adventure.text.Component
 import net.minestom.server.MinecraftServer
 import net.minestom.server.collision.ShapeImpl
 import net.minestom.server.coordinate.Point
@@ -66,8 +67,6 @@ import net.minestom.server.inventory.condition.InventoryConditionResult
 import net.minestom.server.item.ItemComponent
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
-import net.minestom.server.network.packet.client.play.ClientEditBookPacket
-import net.minestom.server.network.packet.client.play.ClientUpdateSignPacket
 import net.minestom.server.tag.Tag
 import net.minestom.server.timer.TaskSchedule
 import net.minestom.server.utils.time.Cooldown
@@ -112,7 +111,7 @@ var runConsoleLoop = true
 @OptIn(ExperimentalSerializationApi::class)
 val json = Json { prettyPrint = true; encodeDefaults = true; allowComments = true; ignoreUnknownKeys = true; allowTrailingComma = true}
 
-var scoreboardTitleProgress = -1.0
+var scoreboardTitleIndex = 0
 
 lateinit var config: Config
 lateinit var parentInstanceConfig: InstanceConfig
@@ -126,7 +125,9 @@ lateinit var permissionManager: PermissionManager private set
 
 val tpsMonitor = TpsMonitor()
 
-@OptIn(ExperimentalCoroutinesApi::class)
+val scoreboardTitleList = mutableListOf<Component>()
+val instanceItemNameList = mutableListOf<Component>()
+
 fun main() = runBlocking { try {
     System.setProperty("minestom.chunk-view-distance", "16")
     LoggerSettings.saveToFile = true
@@ -139,7 +140,11 @@ fun main() = runBlocking { try {
     MojangAuth.init()
     MinecraftServer.setBrandName("MCOvertake")
     MinecraftServer.getExceptionManager().setExceptionHandler {
-        log(it as Exception)
+        if (it is Exception) {
+            log(it)
+        } else {
+            it.printStackTrace()
+        }
     }
 
     val configFile = File("config.json5")
@@ -249,16 +254,11 @@ fun main() = runBlocking { try {
         )
     }
 
-    PacketListenerManager.setPlayListener(ClientUpdateSignPacket::class.java) { packet, player ->
-        val data = player.data ?: return@setPlayListener
-        if (player.instance.getBlock(packet.blockPosition) != data.block) return@setPlayListener
-    }
-
     lobbyInstance.eventNode().listen<PlayerSpawnEvent> { e ->
         e.player.teleport(Pos(5.0, 11.0, 5.0))
         e.player.gameMode = GameMode.ADVENTURE
         e.player.inventory[0] = item(Material.COMPASS) {
-            itemName = "<gradient:green:gold:$scoreboardTitleProgress><bold>MCOvertake Game Instances".asMini()
+            itemName = "<gradient:green:gold:$scoreboardTitleIndex><bold>MCOvertake Game Instances".asMini()
         }
         e.player.inventory.addInventoryCondition { player, slot, type, res ->
             try {
@@ -280,7 +280,7 @@ fun main() = runBlocking { try {
         e.player.inventory[0] =
             e.player.inventory[0].with(
                 ItemComponent.ITEM_NAME,
-                "<gradient:green:gold:$scoreboardTitleProgress><bold>MCOvertake Game Instances".asMini()
+                instanceItemNameList[scoreboardTitleIndex]
             )
     }
     lobbyInstance.eventNode().listen<PlayerUseItemEvent> { e ->
@@ -327,17 +327,27 @@ fun main() = runBlocking { try {
             e.player.openInventory(inventory)
         }
     }
-    val bar = kbar("<gradient:green:gold:$scoreboardTitleProgress><bold>MCOvertake - $SERVER_VERSION".asMini()) {
+    var scoreboardTitleProgress = -1.0
+    // Create list of titles to free ~300 mb of ram
+    while (scoreboardTitleProgress < 1.0) {
+        val txt = "<gradient:green:gold:$scoreboardTitleProgress><bold>MCOvertake - $SERVER_VERSION".asMini()
+        if (txt !in scoreboardTitleList) {
+            scoreboardTitleList += txt
+            instanceItemNameList += "<gradient:green:gold:$scoreboardTitleProgress><bold>MCOvertake Instance Selector".asMini()
+        }
+        scoreboardTitleProgress += 0.025
+    }
+    println(scoreboardTitleList.size)
+    val bar = kbar(scoreboardTitleList[0]) {
         lobbyInstance.players.onEach { addViewer(it) }
     }
     SchedulerManager.scheduleTask({
         tick++
-
-        scoreboardTitleProgress += 0.02
-        if (scoreboardTitleProgress >= 1.0) {
-            scoreboardTitleProgress = -1.0
+        scoreboardTitleIndex++
+        if (scoreboardTitleIndex >= scoreboardTitleList.size) {
+            scoreboardTitleIndex = 0
         }
-        bar.setTitle("<gradient:green:gold:$scoreboardTitleProgress><bold>MCOvertake - $SERVER_VERSION".asMini())
+        bar.setTitle(scoreboardTitleList[scoreboardTitleIndex])
     }, TaskSchedule.tick(1), TaskSchedule.tick(1))
 
     SchedulerManager.scheduleTask({ System.gc() }, TaskSchedule.seconds(30), TaskSchedule.seconds(30))
@@ -425,7 +435,7 @@ fun main() = runBlocking { try {
     )
 
     // Save loop
-    SchedulerManager.scheduleTask({ Thread { runBlocking {
+    SchedulerManager.scheduleTask({ runBlocking { launch(Dispatchers.IO) {
             try {
                 instances.values.onEach {
                     it.save()
@@ -589,12 +599,10 @@ fun scheduleImmediately(fn: () -> Unit) =
     SchedulerManager.scheduleTask(fn, TaskSchedule.immediate(), TaskSchedule.stop())
 
 fun PlayerInventory.idle() {
-    set(0, idleItem())
+    set(0, idleItem)
 }
-
-fun idleItem(): ItemStack = item(Material.GRAY_DYE) {
+val idleItem = item(Material.GRAY_DYE) {
     itemName = "".asMini()
-    amount = 1
 }
 
 fun String.toUUID(): UUID? = UUID.fromString(this)
