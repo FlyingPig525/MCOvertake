@@ -453,7 +453,8 @@ fun main() = runBlocking { try {
         forceInvite,
         tpAlertCommand,
         addOpCommand,
-        flightSpeedCommand
+        flightSpeedCommand,
+        playtimeCommand
     )
 
     // Save loop

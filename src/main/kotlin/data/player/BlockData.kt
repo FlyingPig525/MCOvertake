@@ -125,12 +125,8 @@ class BlockData(val uuid: String, @Serializable(BlockSerializer::class) val bloc
     val baseAttackCost: Int get() {
         return 15
     }
-    @Transient val lastTeleporterPos: MutableSet<Point> = mutableSetOf()
-    @Transient var targetWallLevel: Int = 0
     @Transient val wallUpgradeQueue: MutableList<Pair<Point, Int>> = mutableListOf()
     @Transient var handAnimationWasDrop = false
-    @Transient var bulkWallQueueFirstPos: Point? = null
-    @Transient var bulkWallQueueFirstPosJustReset = false
     @Transient var sunOrMoonChangeCooldown: Cooldown = Cooldown(Duration.ZERO)
     @Transient var alertLocation: Pos? = null
     @Transient var actionBarText: Component = "".asMini()

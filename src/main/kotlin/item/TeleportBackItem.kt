@@ -4,6 +4,7 @@ import io.github.flyingpig525.GameInstance
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.data
 import io.github.flyingpig525.data.block.Head.Companion.withHead
+import io.github.flyingpig525.data.player.PlayerData.Companion.playerData
 import io.github.flyingpig525.instances
 import io.github.flyingpig525.ksp.Item
 import net.bladehunt.kotstom.dsl.item.item
@@ -30,7 +31,7 @@ object TeleportBackItem : Actionable {
         }.withHead("6ccbf9883dd359fdf2385c90a459d737765382ec4117b04895ac4dc4b60fc")
 
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
-        val data = event.player.data ?: return true
+        val data = event.player.playerData ?: return true
         if (data.lastTeleporterPos.isEmpty()) {
             event.player.teleport(event.player.position.withY(48.0))
             event.player.inventory[2] = ItemStack.AIR

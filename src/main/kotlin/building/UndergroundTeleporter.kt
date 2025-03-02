@@ -5,6 +5,7 @@ import io.github.flyingpig525.building.RockMiner.RockMinerCompanion
 import io.github.flyingpig525.building.category.BasicCategory
 import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.data.player.CurrencyCost
+import io.github.flyingpig525.data.player.PlayerData.Companion.playerData
 import io.github.flyingpig525.dsl.blockDisplay
 import io.github.flyingpig525.ksp.BuildingCompanion
 import io.github.flyingpig525.ksp.PlayerBuildings
@@ -49,7 +50,7 @@ class UndergroundTeleporter : Building(), Interactable {
         val pos = e.blockPosition.add(0.5, 0.0, 0.5)
         if (e.instance.getBlock(pos.playerPosition) != data.block) return true
         e.player.teleport(pos.sub(0.0, 9.0, 0.0).asPos())
-        data.lastTeleporterPos += pos
+        (e.player.playerData ?: return false).lastTeleporterPos += pos
         return false
     }
 
