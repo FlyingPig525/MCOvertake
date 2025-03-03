@@ -1,8 +1,8 @@
 package io.github.flyingpig525.data.research.upgrade
 
+import io.github.flyingpig525.GameInstance
 import io.github.flyingpig525.data.research.action.ActionData
 import io.github.flyingpig525.data.research.currency.ResearchCurrency
-import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade
 import io.github.flyingpig525.getTrueTarget
 import io.github.flyingpig525.playerPosition
 import io.github.flyingpig525.repeatAdjacent
@@ -23,7 +23,7 @@ class AcceleratedIndustrialization : ResearchUpgrade() {
     override val cost: Long
         get() = 200 * 3.0.pow(level).toLong()
 
-    override fun item(currency: ResearchCurrency): ItemStack {
+    override fun item(currency: ResearchCurrency, gameInstance: GameInstance): ItemStack {
         return researchItem(Material.COMPASS, this) {
             lore {
                 +"<dark_gray>Decreases claim cooldown by 1.5%(+0.5% after level 1) for each block".asMini().noItalic()

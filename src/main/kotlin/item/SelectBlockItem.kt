@@ -104,9 +104,7 @@ object SelectBlockItem : Actionable {
             }
             instance.uuidParents[e.player.uuid.toString()] = e.player.uuid.toString()
             instance.dataResolver[e.player.uuid.toString()] =
-                BlockData(e.player.uuid.toString(), res.clickedItem.material().block()!!, e.player.username).apply {
-                    if (instance.noOp) research.basicResearch.noOp = true
-                }
+                BlockData(e.player.uuid.toString(), res.clickedItem.material().block()!!, e.player.username)
             e.player.closeInventory()
             for (i in 0..8) {
                 e.player.inventory[i] = ItemStack.AIR

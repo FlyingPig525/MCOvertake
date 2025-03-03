@@ -1,5 +1,6 @@
 package io.github.flyingpig525.data.research.upgrade
 
+import io.github.flyingpig525.GameInstance
 import io.github.flyingpig525.data.research.action.ActionData
 import io.github.flyingpig525.data.research.currency.ResearchCurrency
 import kotlinx.serialization.Serializable
@@ -13,7 +14,7 @@ class RefundResourcesOnDestruction : ResearchUpgrade(level = 1) {
     override val name: String = "Refund Resources on Destruction"
     override val cost: Long = 0
 
-    override fun item(currency: ResearchCurrency): ItemStack {
+    override fun item(currency: ResearchCurrency, gameInstance: GameInstance): ItemStack {
         TODO("This function should not be accessible!")
     }
 

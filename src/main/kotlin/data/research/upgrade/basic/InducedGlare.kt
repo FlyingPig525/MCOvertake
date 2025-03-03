@@ -1,5 +1,6 @@
 package io.github.flyingpig525.data.research.upgrade
 
+import io.github.flyingpig525.GameInstance
 import io.github.flyingpig525.data
 import io.github.flyingpig525.data.research.action.ActionData
 import io.github.flyingpig525.data.research.currency.ResearchCurrency
@@ -16,7 +17,7 @@ class InducedGlare : ResearchUpgrade() {
     override val name: String = "Induced Glare"
     override val cost: Long = 1000
 
-    override fun item(currency: ResearchCurrency): ItemStack = researchItem(Material.PEARLESCENT_FROGLIGHT, this) {
+    override fun item(currency: ResearchCurrency, gameInstance: GameInstance): ItemStack = researchItem(Material.PEARLESCENT_FROGLIGHT, this) {
         lore {
             +"<dark_gray>Reduces attack cost by 5% when attacking".asMini().noItalic()
             +"<dark_gray>under sunlight".asMini().noItalic()

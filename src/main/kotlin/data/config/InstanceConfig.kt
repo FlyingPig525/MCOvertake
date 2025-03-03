@@ -27,7 +27,9 @@ data class InstanceConfig(
     // "Induced Glare" or "Suprise Attack," in minutes
     val sunOrMoonCooldownLength: Long = 60,
     // A player whitelist for this specific instance. An empty array turns the whitelist off
-    val whitelist: MutableSet<String> = mutableSetOf()
+    val whitelist: MutableSet<String> = mutableSetOf(),
+    // Whether overpowered research should be accessible
+    val opResearch: Boolean = false
 ) {
     init {
         assert(noiseScale in 0.0..2.0) { "Noise scale must be within 0 and 2" }
@@ -51,7 +53,8 @@ data class InstanceConfig(
             "// Whether sky islands should be generated. Default: false",
             "// How long a player needs to wait before they can change the targeted attack upgrade,\n\t" +
                     "// \"Induced Glare\" or \"Suprise Attack,\" in minutes. Default: 60",
-            "// A player whitelist for this specific instance. An empty array turns the whitelist off. Default: []"
+            "// A player whitelist for this specific instance. An empty array turns the whitelist off. Default: []",
+            "// Whether overpowered research upgrades should be available"
         )
     }
 }

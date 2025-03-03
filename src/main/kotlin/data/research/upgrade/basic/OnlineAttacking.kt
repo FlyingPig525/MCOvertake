@@ -1,5 +1,6 @@
 package io.github.flyingpig525.data.research.upgrade
 
+import io.github.flyingpig525.GameInstance
 import io.github.flyingpig525.GameInstance.Companion.gameInstance
 import io.github.flyingpig525.anyOnline
 import io.github.flyingpig525.data.research.action.ActionData
@@ -21,7 +22,7 @@ class OnlineAttacking : ResearchUpgrade() {
     override val name: String = "Online Attacking"
     override val cost: Long get() = ((level + 1.0).pow(1.5) * 500.0).roundToLong()
 
-    override fun item(currency: ResearchCurrency): ItemStack = researchItem(Material.GOLDEN_SWORD, this) {
+    override fun item(currency: ResearchCurrency, gameInstance: GameInstance): ItemStack = researchItem(Material.GOLDEN_SWORD, this) {
         lore {
             +"<dark_gray>Decreases attack cooldown by 5% for each level".asMini().noItalic()
             +"<dark_gray>while the targeted player (or any of their co-op members)".asMini().noItalic()

@@ -127,8 +127,6 @@ class GameInstance(
 
     val removingPlayerBlock: MutableMap<UUID, Boolean> = mutableMapOf()
 
-    var noOp: Boolean = true
-
     init {
         if (!path.exists()) {
             path.createDirectories()

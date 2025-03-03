@@ -1,5 +1,6 @@
 package io.github.flyingpig525.data.research.upgrade
 
+import io.github.flyingpig525.GameInstance
 import io.github.flyingpig525.data.research.currency.BasicResearch
 import io.github.flyingpig525.data.research.currency.ResearchCurrency
 import kotlinx.serialization.Serializable
@@ -23,7 +24,7 @@ class AdjacentWallBonusPercentageIncrease : ResearchUpgrade() {
         return (60000L * (1.25.pow(level)) / 10).toLong() * 10L
     }
 
-    override fun item(currency: ResearchCurrency): ItemStack = researchItem(Material.NETHERITE_SCRAP, this) {
+    override fun item(currency: ResearchCurrency, gameInstance: GameInstance): ItemStack = researchItem(Material.NETHERITE_SCRAP, this) {
         lore {
             +"<dark_gray>Increases the exponential wall attack cost percentage".asMini().noItalic()
             +"<dark_gray>given from adjacent walls by 2% for each level".asMini().noItalic()
