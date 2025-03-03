@@ -77,7 +77,7 @@ object ResearchUpgradeItem : Actionable {
             val newItem = upgrade.item(currency, e.instance.gameInstance!!).withTag(Tag.String("name"), upgrade.name)
             if (newItem.material() == Material.AIR) continue
             val lore = newItem.get(ItemComponent.LORE)!!.map {
-                if (it.toString().contains("Cost:") && upgrade.level == upgrade.maxLevel) {
+                if (upgrade.level == upgrade.maxLevel && it.toString().contains("Cost:")) {
                     return@map "<green><bold>Max Level".asMini().noItalic()
                 }
                 it
@@ -113,7 +113,7 @@ object ResearchUpgradeItem : Actionable {
             (player.openInventory!! as Inventory).apply {
                 val newItem = upgrade.item(currency, player.gameInstance!!).withTag(Tag.String("name"), upgrade.name)
                 val lore = newItem.get(ItemComponent.LORE)!!.map {
-                    if (it.toString().contains("Cost:") && upgrade.level == upgrade.maxLevel) {
+                    if (upgrade.level == upgrade.maxLevel && it.toString().contains("Cost:")) {
                         return@map "<green><bold>Max Level".asMini().noItalic()
                     }
                     it

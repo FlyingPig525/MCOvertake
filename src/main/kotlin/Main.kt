@@ -255,7 +255,7 @@ fun main() = runBlocking { try {
 
         MinecraftServer.getInstanceManager().instances.onEach {
             it.players.onEach {
-                it.sendMessage("<green>+ ${player.username}".asMini())
+                it.sendMessage("<green>+${player.username}".asMini())
             }
         }
     }
@@ -263,7 +263,7 @@ fun main() = runBlocking { try {
     GlobalEventHandler.listen<PlayerDisconnectEvent> { e ->
         MinecraftServer.getInstanceManager().instances.onEach {
             it.players.onEach {
-                it.sendMessage("<red>- ${e.player.username}".asMini())
+                it.sendMessage("<red>-${e.player.username}".asMini())
             }
         }
     }
@@ -281,7 +281,10 @@ fun main() = runBlocking { try {
                 if (item == SelectBlockItem.item) {
                     SelectBlockItem.onInteract(PlayerUseItemEvent(player, PlayerHand.MAIN, item, 0L))
                 }
-            } catch (_: Exception) {}
+            } catch (e: Exception) {
+                log("An exception occurred in the lobby inventory condition", LogType.EXCEPTION)
+                log(e)
+            }
         }
         e.player.isAllowFlying = true
         e.player.isFlying = true
