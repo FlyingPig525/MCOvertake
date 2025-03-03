@@ -39,13 +39,25 @@ object WallItem : Actionable {
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
         val instance = event.instance
         val data = event.player.data ?: return true
-        if (data.organicMatter < 15) return true
+        if (data.organicMatter < 15) {
+            event.player.sendMessage("<red><bold>Not enough Organic Matter</bold> (${data.organicMatter}/15)".asMini())
+            return true
+        }
         if (!data.wallCooldown.isReady(Instant.now().toEpochMilli())) return true
         val target = event.player.getTrueTarget(20) ?: return true
         if (!checkBlockAvailable(data, target, instance)) return true
+        var cooldownMs = 500L
+
+        target.playerPosition.repeatAdjacent {
+            val block = instance.getBlock(it)
+            if (block != Block.GRASS_BLOCK || block != Block.SAND || block != data.block) {
+                cooldownMs = 1500L
+            }
+        }
+
         val actionData = ActionData.BuildWall(data, instance, event.player).apply {
             cost = 15
-            cooldown = Cooldown(Duration.ofMillis(500))
+            cooldown = Cooldown(Duration.ofMillis(cooldownMs))
         }.also { data.research.onBuildWall(it) }
         data.organicMatter -= actionData.cost
         data.wallCooldown = actionData.cooldown

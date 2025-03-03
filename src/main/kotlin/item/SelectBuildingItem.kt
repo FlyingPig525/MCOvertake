@@ -96,8 +96,6 @@ object SelectBuildingItem : Actionable {
             }
             if (close) {
                 player.closeInventory()
-            } else {
-                inventory[slot] = res.clickedItem
             }
         }
     }

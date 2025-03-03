@@ -20,9 +20,7 @@ import io.github.flyingpig525.item.SelectBlockItem
 import io.github.flyingpig525.ksp.initBuildingCompanions
 import io.github.flyingpig525.ksp.initItems
 import io.github.flyingpig525.log.MCOvertakeLogType
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import net.bladehunt.kotstom.*
@@ -42,6 +40,7 @@ import net.bladehunt.kotstom.extension.roundToBlock
 import net.bladehunt.kotstom.extension.set
 import net.kyori.adventure.resource.ResourcePackInfo
 import net.kyori.adventure.resource.ResourcePackRequest
+import net.kyori.adventure.text.Component
 import net.minestom.server.MinecraftServer
 import net.minestom.server.collision.ShapeImpl
 import net.minestom.server.coordinate.Point
@@ -99,7 +98,7 @@ const val SKY_SYMBOL = "INSERT SYMBOL"
 
 const val BUILDING_INVENTORY_SLOT = 4
 
-const val SERVER_VERSION = "v0.4"
+const val SERVER_VERSION = "v0.4.3"
 
 const val PIXEL_SIZE = 1.0 / 16.0
 
@@ -114,7 +113,7 @@ var runConsoleLoop = true
 @OptIn(ExperimentalSerializationApi::class)
 val json = Json { prettyPrint = true; encodeDefaults = true; allowComments = true; ignoreUnknownKeys = true; allowTrailingComma = true}
 
-var scoreboardTitleProgress = -1.0
+var scoreboardTitleIndex = 0
 
 lateinit var config: Config
 lateinit var parentInstanceConfig: InstanceConfig
@@ -128,8 +127,11 @@ lateinit var permissionManager: PermissionManager private set
 
 val tpsMonitor = TpsMonitor()
 
+val scoreboardTitleList = mutableListOf<Component>()
+val instanceItemNameList = mutableListOf<Component>()
+
 fun main() = runBlocking { try {
-    System.setProperty("minestom.chunk-view-distance", "32")
+    System.setProperty("minestom.chunk-view-distance", "16")
     LoggerSettings.saveToFile = true
     LoggerSettings.saveDirectoryPath = "./logs/"
     LoggerSettings.logFileNameFormat = "yyyy-MM-dd-Hms"
@@ -140,7 +142,11 @@ fun main() = runBlocking { try {
     MojangAuth.init()
     MinecraftServer.setBrandName("MCOvertake")
     MinecraftServer.getExceptionManager().setExceptionHandler {
-        log(it as Exception)
+        if (it is Exception) {
+            log(it)
+        } else {
+            it.printStackTrace()
+        }
     }
 
     val configFile = File("config.json5")
@@ -248,13 +254,27 @@ fun main() = runBlocking { try {
             .prompt("<green>This resource pack provides \"crucial\" visual changes that allow for a better and more <i>smooth</i> experience.".asMini())
             .build()
         )
+
+        MinecraftServer.getInstanceManager().instances.onEach {
+            it.players.onEach {
+                it.sendMessage("<green>+ ${player.username}".asMini())
+            }
+        }
+    }
+
+    GlobalEventHandler.listen<PlayerDisconnectEvent> { e ->
+        MinecraftServer.getInstanceManager().instances.onEach {
+            it.players.onEach {
+                it.sendMessage("<red>- ${e.player.username}".asMini())
+            }
+        }
     }
 
     lobbyInstance.eventNode().listen<PlayerSpawnEvent> { e ->
         e.player.teleport(Pos(5.0, 11.0, 5.0))
         e.player.gameMode = GameMode.ADVENTURE
         e.player.inventory[0] = item(Material.COMPASS) {
-            itemName = "<gradient:green:gold:$scoreboardTitleProgress><bold>MCOvertake Game Instances".asMini()
+            itemName = "<gradient:green:gold:$scoreboardTitleIndex><bold>MCOvertake Game Instances".asMini()
         }
         e.player.inventory.addInventoryCondition { player, slot, type, res ->
             try {
@@ -276,7 +296,7 @@ fun main() = runBlocking { try {
         e.player.inventory[0] =
             e.player.inventory[0].with(
                 ItemComponent.ITEM_NAME,
-                "<gradient:green:gold:$scoreboardTitleProgress><bold>MCOvertake Game Instances".asMini()
+                instanceItemNameList[scoreboardTitleIndex]
             )
     }
     lobbyInstance.eventNode().listen<PlayerUseItemEvent> { e ->
@@ -323,20 +343,37 @@ fun main() = runBlocking { try {
             e.player.openInventory(inventory)
         }
     }
-    val bar = kbar("<gradient:green:gold:$scoreboardTitleProgress><bold>MCOvertake - $SERVER_VERSION".asMini()) {
+    var scoreboardTitleProgress = -1.0
+    // Create list of titles to free ~300 mb of ram
+    while (scoreboardTitleProgress < 1.0) {
+        val txt = "<gradient:green:gold:$scoreboardTitleProgress><bold>MCOvertake - $SERVER_VERSION".asMini()
+        if (txt !in scoreboardTitleList) {
+            scoreboardTitleList += txt
+            instanceItemNameList += "<gradient:green:gold:$scoreboardTitleProgress><bold>MCOvertake Instance Selector".asMini()
+        }
+        scoreboardTitleProgress += 0.025
+    }
+    println(scoreboardTitleList.size)
+    val bar = kbar(scoreboardTitleList[0]) {
         lobbyInstance.players.onEach { addViewer(it) }
     }
-    SchedulerManager.scheduleTask({
+    SchedulerManager.scheduleTask({ try {
         tick++
-
-        scoreboardTitleProgress += 0.02
-        if (scoreboardTitleProgress >= 1.0) {
-            scoreboardTitleProgress = -1.0
+        scoreboardTitleIndex++
+        if (scoreboardTitleIndex >= scoreboardTitleList.size) {
+            scoreboardTitleIndex = 0
         }
-        bar.setTitle("<gradient:green:gold:$scoreboardTitleProgress><bold>MCOvertake - $SERVER_VERSION".asMini())
+        bar.setTitle(scoreboardTitleList[scoreboardTitleIndex])
+    } catch(e: Exception) {
+        log("An exception occurred in the lobby scoreboard task!", LogType.EXCEPTION)
+        log(e)
+    }
     }, TaskSchedule.tick(1), TaskSchedule.tick(1))
 
-    SchedulerManager.scheduleTask({ System.gc() }, TaskSchedule.seconds(30), TaskSchedule.seconds(30))
+    SchedulerManager.scheduleTask({ try { System.gc() } catch (e: Exception) {
+        log("An exception occurred while garbage collecting!", LogType.EXCEPTION)
+        log(e)
+    } }, TaskSchedule.seconds(30), TaskSchedule.seconds(30))
 
     instances.values.onEach { it.setupSpawning() }
     log("Player spawning setup...")
@@ -358,25 +395,47 @@ fun main() = runBlocking { try {
         }
     }
     val refreshConfig = kommand("refreshConfig") {
-
-        defaultExecutor { player, ctx ->
-            val game = (player as Player).gameInstance
-            if (game == null) {
-                player.sendMessage("<red><bold>You must be in a game instance to run this command!".asMini())
-                return@defaultExecutor
+        buildSyntax {
+            condition { player, ctx ->
+                permissionManager.hasPermission(player as Player, Permission("process.config.refresh"))
             }
-            val data = player.data
-            if (data == null /* || game.uuidParents[player.uuid.toString()] != player.uuid.toString() */) {
-                player.sendMessage("<red><bold>You must own a block to run this command!".asMini())
-                return@defaultExecutor
+            executor { player, ctx ->
+                if (player !is Player) return@executor
+                val game = player.gameInstance
+                if (game == null) {
+                    player.sendMessage("<red><bold>You must be in a game instance to run this command!".asMini())
+                    return@executor
+                }
+                val data = player.data
+                if (data == null /* || game.uuidParents[player.uuid.toString()] != player.uuid.toString() */) {
+                    player.sendMessage("<red><bold>You must own a block to run this command!".asMini())
+                    return@executor
+                }
+                data.blockConfig = BlockConfig()
             }
-            data.blockConfig = BlockConfig()
         }
+
     }
     val noOpCommand = kommand("removeOp") {
 
-        defaultExecutor { player, ctx ->
-            (player as Player).data?.research?.basicResearch?.upgradeByName("Test")?.level = 0
+        buildSyntax {
+            condition { player, ctx ->
+                permissionManager.hasPermission(player as Player, Permission("data.research.set"))
+            }
+            executor { player, ctx ->
+                (player as Player).data?.research?.basicResearch?.upgradeByName("Test")?.level = 0
+            }
+        }
+    }
+
+    val addOpCommand = kommand("addOp") {
+        buildSyntax {
+            condition { player, ctx ->
+                permissionManager.hasPermission(player as Player, Permission("data.research.set"))
+            }
+            executor { player, ctx ->
+                (player as Player).data?.research?.basicResearch?.upgradeByName("Test")?.level = 1
+            }
         }
     }
 
@@ -393,20 +452,30 @@ fun main() = runBlocking { try {
         noOpCommand,
         setGrass,
         setAllCommand,
-        tpCommand
+        tpCommand,
+        forceInvite,
+        tpAlertCommand,
+        addOpCommand,
+        flightSpeedCommand
     )
 
     // Save loop
-    SchedulerManager.scheduleTask({
-        launch {
-            instances.values.onEach {
-                it.save()
+    SchedulerManager.scheduleTask({ runBlocking { launch(Dispatchers.IO) {
+            try {
+                instances.values.onEach {
+                    it.save()
+                    System.gc()
+                }
+                if (config.printSaveMessages) {
+                    log("Game data saved")
+                }
+            } catch (e: Exception) {
+                log("An exception has occurred during game saving!", LogType.EXCEPTION)
+                log(e)
             }
-            if (config.printSaveMessages) {
-                log("Game data saved")
-            }
-        }
-    }, TaskSchedule.minutes(1), TaskSchedule.minutes(1))
+        }}
+        TaskSchedule.minutes(5)
+    }, TaskSchedule.minutes(5))
 
     instances.values.onEach { it.registerTasks() }
     log("Game loops scheduled...")
@@ -458,6 +527,9 @@ fun main() = runBlocking { try {
         log("Console loop failed! || ${it?.cause?.message}", LogType.ERROR)
     }
     log("Console loop running!")
+    if (config.printSaveMessages) {
+        log("Printing save messages")
+    }
 } catch (e: Exception) {
     log(e)
 }}
@@ -556,12 +628,10 @@ fun scheduleImmediately(fn: () -> Unit) =
     SchedulerManager.scheduleTask(fn, TaskSchedule.immediate(), TaskSchedule.stop())
 
 fun PlayerInventory.idle() {
-    set(0, idleItem())
+    set(0, idleItem)
 }
-
-fun idleItem(): ItemStack = item(Material.GRAY_DYE) {
+val idleItem = item(Material.GRAY_DYE) {
     itemName = "".asMini()
-    amount = 1
 }
 
 fun String.toUUID(): UUID? = UUID.fromString(this)

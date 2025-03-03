@@ -1,7 +1,10 @@
 package io.github.flyingpig525.item
 
+import cz.lukynka.prettylog.LogType
+import cz.lukynka.prettylog.log
 import io.github.flyingpig525.*
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
+import io.github.flyingpig525.building.organicMatter
 import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.data.research.action.ActionData
 import io.github.flyingpig525.dsl.blockDisplay
@@ -35,6 +38,7 @@ import net.minestom.server.particle.Particle
 import net.minestom.server.tag.Tag
 import net.minestom.server.timer.TaskSchedule
 import net.minestom.server.utils.time.Cooldown
+import java.lang.Exception
 import java.time.Duration
 import java.time.Instant
 import java.util.*
@@ -98,9 +102,9 @@ object UpgradeWallItem : Actionable {
             instance.scheduleNextTick {
                 data.bulkWallQueueFirstPos = target
             }
-            instance.scheduler().scheduleTask({
+            instance.scheduler().scheduleTask({ try {
                 if (data.bulkWallQueueFirstPos == null) return@scheduleTask TaskSchedule.stop()
-                val player = instance.getPlayerByUuid(event.player.uuid) ?: return@scheduleTask  TaskSchedule.stop()
+                val player = instance.getPlayerByUuid(event.player.uuid) ?: return@scheduleTask TaskSchedule.stop()
                 val target = player.getTrueTarget(20)?.buildingPosition ?: return@scheduleTask TaskSchedule.tick(1)
                 val lowX = min(data.bulkWallQueueFirstPos!!.x, target.x)
                 val lowZ = min(data.bulkWallQueueFirstPos!!.z, target.z)
@@ -126,6 +130,10 @@ object UpgradeWallItem : Actionable {
                     trailParticle.withTarget(y40), zeroOne, Vec.ZERO, 1f, 10
                 )
                 player.sendPackets(targetParticles)
+            } catch (e: Exception) {
+                log("An exception occurred during the mass selection task!", LogType.EXCEPTION)
+                log(e)
+            }
                 TaskSchedule.tick(1)
             }, TaskSchedule.nextTick())
             return true
@@ -133,17 +141,27 @@ object UpgradeWallItem : Actionable {
         if (!data.wallUpgradeCooldown.isReady(Instant.now().toEpochMilli())) return true
         val block = instance.getBlock(target).defaultState()
         if (!block.canUpgradeWall) return true
-        upgradeWall(block, target, data, instance)
+        upgradeWall(block, target, data, instance, event.player)
         return true
     }
 
-    fun upgradeWall(block: Block, position: Point, data: BlockData, instance: Instance): Boolean {
+    fun upgradeWall(block: Block, position: Point, data: BlockData, instance: Instance, player: Player? = null): Boolean {
         val cost = getWallUpgradeCost(block) ?: return false
+        var cooldownMs = 1000L
+        position.playerPosition.repeatAdjacent {
+            val block = instance.getBlock(it)
+            if (block != Block.GRASS_BLOCK || block != Block.SAND || block != data.block || block != Block.AIR) {
+                cooldownMs = 2000L
+            }
+        }
         val actionData = ActionData.UpgradeWall(data, instance).apply {
             this.cost = cost
-            this.cooldown = Cooldown(Duration.ofSeconds(1))
+            this.cooldown = Cooldown(Duration.ofMillis(cooldownMs))
         }.also { data.research.onUpgradeWall(it) }
-        if (data.organicMatter < actionData.cost) return false
+        if (data.organicMatter < actionData.cost) {
+            player?.sendMessage("<red><bold>Not enough Organic Matter</bold> (${data.organicMatter}/${actionData.cost})".asMini())
+            return false
+        }
         data.organicMatter -= actionData.cost
         data.wallUpgradeCooldown = actionData.cooldown
         data.sendPacket(
@@ -242,7 +260,11 @@ object UpgradeWallItem : Actionable {
                     targetLevel = targetLevel.coerceIn(1, maxWallLevel)
                     val targetMaterial = wall(targetLevel).registry().material()!!
                     (player.openInventory!! as Inventory)[4, 1] = item(targetMaterial) {
-                        itemName = "<green>Target Level: <gold><bold>$targetLevel".asMini()
+                        var cost = 0
+                        for (i in 0..targetLevel) {
+                            cost += getWallUpgradeCost(i)
+                        }
+                        itemName = "<green>Target Level: <gold><bold>$targetLevel <gray>- <green> $cost $organicMatter".asMini()
                         lore {
                             +"<dark_gray>${targetMaterial.name().replace("minecraft:", "")}".asMini().noItalic()
                         }

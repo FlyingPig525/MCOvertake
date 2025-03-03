@@ -1,9 +1,14 @@
 package io.github.flyingpig525.console
 
+import cz.lukynka.prettylog.LogType
 import cz.lukynka.prettylog.log
 import io.github.flyingpig525.config
 import io.github.flyingpig525.data.config.getCommentString
 import io.github.flyingpig525.instances
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import java.io.File
 
 object SaveCommand : Command {
@@ -21,7 +26,17 @@ object SaveCommand : Command {
     override fun execute(arguments: List<String>) {
         if (arguments.size == 1) {
             log("Saving...")
-            instances.values.onEach { it.save() }
+            runBlocking { launch(Dispatchers.IO) {
+                try {
+                    instances.values.onEach {
+                        it.save()
+                        System.gc()
+                    }
+                } catch (e: Exception) {
+                    log("An exception has occurred during game saving!", LogType.EXCEPTION)
+                    log(e)
+                }
+            }}
             log("Game data saved")
         } else {
             log("Saving main config")

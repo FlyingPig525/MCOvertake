@@ -9,9 +9,11 @@ import io.github.flyingpig525.data.research.action.ActionData
 import io.github.flyingpig525.ksp.Item
 import io.github.flyingpig525.wall.getWallAttackCost
 import io.github.flyingpig525.wall.lastWall
+import io.github.flyingpig525.wall.wall
 import io.github.flyingpig525.wall.wallLevel
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.extension.adventure.asMini
+import net.bladehunt.kotstom.extension.asPos
 import net.bladehunt.kotstom.extension.set
 import net.minestom.server.coordinate.Point
 import net.minestom.server.entity.Player
@@ -92,7 +94,7 @@ object AttackItem : Actionable {
         if (wallLevel <= 10) {
             cooldownTicks += 3 * wallLevel
         } else {
-            cooldownTicks += (wallLevel * wallLevel) / 3
+            cooldownTicks += 5 * wallLevel
         }
         return Cooldown(Duration.ofMillis(cooldownTicks*50))
     }
@@ -100,9 +102,9 @@ object AttackItem : Actionable {
     fun attackRaft(targetData: BlockData, point: Point, instance: Instance) {
         ClaimWaterItem.destroyPlayerRaft(point.withY(40.0), instance)
         targetData.blocks--
-        instance.setBlock(point.withY(38.0), Block.SAND)
+        instance.setBlock(point.playerPosition, Block.SAND)
         instance.setBlock(point.buildingPosition, Block.AIR)
-        val pos = visualWaterBlock(point, instance)
+        val pos = visualWaterBlock(point.visiblePosition, instance)
         instance.setBlock(pos, listOf(Block.SAND, Block.SAND, Block.SAND, Block.SANDSTONE).random())
         // TODO: PARTICLES
     }
@@ -157,6 +159,7 @@ object AttackItem : Actionable {
         val waterBlock = instance.getBlock(target.visiblePosition)
         val buildingBlock = instance.getBlock(buildingPoint)
 
+        var couldAttack = true
         val taken = when(buildingBlock) {
             Block.AIR -> { true }
             Block.LILY_PAD -> {
@@ -171,6 +174,11 @@ object AttackItem : Actionable {
             else -> run {
                 if (Building.blockIsBuilding(buildingBlock)) {
                     val building = Building.getBuildingByBlock(buildingBlock)!!
+                    if (building.getResourceUse(data.disposableResourcesUsed, building.playerRef.get(data.buildings).count) > data.maxDisposableResources * 1.5) {
+                        player.sendMessage("<red>Max extra disposable resources reached".asMini())
+                        couldAttack = false
+                        return@run false
+                    }
                     val buildingRef = building.playerRef.get(data.buildings)
                     val targetRef = building.playerRef.get(targetData.buildings)
                     targetRef.count--
@@ -212,17 +220,20 @@ object AttackItem : Actionable {
                 claimWithParticle(event.player, target, attackData.playerData.block, instance)
             }
         }
-        data.attackCooldown = attackData.attackCooldown
-        data.sendPacket(
-            SetCooldownPacket(
-                itemMaterial.cooldownIdentifier,
-                data.attackCooldown.ticks
+        if (couldAttack) {
+            data.attackCooldown = attackData.attackCooldown
+            data.sendPacket(
+                SetCooldownPacket(
+                    itemMaterial.cooldownIdentifier,
+                    data.attackCooldown.ticks
+                )
             )
-        )
-        data.power -= attackData.attackCost
+            data.power -= attackData.attackCost
+        }
         ActionData.Attacked(attackData.targetData, instance, targetPlayer).apply {
             this.attackerData = data
             this.attackerPlayer = event.player
+            this.location = target.visiblePosition.asPos()
         }.also { targetData.research.onAttacked(it) }
         data.updateBossBars()
         targetData.updateBossBars()
@@ -240,6 +251,7 @@ object AttackItem : Actionable {
     }
 
     override fun setItemSlot(player: Player) {
+        if (itemCheck(player, this)) return
         player.inventory[0] = getItem(player.uuid, instances.fromInstance(player.instance)!!)
     }
 }

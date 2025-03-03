@@ -25,13 +25,10 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.bladehunt.kotstom.InstanceManager
 import net.bladehunt.kotstom.SchedulerManager
-import net.bladehunt.kotstom.dsl.kbar
-import net.bladehunt.kotstom.dsl.line
 import net.bladehunt.kotstom.dsl.listen
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.bladehunt.kotstom.extension.get
 import net.bladehunt.kotstom.extension.set
-import net.hollowcube.polar.PolarLoader
 import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.color.Color
 import net.minestom.server.coordinate.Pos
@@ -43,7 +40,7 @@ import net.minestom.server.event.instance.InstanceTickEvent
 import net.minestom.server.event.player.*
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.InstanceContainer
-import net.minestom.server.instance.LightingChunk
+import net.minestom.server.instance.anvil.AnvilLoader
 import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
 import net.minestom.server.network.packet.server.SendablePacket
@@ -51,14 +48,12 @@ import net.minestom.server.network.packet.server.play.ParticlePacket
 import net.minestom.server.particle.Particle
 import net.minestom.server.potion.Potion
 import net.minestom.server.potion.PotionEffect
+import net.minestom.server.scoreboard.Sidebar
 import net.minestom.server.tag.Tag
 import net.minestom.server.timer.TaskSchedule
 import java.nio.file.Path
 import java.util.*
-import kotlin.io.path.ExperimentalPathApi
-import kotlin.io.path.createDirectories
-import kotlin.io.path.deleteRecursively
-import kotlin.io.path.exists
+import kotlin.io.path.*
 import kotlin.math.pow
 import kotlin.random.Random
 
@@ -141,6 +136,10 @@ class GameInstance(
             pdFile.createNewFile()
             pdFile.writeText("{}")
         }
+        val worldFolder = path.resolve("world")
+        if (!worldFolder.exists()) {
+            worldFolder.createDirectory()
+        }
         log("GameInstance $name created...", MCOvertakeLogType.FILESYSTEM)
     }
 
@@ -159,7 +158,7 @@ class GameInstance(
         return ret
     }
 
-    fun save() = runBlocking { withContext(Dispatchers.IO) { launch {
+    suspend fun save() = withContext(Dispatchers.IO) {
         try {
             if (!path.exists()) {
                 path.createDirectories()
@@ -185,18 +184,20 @@ class GameInstance(
                 pCFile.createNewFile()
             }
             pCFile.writeText(Json.encodeToString(playerConfigs))
-            instance.saveChunksToStorage()
             instance.saveInstance()
+            instance.saveChunksToStorage()
         } catch (e: Exception) {
-            e.printStackTrace()
+            log("An exception occurred during $name instance saving!", LogType.EXCEPTION)
+            log(e)
         }
-    }}}
+    }
 
     fun registerTickEvents() {
         instance.eventNode().listen<PlayerTickEvent> { e ->
             val playerData = e.player.data ?: return@listen
             playerData.actionBar(e.player)
             if (playerData.showResearchTick) {
+                // TODO: make this just a global bossbar and not per-data, uses 21mb of ram in 1 min
                 playerData.researchTickProgress.name("<white>Research Tick <gray>-<white> ${tick % 400uL}/400".asMini())
                 val perc = ((tick % 400uL).toFloat() / 400f).coerceIn(0f..1f)
                 playerData.researchTickProgress.progress(perc)
@@ -219,7 +220,7 @@ class GameInstance(
                 val playerBlock = instance.getBlock(playerPoint).defaultState()
                 val canAccess = playerPoint.anyAdjacentBlocksMatch(playerData.block, instance)
                 val attackFromWater = playerPoint.repeatDirection { point, dir ->
-                    val block = instance.getBlock(point.playerPosition.add(0.0, 1.0, 0.0)).defaultState()
+                    val block = instance.getBlock(point.playerPosition).defaultState()
                     block == Block.SAND || block == Block.AIR
                 }
                 when (playerBlock) {
@@ -369,21 +370,30 @@ class GameInstance(
             it.isCancelled = true
         }
 
-
-        instance.eventNode().listen<PlayerDisconnectEvent> { e ->
-            save()
-        }
-
         instance.eventNode().listen<PlayerHandAnimationEvent> {
-            val item = it.player.getItemInHand(it.hand)
-            for (actionable in Actionable.registry) {
-                if (item.getTag(Tag.String("identifier")) == actionable.identifier) {
-                    try {
-                        actionable.onHandAnimation(it)
-                    } catch (e: Exception) {
-                        log(e)
+            val target = it.player.getTrueTarget(20)
+            var callItem = true
+            if (target != null) {
+                val building = Building.getBuildingByBlock(it.instance.getBlock(target.buildingPosition))
+                val data = it.player.data
+                if (building != null && data != null) {
+                    val ref = building.playerRef.get(data.buildings)
+                    if (ref is Interactable) {
+                        callItem = ref.onHandAnimation(it, target.buildingPosition)
                     }
-                    break
+                }
+            }
+            if (callItem) {
+                val item = it.player.getItemInHand(it.hand)
+                for (actionable in Actionable.registry) {
+                    if (item.getTag(Tag.String("identifier")) == actionable.identifier) {
+                        try {
+                            actionable.onHandAnimation(it)
+                        } catch (e: Exception) {
+                            log(e)
+                        }
+                        break
+                    }
                 }
             }
         }
@@ -418,22 +428,47 @@ class GameInstance(
         }, TaskSchedule.tick(70), TaskSchedule.tick(70))
     }
 
+    private val scoreboard = Sidebar(
+        "<gradient:green:gold:$scoreboardTitleIndex><bold>MCOvertake - $SERVER_VERSION".asMini()
+    )
     fun setupScoreboard() {
         // Every tick
         SchedulerManager.scheduleTask({
             try {
-                kbar("<gradient:green:gold:$scoreboardTitleProgress><bold>MCOvertake - $SERVER_VERSION".asMini()) {
-                    for ((i, player) in blockData.toBlockSortedList().withIndex()) {
-                        if (player.playerDisplayName == "") player.playerDisplayName =
-                            instance.getPlayerByUuid(player.uuid.toUUID())?.username ?: continue
-                        if (player.blocks == 0) continue
-                        line("<dark_green><bold>${player.playerDisplayName}".asMini()) {
-                            isVisible = true
-                            line = player.blocks
-                            id = player.playerDisplayName + "$i"
+//                kbar("<gradient:green:gold:$scoreboardTitleProgress><bold>MCOvertake - $SERVER_VERSION".asMini()) {
+//                    for ((i, player) in blockData.toBlockSortedList().withIndex()) {
+//                        if (player.playerDisplayName == "") player.playerDisplayName =
+//                            instance.getPlayerByUuid(player.uuid.toUUID())?.username ?: continue
+//                        if (player.blocks == 0) continue
+//                        line("<dark_green><bold>${player.playerDisplayName}".asMini()) {
+//                            isVisible = true
+//                            line = player.blocks
+//                            id = player.playerDisplayName + "$i"
+//                        }
+//                    }
+//                    instance.players.onEach { addViewer(it) }
+//                }
+                scoreboard.setTitle(
+                    scoreboardTitleList[scoreboardTitleIndex]
+                )
+                for (player in blockData.toBlockSortedList()) {
+                    if (player.blocks == 0) continue
+                    if (player.playerDisplayName == "") player.playerDisplayName =
+                        instance.getPlayerByUuid(player.uuid.toUUID())?.username ?: continue
+                    val line = scoreboard.getLine(player.playerDisplayName)
+                    if (line != null) {
+                        if (line.line != player.blocks) {
+                            scoreboard.updateLineScore(line.id, player.blocks)
                         }
+                    } else {
+                        scoreboard.createLine(
+                            Sidebar.ScoreboardLine(
+                                player.playerDisplayName,
+                                "<dark_green><bold>${player.playerDisplayName}".asMini(),
+                                player.blocks
+                            )
+                        )
                     }
-                    instance.players.onEach { addViewer(it) }
                 }
             } catch (e: Exception) {
                 log("An exception occurred in the scoreboard task!", LogType.EXCEPTION)
@@ -460,6 +495,7 @@ class GameInstance(
                 }
             }
             e.player.config
+            scoreboard.addViewer(e.player)
         }
     }
 
@@ -489,7 +525,7 @@ class GameInstance(
             .clamp(-1.0, 1.0)
             .build()
         instance = InstanceManager.createInstanceContainer().apply {
-            chunkLoader = PolarLoader(path.resolve("world.polar"))
+            chunkLoader = AnvilLoader(path.resolve("world"))
             val upperSkyBlocks = arrayOf(Block.DIRT, Block.COARSE_DIRT, Block.ROOTED_DIRT, Block.GRAVEL, Block.COBBLESTONE)
             val middleSkyBlocks = arrayOf(Block.DIRT, Block.STONE, Block.GRAVEL, Block.COBBLESTONE)
             val lowerSkyBlocks = arrayOf(Block.STONE, Block.STONE, Block.STONE, Block.GRAVEL, Block.COBBLESTONE)
@@ -504,8 +540,10 @@ class GameInstance(
                         if (y == 39) {
                             if (eval > instanceConfig.noiseThreshold) return@setAll Block.GRASS_BLOCK
                         } else if (y == 5) {
+                            // Ground player blocks
                             return@setAll if (eval > instanceConfig.noiseThreshold) Block.GRASS_BLOCK else Block.SAND
                         } else if (y == 4) {
+                            // Underground player blocks
                             return@setAll if (eval > instanceConfig.noiseThreshold) Block.DIAMOND_BLOCK else Block.GRASS_BLOCK
                         } else if (y == 38) {
                             if (eval > instanceConfig.noiseThreshold) return@setAll upperRiverBlocks[random.nextInt(upperRiverBlocks.size)]
@@ -558,8 +596,9 @@ class GameInstance(
                                         else return@setAll Block.SHORT_GRASS
                                     }
                                 }
+                                // Sky island player blocks
                                 if (y == 6) return@setAll Block.GRASS_BLOCK
-                            }
+                            } else if (y == 6) return@setAll Block.AIR
                         }
                     }
                     if (x in -1..instanceConfig.mapSize + 1 && z in -1..instanceConfig.mapSize + 1 && y < 40) {
@@ -570,7 +609,6 @@ class GameInstance(
                     Block.AIR
                 }
             }
-            setChunkSupplier(::LightingChunk)
         }
         player?.sendMessage("<green>Created instance world".asMini())
         // Player only exists on first creation through commands
@@ -581,8 +619,8 @@ class GameInstance(
                     for (z in 0..instanceConfig.mapSize) {
                         val point = Vec(x.toDouble(), 39.0, z.toDouble())
                         instance.loadChunk(point).thenRun {
-                            val playerBlock = instance.getBlock(x, 38, z)
-                            if (instance.getBlock(x, 39, z) == Block.WATER && instance.getBlock(x, 38, z) != Block.SAND) {
+                            val playerBlock = instance.getBlock(point.playerPosition)
+                            if (instance.getBlock(x, 39, z) == Block.WATER && playerBlock != Block.SAND) {
                                 ClaimWaterItem.spawnPlayerRaft(
                                     playerBlock,
                                     Vec(x.toDouble(), 40.0, z.toDouble()),
@@ -598,6 +636,11 @@ class GameInstance(
                                         break
                                     }
                                 }
+                            }
+                            // Process old worlds with broken sky generation
+                            val skyPoint = point.withY(6.0)
+                            if (instance.getBlock(skyPoint) == Block.DIAMOND_BLOCK) {
+                                instance.setBlock(skyPoint, Block.AIR)
                             }
                         }
                     }

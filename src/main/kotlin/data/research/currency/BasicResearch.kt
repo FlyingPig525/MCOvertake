@@ -26,6 +26,7 @@ class BasicResearch : ResearchCurrency {
         InducedGlare(),
         OnlineAttacking(),
         QuickerCornering(),
+        AcceleratedIndustrialization(),
         TestUpgrade(),
         T2(),
         TripleMatter(),

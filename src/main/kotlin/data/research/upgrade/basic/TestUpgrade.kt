@@ -1,8 +1,10 @@
 package io.github.flyingpig525.data.research.upgrade
 
+import io.github.flyingpig525.data.player.permission.Permission
 import io.github.flyingpig525.data.research.action.ActionData
 import io.github.flyingpig525.data.research.currency.BasicResearch
 import io.github.flyingpig525.data.research.currency.ResearchCurrency
+import io.github.flyingpig525.permissionManager
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
@@ -33,6 +35,7 @@ class TestUpgrade : ResearchUpgrade() {
 
     override fun onClaimLand(eventData: ActionData.ClaimLand): ActionData.ClaimLand? {
         if (level == 0) return null
+        if (eventData.player != null && !permissionManager.hasPermission(eventData.player, Permission("data.research.op"))) return null
 //        log("Claim Land")
         return eventData.apply {
             claimCooldown = Cooldown(Duration.ofMillis(100))
@@ -42,6 +45,7 @@ class TestUpgrade : ResearchUpgrade() {
 
     override fun onAttacked(eventData: ActionData.Attacked): ActionData.Attacked? {
         if (level == 0) return null
+        if (eventData.player != null && !permissionManager.hasPermission(eventData.player, Permission("data.research.op"))) return null
 //        log("Attacked")
         eventData.playerData.power += 12
         return eventData
@@ -49,6 +53,7 @@ class TestUpgrade : ResearchUpgrade() {
 
     override fun onBuildWall(eventData: ActionData.BuildWall): ActionData.BuildWall? {
         if (level == 0) return null
+        if (eventData.player != null && !permissionManager.hasPermission(eventData.player, Permission("data.research.op"))) return null
 //        log("Build Wall")
         eventData.cost = 0
         eventData.cooldown = Cooldown(Duration.ofMillis(100))
@@ -57,6 +62,7 @@ class TestUpgrade : ResearchUpgrade() {
 
     override fun onDestroyBuilding(eventData: ActionData.DestroyBuilding): ActionData.DestroyBuilding? {
         if (level == 0) return null
+        if (eventData.player != null && !permissionManager.hasPermission(eventData.player, Permission("data.research.op"))) return null
 //        log("Destroy Building")
         eventData.playerData.organicMatter += eventData.wallLevel * 5
         return eventData
@@ -64,6 +70,7 @@ class TestUpgrade : ResearchUpgrade() {
 
     override fun onPlaceColony(eventData: ActionData.PlaceColony): ActionData.PlaceColony? {
         if (level == 0) return null
+        if (eventData.player != null && !permissionManager.hasPermission(eventData.player, Permission("data.research.op"))) return null
 //        log("Place Colony")
         eventData.cost = 0
         eventData.cooldown = Cooldown(Duration.ofMillis(100))
@@ -72,6 +79,7 @@ class TestUpgrade : ResearchUpgrade() {
 
     override fun onPlaceRaft(eventData: ActionData.PlaceRaft): ActionData.PlaceRaft? {
         if (level == 0) return null
+        if (eventData.player != null && !permissionManager.hasPermission(eventData.player, Permission("data.research.op"))) return null
 //        log("Place Raft")
         eventData.cost = 0
         eventData.cooldown = Cooldown(Duration.ofMillis(100))
@@ -80,6 +88,7 @@ class TestUpgrade : ResearchUpgrade() {
 
     override fun onAttack(eventData: ActionData.Attack): ActionData.Attack? {
         if (level == 0) return null
+        if (eventData.player != null && !permissionManager.hasPermission(eventData.player, Permission("data.research.op"))) return null
 //        log("Post Attack")
         eventData.attackCost = 0
         eventData.attackCooldown = Cooldown(Duration.ofMillis(10))
@@ -88,6 +97,7 @@ class TestUpgrade : ResearchUpgrade() {
 
     override fun onAttackCostCalculation(eventData: ActionData.AttackCostCalculation): ActionData.AttackCostCalculation? {
         if (level == 0) return null
+        if (eventData.player != null && !permissionManager.hasPermission(eventData.player, Permission("data.research.op"))) return null
 //        log("Pre Attack")
         eventData.wallLevel = 0
         return eventData
@@ -95,6 +105,7 @@ class TestUpgrade : ResearchUpgrade() {
 
     override fun onUpgradeWall(eventData: ActionData.UpgradeWall): ActionData.UpgradeWall? {
         if (level == 0) return null
+        if (eventData.player != null && !permissionManager.hasPermission(eventData.player, Permission("data.research.op"))) return null
 //        log("Upgrade Wall")
         eventData.cost = 0
         eventData.cooldown = Cooldown(Duration.ofMillis(50))
