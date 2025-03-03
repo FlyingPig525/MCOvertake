@@ -2,6 +2,7 @@ package io.github.flyingpig525.item
 
 import io.github.flyingpig525.*
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
+import io.github.flyingpig525.data.Sounds
 import io.github.flyingpig525.data.research.action.ActionData
 import io.github.flyingpig525.ksp.Item
 import net.bladehunt.kotstom.dsl.item.amount
@@ -40,6 +41,7 @@ object WallItem : Actionable {
         val instance = event.instance
         val data = event.player.data ?: return true
         if (data.organicMatter < 15) {
+            event.player.playSound(Sounds.ERROR)
             event.player.sendMessage("<red><bold>Not enough Organic Matter</bold> (${data.organicMatter}/15)".asMini())
             return true
         }
@@ -69,6 +71,7 @@ object WallItem : Actionable {
             }
         }
 
+        event.player.playSound(Sounds.PLACE_BUILDING)
         data.sendPacket(
             SetCooldownPacket(
                 itemMaterial.cooldownIdentifier,
