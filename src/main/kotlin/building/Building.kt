@@ -38,7 +38,10 @@ abstract class Building(val producesPollution: Boolean = false) {
         val playerRef: KProperty1<PlayerBuildings, Building>
 
         fun getItem(cost: CurrencyCost, count: Int): ItemStack
-        fun getItem(playerData: BlockData): ItemStack
+        fun getItem(playerData: BlockData): ItemStack {
+            val building = playerRef.get(playerData.buildings)
+            return getItem(building.cost, building.count)
+        }
 
         /**
          * @param [currentDisposableResources] The current total

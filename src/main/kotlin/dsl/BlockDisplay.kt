@@ -10,8 +10,7 @@ import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.metadata.display.BlockDisplayMeta
 import net.minestom.server.instance.block.Block
 
-class BlockDisplayDsl {
-    val entity = Entity(EntityType.BLOCK_DISPLAY)
+class BlockDisplayDsl(val entity: Entity = Entity(EntityType.BLOCK_DISPLAY)) {
     var block: Block
         set(value) {
             (entity.entityMeta as BlockDisplayMeta).setBlockState(value)
@@ -72,4 +71,7 @@ class BlockDisplayDsl {
 
 inline fun blockDisplay(block: BlockDisplayDsl.() -> Unit): Entity {
     return BlockDisplayDsl().apply(block).entity
+}
+inline fun blockDisplay(of: Entity, block: BlockDisplayDsl.() -> Unit): Entity {
+    return BlockDisplayDsl(of).apply(block).entity
 }

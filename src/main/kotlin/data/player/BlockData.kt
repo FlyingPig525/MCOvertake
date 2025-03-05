@@ -306,7 +306,7 @@ class BlockData(val uuid: String, @Serializable(BlockSerializer::class) val bloc
     val research = ResearchContainer()
 
     companion object {
-        val NONE = BlockData("", Block.AIR, "")
+        val NONE = BlockData(UUID.randomUUID().toString(), Block.AIR, "")
         fun DataMap.getDataByBlock(block: Block): BlockData? {
             return values.find { it.block == block }
         }

@@ -3,6 +3,7 @@ package io.github.flyingpig525
 import cz.lukynka.prettylog.*
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.GameInstance.Companion.gameInstance
+import io.github.flyingpig525.building.ToxicologyLab
 import io.github.flyingpig525.command.*
 import io.github.flyingpig525.console.Command
 import io.github.flyingpig525.console.ConfigCommand
@@ -16,6 +17,7 @@ import io.github.flyingpig525.data.player.config.BlockConfig
 import io.github.flyingpig525.data.player.config.PlayerConfig
 import io.github.flyingpig525.data.player.permission.Permission
 import io.github.flyingpig525.data.player.permission.PermissionManager
+import io.github.flyingpig525.entity.ToxicologyLabGasEntity
 import io.github.flyingpig525.item.SelectBlockItem
 import io.github.flyingpig525.ksp.initBuildingCompanions
 import io.github.flyingpig525.ksp.initItems
@@ -193,7 +195,7 @@ fun main() = runBlocking { try {
         }
         setChunkSupplier(::LightingChunk)
     }
-    lobbyInstance.setBlock(Vec(5.0, 5.0, 5.0), Block.CAMPFIRE)
+    ToxicologyLabGasEntity().setInstance(lobbyInstance, Vec(3.0, 10.5, 3.0))
     log("Created lobby instance...", MCOvertakeLogType.FILESYSTEM)
     initBuildingCompanions()
     log("Building companions initialized...")

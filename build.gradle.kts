@@ -33,6 +33,9 @@ dependencies {
     // ksp
     implementation(project(":ksp"))
     ksp(project(":ksp"))
+
+    // Math
+    implementation("info.laht.threekt:math:r1-ALPHA-27")
 }
 
 tasks.test {

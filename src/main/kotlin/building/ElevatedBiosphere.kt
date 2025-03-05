@@ -38,6 +38,17 @@ class ElevatedBiosphere : Building() {
         instance.setBlock(playerTarget.buildingPosition, block.building(identifier))
         count++
         positions += playerTarget.buildingPosition
+        enabledPositions(data)
+    }
+
+    private fun enabledPositions(data: BlockData) {
+        val canHandleList = mutableListOf<Point>()
+        for (pos in positions.sortedBy { it.y }) {
+            if (data.lubricant >= (canHandleList.size + 1) * 40) {
+                canHandleList += pos
+            }
+        }
+        enabledPositions = canHandleList
     }
 
     override fun onDestruction(point: Point, instance: Instance, data: BlockData): Boolean {
@@ -46,14 +57,8 @@ class ElevatedBiosphere : Building() {
     }
 
     override fun tick(data: BlockData) {
-        val canHandleList = mutableListOf<Point>()
-        for (pos in positions.sortedBy { it.y }) {
-            if (data.lubricant >= (canHandleList.size + 1) * 40) {
-                canHandleList += pos
-            }
-        }
-        data.lubricant -= canHandleList.size * 40
-        enabledPositions = canHandleList
+        enabledPositions(data)
+        data.lubricant -= enabledPositions.size * 40
     }
 
     override fun select(player: Player) {

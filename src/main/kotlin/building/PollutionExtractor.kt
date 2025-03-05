@@ -44,7 +44,7 @@ class PollutionExtractor : Building() {
     override fun tick(data: BlockData) {
         if (count == 0) return
         val pollution = data.buildings.sumOf { if (it.producesPollution) it.count else 0 }
-        data.lubricant -= 10 * count
+        data.lubricant -= 20 * count
         data.organicMatter += 0.05 * pollution
     }
 
@@ -62,7 +62,7 @@ class PollutionExtractor : Building() {
                 lore {
                     +"<dark_gray>Utilizes the carbon from pollution".asMini()
                     +"<dark_gray>and turns it into usable organic matter".asMini()
-                    +"<gray>Consumes 2 $lubricant per research tick".asMini().noItalic()
+                    +"<gray>Consumes 20 $lubricant per research tick".asMini().noItalic()
                     +"<gray>Produces 0.05 $organicMatter per pollution-producing building every 30 ticks".asMini().noItalic()
                     resourcesConsumed(6, count)
                     amountOwned(count)
