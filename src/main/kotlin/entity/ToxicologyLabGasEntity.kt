@@ -16,12 +16,12 @@ import net.minestom.server.utils.MathUtils
 import java.math.MathContext
 import kotlin.math.sin
 
-class ToxicologyLabGasEntity : Entity(EntityType.ITEM_DISPLAY) {
-    private val euler = Euler(degToRad(45), 0f, 0f)
+class ToxicologyLabGasEntity(private val startingScale: Double = 1.1) : Entity(EntityType.ITEM_DISPLAY) {
+    private val euler = Euler(degToRad(45), (0..10).random().toFloat(), (0..10).random().toFloat())
     private val rotation = Quaternion().setFromEuler(euler)
-    private var x = 1.1
-    private var z = 1.1
-    private var y = 1.1
+    private var x = startingScale
+    private var z = startingScale
+    private var y = startingScale
     private val vec get() = Vec(x, y, z)
     init {
         editMeta<ItemDisplayMeta> {
@@ -31,6 +31,7 @@ class ToxicologyLabGasEntity : Entity(EntityType.ITEM_DISPLAY) {
             scale = vec
             leftRotation = rotation.toArray()
             posRotInterpolationDuration = 1
+            transformationInterpolationDuration = 1
         }
 //            block = Block.LIME_STAINED_GLASS
 //            scale = Vec(0.4, 0.4, 0.4)
@@ -48,9 +49,9 @@ class ToxicologyLabGasEntity : Entity(EntityType.ITEM_DISPLAY) {
         editMeta<ItemDisplayMeta> {
             euler.z += degToRad(1)
             euler.y += degToRad(1)
-            x = 1.1 + (0.08 * sin(time.toDouble() / 4))
-            y = 1.1 + (0.08 * sin(time.toDouble() / 4))
-            z = 1.1 + (0.08 * sin(time.toDouble() / 4))
+            x = startingScale + (0.08 * sin((time.toDouble() + (startingScale * 45)) / 4))
+            y = startingScale + (0.08 * sin((time.toDouble() + (startingScale * 45)) / 4))
+            z = startingScale + (0.08 * sin((time.toDouble() + (startingScale * 45)) / 4))
             scale = vec
             rotation.setFromEuler(euler)
             leftRotation = rotation.toArray()

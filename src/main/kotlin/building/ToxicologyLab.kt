@@ -83,11 +83,13 @@ class ToxicologyLab : Building() {
             return point.isSky
         }
 
-        override fun checkShouldSpawn(point: Point, instance: Instance): Boolean =
-            instance.getBlock(point.buildingPosition) == block
-                    && !instance.getNearbyEntities(point.buildingPosition, 0.2).any {
+        override fun checkShouldSpawn(point: Point, instance: Instance): Boolean {
+            val block = instance.getBlock(point.buildingPosition).defaultState() == block.defaultState()
+            val entities = !instance.getNearbyEntities(point.buildingPosition, 0.2).any {
                 it.getTag(Tag.String("identifier")) == identifier
             }
+            return block && entities
+        }
 
         override fun spawn(point: Point, instance: Instance, uuid: UUID) {
             blockDisplay {
@@ -111,7 +113,9 @@ class ToxicologyLab : Building() {
                     setTag(Tag.String("identifier"), identifier)
                 }
             }.setInstance(instance, point)
-            ToxicologyLabGasEntity().setInstance(instance, point)
+            for (i in 0..3) {
+                ToxicologyLabGasEntity(1.0 + ((-10..10).random() / 100.0)).setInstance(instance, point)
+            }
         }
 
         override fun remove(point: Point, instance: Instance, uuid: UUID) {

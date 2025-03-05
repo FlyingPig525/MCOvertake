@@ -355,7 +355,6 @@ fun main() = runBlocking { try {
         }
         scoreboardTitleProgress += 0.025
     }
-    println(scoreboardTitleList.size)
     val bar = kbar(scoreboardTitleList[0]) {
         lobbyInstance.players.onEach { addViewer(it) }
     }
