@@ -84,7 +84,7 @@ class ToxicologyLab : Building() {
         }
 
         override fun checkShouldSpawn(point: Point, instance: Instance): Boolean =
-            instance.getBlock(point.buildingPosition).defaultState() == block
+            instance.getBlock(point.buildingPosition) == block
                     && !instance.getNearbyEntities(point.buildingPosition, 0.2).any {
                 it.getTag(Tag.String("identifier")) == identifier
             }
