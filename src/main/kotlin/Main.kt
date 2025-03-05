@@ -252,6 +252,7 @@ fun main() = runBlocking { try {
             .prompt("<green>This resource pack provides \"crucial\" visual changes that allow for a better and more <i>smooth</i> experience.".asMini())
             .build()
         )
+        log("${event.player.username} joined", LogType.USER_ACTION)
 
         MinecraftServer.getInstanceManager().instances.onEach {
             it.players.onEach {
@@ -261,6 +262,7 @@ fun main() = runBlocking { try {
     }
 
     GlobalEventHandler.listen<PlayerDisconnectEvent> { e ->
+        log("${e.player.username} left", LogType.USER_ACTION)
         MinecraftServer.getInstanceManager().instances.onEach {
             it.players.onEach {
                 it.sendMessage("<red>-${e.player.username}".asMini())
