@@ -11,12 +11,18 @@ import net.minestom.server.entity.Player
 import net.minestom.server.inventory.condition.InventoryConditionResult
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
+import kotlin.math.pow
 
 @Serializable
 class AdjacentWallBonusPercentageDecrease : ResearchUpgrade() {
     override var maxLevel: Int = 4
     override val name: String = "Wall Fucker Upper"
-    override val cost: Long get() = 500L * level + 500L
+    override val cost: Long get() {
+        if (level <= 3) {
+            return listOf(5500L, 21000L, 42000L, 63500L)[level]
+        }
+        return (63500L * (1.25.pow(level)) / 10).toLong() * 10L
+    }
 
     override fun item(currency: ResearchCurrency, gameInstance: GameInstance): ItemStack = researchItem(Material.SCRAPE_POTTERY_SHERD, this) {
         lore {
