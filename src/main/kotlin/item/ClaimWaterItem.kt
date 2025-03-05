@@ -2,6 +2,7 @@ package io.github.flyingpig525.item
 
 import io.github.flyingpig525.*
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
+import io.github.flyingpig525.data.Sounds
 import io.github.flyingpig525.data.research.action.ActionData
 import io.github.flyingpig525.dsl.blockDisplay
 import io.github.flyingpig525.ksp.Item
@@ -46,10 +47,12 @@ object ClaimWaterItem : Actionable {
             cost = data.raftCost
         }.also { data.research.onPlaceRaft(it) }
         if (data.organicMatter < actionData.cost) {
+            event.player.playSound(Sounds.ERROR)
             event.player.sendMessage("<red><bold>Not enough Organic Matter </bold>(${data.organicMatter}/${actionData.cost})".asMini())
             return true
         }
         // Claim logic
+        event.player.playSound(Sounds.BUILD_RAFT)
         event.instance.setBlock(target.playerPosition, data.block)
         event.instance.setBlock(target.withY(40.0), Block.LILY_PAD)
         // Find sand block
