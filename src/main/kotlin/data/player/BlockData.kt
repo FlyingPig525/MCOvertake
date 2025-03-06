@@ -294,6 +294,11 @@ class BlockData(val uuid: String, @Serializable(BlockSerializer::class) val bloc
         }
     }
 
+    fun getPlayers(): List<Player> {
+        val uuids = gameInstance?.uuidParentsInverse?.get(uuid) ?: return emptyList()
+        return uuids.mapNotNull { gameInstance!!.instance.getPlayerByUuid(uuid.toUUID()) }
+    }
+
     val research = ResearchContainer()
 
     companion object {

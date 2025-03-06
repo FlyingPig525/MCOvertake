@@ -165,7 +165,11 @@ object UpgradeWallItem : Actionable {
             return false
         }
         data.organicMatter -= actionData.cost
-        data.wallUpgradeCooldown = actionData.cooldown
+        if (data.getPlayers().isEmpty()) {
+            data.wallUpgradeCooldown = Cooldown(actionData.cooldown.duration.multipliedBy(4L))
+        } else {
+            data.wallUpgradeCooldown = Cooldown(actionData.cooldown.duration.multipliedBy(2L))
+        }
         data.sendPacket(
             SetCooldownPacket(
                 itemMaterial.cooldownIdentifier,
