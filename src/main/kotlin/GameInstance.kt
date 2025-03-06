@@ -548,7 +548,7 @@ class GameInstance(
             .clamp(-1.0, 1.0)
             .build()
         val skyNoise = JNoise.newBuilder().superSimplex(
-            SuperSimplexNoiseGenerator.newBuilder().setSeed(12312L).setVariant2D(
+            SuperSimplexNoiseGenerator.newBuilder().setSeed(instanceConfig.noiseSeed + 10).setVariant2D(
                 Simplex2DVariant.CLASSIC
             )
         )
