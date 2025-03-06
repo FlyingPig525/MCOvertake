@@ -277,9 +277,7 @@ class BlockData(val uuid: String, @Serializable(BlockSerializer::class) val bloc
     }
 
     fun sendPacket(packet: SendablePacket) {
-        gameInstance!!.uuidParentsInverse[uuid]?.map {
-            gameInstance!!.instance.getEntityByUuid(it.toUUID()) as Player?
-        }?.onEach { it?.sendPacket(packet) }
+        getPlayers().onEach { it.sendPacket(packet) }
     }
 
     fun sendPackets(vararg packets: SendablePacket) {
@@ -287,11 +285,7 @@ class BlockData(val uuid: String, @Serializable(BlockSerializer::class) val bloc
     }
 
     fun onPlayers(fn: (p: Player) -> Unit) {
-        val uuids = gameInstance?.uuidParentsInverse?.get(uuid) ?: return
-        for (uuid in uuids) {
-            val p = gameInstance!!.instance.getPlayerByUuid(uuid.toUUID()) ?: continue
-            fn(p)
-        }
+        getPlayers().forEach { fn(it) }
     }
 
     fun getPlayers(): List<Player> {
