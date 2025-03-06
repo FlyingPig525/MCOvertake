@@ -1,20 +1,15 @@
 package io.github.flyingpig525.entity
 
-import de.articdive.jnoise.core.util.MathUtil
 import info.laht.threekt.math.*
-import io.github.flyingpig525.dsl.blockDisplay
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.extension.editMeta
 import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.Entity
 import net.minestom.server.entity.EntityType
-import net.minestom.server.entity.metadata.display.BlockDisplayMeta
 import net.minestom.server.entity.metadata.display.ItemDisplayMeta
-import net.minestom.server.instance.block.Block
 import net.minestom.server.item.Material
-import net.minestom.server.utils.MathUtils
-import java.math.MathContext
 import kotlin.math.sin
+import kotlin.math.tan
 
 class ToxicologyLabGasEntity(private val startingScale: Double = 1.1) : Entity(EntityType.ITEM_DISPLAY) {
     private val euler = Euler(degToRad(45), (0..10).random().toFloat(), (0..10).random().toFloat())
@@ -23,6 +18,7 @@ class ToxicologyLabGasEntity(private val startingScale: Double = 1.1) : Entity(E
     private var z = startingScale
     private var y = startingScale
     private val vec get() = Vec(x, y, z)
+    private val randomSin = (0..50).random() / 100.0
     init {
         editMeta<ItemDisplayMeta> {
             itemStack = item(Material.GREEN_STAINED_GLASS)
@@ -47,12 +43,14 @@ class ToxicologyLabGasEntity(private val startingScale: Double = 1.1) : Entity(E
     override fun tick(time: Long) {
         super.tick(time)
         editMeta<ItemDisplayMeta> {
-            euler.z += degToRad(1)
-            euler.y += degToRad(1)
-            x = startingScale + (0.08 * sin((time.toDouble() + (startingScale * 45)) / 4))
-            y = startingScale + (0.08 * sin((time.toDouble() + (startingScale * 45)) / 4))
-            z = startingScale + (0.08 * sin((time.toDouble() + (startingScale * 45)) / 4))
-            scale = vec
+            euler.x += degToRad((1..2).random())
+            euler.y += degToRad((1..2).random())
+            euler.z += degToRad((1..2).random())
+            val scale = startingScale + (0.08 * sin((time.toDouble() + tan(startingScale * 45)) / 4 + randomSin))
+            x = scale
+            y = scale
+            z = scale
+            this.scale = vec
             rotation.setFromEuler(euler)
             leftRotation = rotation.toArray()
 //            println(leftRotation.map { it })

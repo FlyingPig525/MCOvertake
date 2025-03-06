@@ -16,7 +16,6 @@ import net.bladehunt.kotstom.extension.adventure.noItalic
 import net.bladehunt.kotstom.extension.set
 import net.minestom.server.coordinate.Point
 import net.minestom.server.coordinate.Vec
-import net.minestom.server.entity.MetadataDef
 import net.minestom.server.entity.Player
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
@@ -56,7 +55,8 @@ class ToxicologyLab : Building() {
 
     @io.github.flyingpig525.ksp.BuildingCompanion(orderAfter = "PollutionExtractor", category = SkyCategory::class)
     companion object ToxicologyLabCompanion : BuildingCompanion, Validated, DisplayEntityBlock {
-        override val block: Block = Block.CONDUIT.withProperty("waterlogged", "false")
+        // this is the first block display only building!
+        override val block: Block = INVISIBLE_BLOCK
         override val identifier: String = "power:generator_3"
         override val playerRef: KProperty1<PlayerBuildings, Building> = PlayerBuildings::toxicologyLabs
 
@@ -113,8 +113,11 @@ class ToxicologyLab : Building() {
                     setTag(Tag.String("identifier"), identifier)
                 }
             }.setInstance(instance, point)
-            for (i in 0..3) {
-                ToxicologyLabGasEntity(1.0 + ((-10..10).random() / 100.0)).setInstance(instance, point)
+            for (i in 0..2) {
+                ToxicologyLabGasEntity(1.0 + ((-10..10).random() / 100.0)).apply {
+                    setTag(Tag.UUID("player"), uuid)
+                    setTag(Tag.String("identifier"), identifier)
+                }.setInstance(instance, point)
             }
         }
 

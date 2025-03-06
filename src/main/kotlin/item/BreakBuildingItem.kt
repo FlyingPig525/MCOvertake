@@ -4,6 +4,7 @@ import io.github.flyingpig525.*
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.GameInstance.Companion.gameInstance
 import io.github.flyingpig525.building.Building
+import io.github.flyingpig525.building.DisplayEntityBlock
 import io.github.flyingpig525.data.research.action.ActionData
 import io.github.flyingpig525.ksp.Item
 import io.github.flyingpig525.wall.blockIsWall
@@ -82,7 +83,8 @@ object BreakBuildingItem : Actionable {
         if (identifier == null) {
             if (!blockIsWall(buildingBlock)) return true
         } else {
-            val ref = Building.getBuildingByIdentifier(identifier)?.playerRef?.get(data.buildings) ?: return true
+            val buildingCompanion = Building.getBuildingByIdentifier(identifier) ?: return true
+            val ref = buildingCompanion.playerRef.get(data.buildings)
             if (!ref.onDestruction(buildingPos, instance, data)) return true
             ref.count--
             ref.select(event.player)
@@ -90,6 +92,10 @@ object BreakBuildingItem : Actionable {
                 building = ref
                 wallLevel = buildingBlock.wallLevel
             }.also { data.research.onDestroyBuilding(it) }
+            if (buildingCompanion is DisplayEntityBlock) {
+                // if this excepts, then something horribly wrong has happened
+                buildingCompanion.remove(buildingPos, instance, data.uuid.toUUID()!!)
+            }
         }
         if (instance.getBlock(groundPos) == Block.WATER) {
             instance.setBlock(buildingPos, Block.LILY_PAD)
