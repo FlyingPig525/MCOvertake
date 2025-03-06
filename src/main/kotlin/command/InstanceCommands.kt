@@ -8,6 +8,7 @@ import io.github.flyingpig525.data.player.permission.Permission
 import kotlinx.coroutines.Dispatchers
 import net.bladehunt.kotstom.InstanceManager
 import net.bladehunt.kotstom.command.Kommand
+import net.bladehunt.kotstom.coroutines.kommand.executorAsync
 import net.bladehunt.kotstom.dsl.kommand.buildSyntax
 import net.bladehunt.kotstom.dsl.kommand.kommand
 import net.bladehunt.kotstom.extension.adventure.asMini
