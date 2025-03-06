@@ -1,13 +1,12 @@
 package io.github.flyingpig525.building
 
 import io.github.flyingpig525.*
-import io.github.flyingpig525.building.RockMiner.RockMinerCompanion
 import io.github.flyingpig525.building.category.BasicCategory
 import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.data.player.CurrencyCost
 import io.github.flyingpig525.data.player.PlayerData.Companion.playerData
 import io.github.flyingpig525.dsl.blockDisplay
-import io.github.flyingpig525.ksp.BuildingCompanion
+import io.github.flyingpig525.item.BreakBuildingItem
 import io.github.flyingpig525.ksp.PlayerBuildings
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item
@@ -20,7 +19,6 @@ import net.bladehunt.kotstom.extension.set
 import net.minestom.server.coordinate.Point
 import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.Player
-import net.minestom.server.entity.metadata.display.BlockDisplayMeta
 import net.minestom.server.event.player.PlayerBlockInteractEvent
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
@@ -107,5 +105,7 @@ class UndergroundTeleporter : Building(), Interactable {
         override fun validate(instance: Instance, point: Point): Boolean {
             return instance.getBlock(point.visiblePosition).defaultState() == Block.WATER || point.isUnderground
         }
+
+        override fun shouldCallItemUse(item: ItemStack) = item.getTag(Tag.String("identifier")) != BreakBuildingItem.identifier
     }
 }

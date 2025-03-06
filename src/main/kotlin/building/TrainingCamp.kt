@@ -6,7 +6,6 @@ import io.github.flyingpig525.building.category.BasicCategory
 import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.data.player.CurrencyCost
-import io.github.flyingpig525.ksp.BuildingCompanion
 import io.github.flyingpig525.ksp.PlayerBuildings
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item
@@ -66,7 +65,7 @@ class TrainingCamp : Building() {
             return getItem(playerData.buildings.trainingCamps.cost, playerData.buildings.trainingCamps.count)
         }
 
-        override fun shouldCallItemUse(): Boolean = true
+        override fun shouldCallItemUse(item: ItemStack): Boolean = true
 
         override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 3
     }

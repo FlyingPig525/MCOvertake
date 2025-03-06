@@ -367,7 +367,7 @@ class GameInstance(
         instance.eventNode().listen<PlayerBlockInteractEvent> { e ->
             val item = e.player.getItemInHand(e.hand)
             val building = Building.getBuildingByBlock(e.block)
-            var callItemUse = building?.shouldCallItemUse() ?: false
+            var callItemUse = building?.shouldCallItemUse(item) ?: false
             val data = e.player.data
             if (building != null && data != null) {
                 val ref = building.playerRef.get(data.buildings)

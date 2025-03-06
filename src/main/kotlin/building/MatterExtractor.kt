@@ -7,7 +7,6 @@ import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.data.player.CurrencyCost
 import io.github.flyingpig525.data.research.action.ActionData
-import io.github.flyingpig525.ksp.BuildingCompanion
 import io.github.flyingpig525.ksp.PlayerBuildings
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item
@@ -73,6 +72,6 @@ class MatterExtractor : Building() {
 
         override fun getResourceUse(currentDisposableResources: Int): Int = currentDisposableResources + 3
 
-        override fun shouldCallItemUse(): Boolean = true
+        override fun shouldCallItemUse(item: ItemStack): Boolean = true
     }
 }
