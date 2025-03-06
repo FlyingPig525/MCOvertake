@@ -1,5 +1,6 @@
 package io.github.flyingpig525.data.research.upgrade
 
+import io.github.flyingpig525.GameInstance
 import io.github.flyingpig525.data
 import io.github.flyingpig525.data.research.currency.BasicResearch
 import io.github.flyingpig525.data.research.currency.ResearchCurrency
@@ -20,8 +21,8 @@ class UpMax : ResearchUpgrade() {
     override val name: String = "Up Maxes"
     override val cost: Long = 0
 
-    override fun item(currency: ResearchCurrency): ItemStack {
-        if ((currency as BasicResearch).noOp) return ItemStack.AIR
+    override fun item(currency: ResearchCurrency, gameInstance: GameInstance): ItemStack {
+        if (!gameInstance.instanceConfig.opResearch) return ItemStack.AIR
         return item(Material.ANVIL) {
             itemName =
                 "<gold><bold>Increase Maximums</bold> <gray>-<aqua> Level: $level/$maxLevel".asMini()

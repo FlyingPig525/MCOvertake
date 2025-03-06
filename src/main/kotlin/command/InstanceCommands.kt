@@ -8,7 +8,6 @@ import io.github.flyingpig525.data.player.permission.Permission
 import kotlinx.coroutines.Dispatchers
 import net.bladehunt.kotstom.InstanceManager
 import net.bladehunt.kotstom.command.Kommand
-import net.bladehunt.kotstom.coroutines.kommand.executorAsync
 import net.bladehunt.kotstom.dsl.kommand.buildSyntax
 import net.bladehunt.kotstom.dsl.kommand.kommand
 import net.bladehunt.kotstom.extension.adventure.asMini
@@ -51,9 +50,9 @@ val createInstanceCommand = kommand("createInstance") {
     val researchArg = ArgumentBoolean("research")
     val skyIslandsArg = ArgumentBoolean("sky_islands")
     val mapSizeArg = ArgumentInteger("map_size").min(1).max(1000).setDefaultValue(300)
-    val noOpArg = ArgumentBoolean("no_op_research")
+    val opArg = ArgumentBoolean("op_research")
 
-    buildSyntax(nameArg, researchArg, skyIslandsArg, mapSizeArg, noOpArg) {
+    buildSyntax(nameArg, researchArg, skyIslandsArg, mapSizeArg, opArg) {
         condition { player, ctx ->
             permissionManager.hasPermission((player as Player), Permission("instance.creation"))
         }
@@ -63,7 +62,7 @@ val createInstanceCommand = kommand("createInstance") {
             val research = ctx.get(researchArg)
             val skyIslands = ctx.get(skyIslandsArg)
             val mapSize = ctx.get(mapSizeArg)
-            val noOp = ctx.get(noOpArg)
+            val op = ctx.get(opArg)
             try {
                 player.sendMessage("<green>Attempting to create instance $name".asMini())
                 if (name == "") {
@@ -81,10 +80,10 @@ val createInstanceCommand = kommand("createInstance") {
                         noiseSeed = (Long.MIN_VALUE..Long.MAX_VALUE).random(),
                         allowResearch = research,
                         generateSkyIslands = skyIslands,
-                        mapSize = mapSize
+                        mapSize = mapSize,
+                        opResearch = op
                     )).apply {
                     totalInit(player as Player)
-                    this.noOp = noOp
                 }
                 config.instanceNames += name
                 File("config.json5").writeText(getCommentString(config))

@@ -125,12 +125,8 @@ class BlockData(val uuid: String, @Serializable(BlockSerializer::class) val bloc
     val baseAttackCost: Int get() {
         return 15
     }
-    @Transient val lastTeleporterPos: MutableSet<Point> = mutableSetOf()
-    @Transient var targetWallLevel: Int = 0
     @Transient val wallUpgradeQueue: MutableList<Pair<Point, Int>> = mutableListOf()
     @Transient var handAnimationWasDrop = false
-    @Transient var bulkWallQueueFirstPos: Point? = null
-    @Transient var bulkWallQueueFirstPosJustReset = false
     @Transient var sunOrMoonChangeCooldown: Cooldown = Cooldown(Duration.ZERO)
     @Transient var alertLocation: Pos? = null
     @Transient var actionBarText: Component = "".asMini()
@@ -286,9 +282,7 @@ class BlockData(val uuid: String, @Serializable(BlockSerializer::class) val bloc
     }
 
     fun sendPacket(packet: SendablePacket) {
-        gameInstance!!.uuidParentsInverse[uuid]?.map {
-            gameInstance!!.instance.getEntityByUuid(it.toUUID()) as Player?
-        }?.onEach { it?.sendPacket(packet) }
+        getPlayers().onEach { it.sendPacket(packet) }
     }
 
     fun sendPackets(vararg packets: SendablePacket) {
@@ -296,11 +290,12 @@ class BlockData(val uuid: String, @Serializable(BlockSerializer::class) val bloc
     }
 
     fun onPlayers(fn: (p: Player) -> Unit) {
-        val uuids = gameInstance?.uuidParentsInverse?.get(uuid) ?: return
-        for (uuid in uuids) {
-            val p = gameInstance!!.instance.getPlayerByUuid(uuid.toUUID()) ?: continue
-            fn(p)
-        }
+        getPlayers().forEach { fn(it) }
+    }
+
+    fun getPlayers(): List<Player> {
+        val uuids = gameInstance?.uuidParentsInverse?.get(uuid) ?: return emptyList()
+        return uuids.mapNotNull { gameInstance!!.instance.getPlayerByUuid(uuid.toUUID()) }
     }
 
     val research = ResearchContainer()

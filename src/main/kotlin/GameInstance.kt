@@ -16,6 +16,8 @@ import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.data.player.BlockData.Companion.getDataByBlock
 import io.github.flyingpig525.data.player.BlockData.Companion.toBlockSortedList
 import io.github.flyingpig525.data.player.DataResolver
+import io.github.flyingpig525.data.player.PlayerData
+import io.github.flyingpig525.data.player.PlayerData.Companion.playerData
 import io.github.flyingpig525.data.player.config.PlayerConfig
 import io.github.flyingpig525.item.*
 import io.github.flyingpig525.log.MCOvertakeLogType
@@ -58,6 +60,7 @@ import kotlin.math.pow
 import kotlin.random.Random
 
 typealias DataMap = MutableMap<String, BlockData>
+typealias PlayerMap = MutableMap<String, PlayerData>
 typealias PlayerConfigMap = MutableMap<String, PlayerConfig>
 
 class GameInstance(
@@ -81,6 +84,11 @@ class GameInstance(
     val blockData: DataMap = Json.decodeFromString<DataMap>(
         if (path.resolve("block-data.json5").toFile().exists())
             path.resolve("block-data.json5").toFile().readText()
+        else "{}"
+    )
+    val playerData: PlayerMap = Json.decodeFromString<PlayerMap>(
+        if (path.resolve("player-data.json5").toFile().exists())
+            path.resolve("player-data.json5").toFile().readText()
         else "{}"
     )
     val playerConfigs: PlayerConfigMap = Json.decodeFromString(
@@ -120,8 +128,6 @@ class GameInstance(
 
     val removingPlayerBlock: MutableMap<UUID, Boolean> = mutableMapOf()
 
-    var noOp: Boolean = false
-
     init {
         if (!path.exists()) {
             path.createDirectories()
@@ -131,7 +137,12 @@ class GameInstance(
             icFile.createNewFile()
             icFile.writeText(getCommentString(instanceConfig))
         }
-        val pdFile = path.resolve("block-data.json5").toFile()
+        val bdFile = path.resolve("block-data.json5").toFile()
+        if (!bdFile.exists()) {
+            bdFile.createNewFile()
+            bdFile.writeText("{}")
+        }
+        val pdFile = path.resolve("player-data.json5").toFile()
         if (!pdFile.exists()) {
             pdFile.createNewFile()
             pdFile.writeText("{}")
@@ -169,16 +180,21 @@ class GameInstance(
             }
             // `json` is formatted, `Json` is not
             icFile.writeText(getCommentString(instanceConfig))
-            val pdFile = path.resolve("block-data.json5").toFile()
-            if (!pdFile.exists()) {
-                pdFile.createNewFile()
+            val bdFile = path.resolve("block-data.json5").toFile()
+            if (!bdFile.exists()) {
+                bdFile.createNewFile()
             }
-            pdFile.writeText(Json.encodeToString(blockData))
+            bdFile.writeText(Json.encodeToString(blockData))
             val uuidFile = path.resolve("coop-uuids.json5").toFile()
             if (!uuidFile.exists()) {
                 uuidFile.createNewFile()
             }
             uuidFile.writeText(Json.encodeToString(uuidParents))
+            val pdFile = path.resolve("player-data.json5").toFile()
+            if (!pdFile.exists()) {
+                pdFile.createNewFile()
+            }
+            pdFile.writeText(Json.encodeToString(playerData))
             val pCFile = path.resolve("player-configs.json5").toFile()
             if (!pCFile.exists()) {
                 pCFile.createNewFile()
@@ -351,7 +367,7 @@ class GameInstance(
         instance.eventNode().listen<PlayerBlockInteractEvent> { e ->
             val item = e.player.getItemInHand(e.hand)
             val building = Building.getBuildingByBlock(e.block)
-            var callItemUse = building?.shouldCallItemUse() ?: false
+            var callItemUse = building?.shouldCallItemUse(item) ?: false
             val data = e.player.data
             if (building != null && data != null) {
                 val ref = building.playerRef.get(data.buildings)
@@ -426,6 +442,14 @@ class GameInstance(
                 log(e)
             }
         }, TaskSchedule.tick(70), TaskSchedule.tick(70))
+        // Playtime tick
+        instance.scheduler().scheduleTask({
+            for (player in instance.players) {
+                val playerData = player.playerData ?: continue
+                playerData.playtime++
+            }
+            TaskSchedule.seconds(1)
+        }, TaskSchedule.seconds(1))
     }
 
     private val scoreboard = Sidebar(
@@ -451,11 +475,13 @@ class GameInstance(
                 scoreboard.setTitle(
                     scoreboardTitleList[scoreboardTitleIndex]
                 )
+                val names = mutableSetOf<String>()
                 for (player in blockData.toBlockSortedList()) {
                     if (player.blocks == 0) continue
                     if (player.playerDisplayName == "") player.playerDisplayName =
                         instance.getPlayerByUuid(player.uuid.toUUID())?.username ?: continue
                     val line = scoreboard.getLine(player.playerDisplayName)
+                    names += player.playerDisplayName
                     if (line != null) {
                         if (line.line != player.blocks) {
                             scoreboard.updateLineScore(line.id, player.blocks)
@@ -469,6 +495,9 @@ class GameInstance(
                             )
                         )
                     }
+                }
+                for (entry in scoreboard.lines) {
+                    if (entry.id !in names) scoreboard.removeLine(entry.id)
                 }
             } catch (e: Exception) {
                 log("An exception occurred in the scoreboard task!", LogType.EXCEPTION)
@@ -496,6 +525,9 @@ class GameInstance(
             }
             e.player.config
             scoreboard.addViewer(e.player)
+            if (!playerData.contains(e.player.uuid.toString())) {
+                playerData[e.player.uuid.toString()] = PlayerData()
+            }
         }
     }
 
@@ -720,7 +752,8 @@ class GameInstance(
                                         ClaimWaterItem.destroyPlayerRaft(it.buildingPosition, instance)
                                         instance.setBlock(it.playerPosition, Block.SAND)
                                     } else {
-                                        instance.setBlock(it.visiblePosition, Block.GRASS_BLOCK)
+                                        val visible = if (it.visiblePosition.isUnderground) instanceConfig.undergroundBlock else Block.GRASS_BLOCK
+                                        instance.setBlock(it.visiblePosition, visible)
                                         instance.setBlock(it.playerPosition, Block.GRASS_BLOCK)
                                     }
                                     instance.setBlock(it.buildingPosition, Block.AIR)

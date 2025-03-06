@@ -51,7 +51,7 @@ abstract class Building(val producesPollution: Boolean = false) {
          */
         fun getResourceUse(currentDisposableResources: Int, count: Int): Int
 
-        fun shouldCallItemUse(): Boolean = false
+        fun shouldCallItemUse(item: ItemStack): Boolean = false
 
         companion object {
             val registry: MutableSet<BuildingCompanion> = mutableSetOf()

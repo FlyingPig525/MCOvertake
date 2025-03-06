@@ -6,6 +6,7 @@ import io.github.flyingpig525.*
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.building.organicMatter
 import io.github.flyingpig525.data.player.BlockData
+import io.github.flyingpig525.data.player.PlayerData.Companion.playerData
 import io.github.flyingpig525.data.research.action.ActionData
 import io.github.flyingpig525.dsl.blockDisplay
 import io.github.flyingpig525.ksp.Item
@@ -67,26 +68,27 @@ object UpgradeWallItem : Actionable {
     override fun onInteract(event: PlayerUseItemEvent): Boolean {
         val instance = event.instance
         val data = event.player.data ?: return true
+        val playerData = event.player.playerData ?: return true
         val target = event.player.getTrueTarget(20)?.buildingPosition ?: return true
-        if (event.player.isSneaking && data.targetWallLevel != 0) {
-            if (data.bulkWallQueueFirstPosJustReset) {
-                data.bulkWallQueueFirstPosJustReset = false
+        if (event.player.isSneaking && playerData.targetWallLevel != 0) {
+            if (playerData.bulkWallQueueFirstPosJustReset) {
+                playerData.bulkWallQueueFirstPosJustReset = false
                 return true
             }
-            if (data.bulkWallQueueFirstPos != null) {
-                val lowX = min(data.bulkWallQueueFirstPos!!.x, target.x).toInt()
-                val lowZ = min(data.bulkWallQueueFirstPos!!.z, target.z).toInt()
-                val maxX = max(data.bulkWallQueueFirstPos!!.x, target.x).toInt()
-                val maxZ = max(data.bulkWallQueueFirstPos!!.z, target.z).toInt()
-                instance.getNearbyEntities(data.bulkWallQueueFirstPos!!, 0.2).onEach {
+            if (playerData.bulkWallQueueFirstPos != null) {
+                val lowX = min(playerData.bulkWallQueueFirstPos!!.x, target.x).toInt()
+                val lowZ = min(playerData.bulkWallQueueFirstPos!!.z, target.z).toInt()
+                val maxX = max(playerData.bulkWallQueueFirstPos!!.x, target.x).toInt()
+                val maxZ = max(playerData.bulkWallQueueFirstPos!!.z, target.z).toInt()
+                instance.getNearbyEntities(playerData.bulkWallQueueFirstPos!!, 0.2).onEach {
                     if (it.hasTag(Tag.Boolean("bulkWallUpgradeSelector"))) it.remove()
                 }
-                data.bulkWallQueueFirstPos = null
-                data.bulkWallQueueFirstPosJustReset = true
+                playerData.bulkWallQueueFirstPos = null
+                playerData.bulkWallQueueFirstPosJustReset = true
                 for (x in lowX..maxX) for (z in lowZ..maxZ) {
                     val pos = target.withX(x.toDouble()).withZ(z.toDouble())
                     if (instance.getBlock(pos).wallLevel != 0 && instance.getBlock(pos.playerPosition) == data.block) {
-                        data.wallUpgradeQueue += pos to data.targetWallLevel
+                        data.wallUpgradeQueue += pos to playerData.targetWallLevel
                         blockDisplay {
                             this.block = Block.LIME_STAINED_GLASS
                             hasGravity = false
@@ -100,16 +102,16 @@ object UpgradeWallItem : Actionable {
                 return true
             }
             instance.scheduleNextTick {
-                data.bulkWallQueueFirstPos = target
+                playerData.bulkWallQueueFirstPos = target
             }
             instance.scheduler().scheduleTask({ try {
-                if (data.bulkWallQueueFirstPos == null) return@scheduleTask TaskSchedule.stop()
+                if (playerData.bulkWallQueueFirstPos == null) return@scheduleTask TaskSchedule.stop()
                 val player = instance.getPlayerByUuid(event.player.uuid) ?: return@scheduleTask TaskSchedule.stop()
                 val target = player.getTrueTarget(20)?.buildingPosition ?: return@scheduleTask TaskSchedule.tick(1)
-                val lowX = min(data.bulkWallQueueFirstPos!!.x, target.x)
-                val lowZ = min(data.bulkWallQueueFirstPos!!.z, target.z)
-                val maxX = max(data.bulkWallQueueFirstPos!!.x, target.x) + 1
-                val maxZ = max(data.bulkWallQueueFirstPos!!.z, target.z) + 1
+                val lowX = min(playerData.bulkWallQueueFirstPos!!.x, target.x)
+                val lowZ = min(playerData.bulkWallQueueFirstPos!!.z, target.z)
+                val maxX = max(playerData.bulkWallQueueFirstPos!!.x, target.x) + 1
+                val maxZ = max(playerData.bulkWallQueueFirstPos!!.z, target.z) + 1
                 val y40 = target.withX(lowX).withZ(lowZ).add(0.0, PIXEL_SIZE, 0.0)
                 val oneZero = y40.withX(maxX)
                 val oneOne = oneZero.withZ(maxZ)
@@ -147,11 +149,11 @@ object UpgradeWallItem : Actionable {
 
     fun upgradeWall(block: Block, position: Point, data: BlockData, instance: Instance, player: Player? = null): Boolean {
         val cost = getWallUpgradeCost(block) ?: return false
-        var cooldownMs = 1000L
+        var cooldownMs = 600L
         position.playerPosition.repeatAdjacent {
-            val block = instance.getBlock(it)
-            if (block != Block.GRASS_BLOCK || block != Block.SAND || block != data.block || block != Block.AIR) {
-                cooldownMs = 2000L
+            val block = instance.getBlock(it).defaultState()
+            if (block != Block.GRASS_BLOCK && block != Block.SAND && block != data.block && block != Block.AIR && block != Block.DIAMOND_BLOCK) {
+                cooldownMs = 1400L
             }
         }
         val actionData = ActionData.UpgradeWall(data, instance).apply {
@@ -163,7 +165,11 @@ object UpgradeWallItem : Actionable {
             return false
         }
         data.organicMatter -= actionData.cost
-        data.wallUpgradeCooldown = actionData.cooldown
+        if (data.getPlayers().isEmpty()) {
+            data.wallUpgradeCooldown = Cooldown(actionData.cooldown.duration.multipliedBy(4L))
+        } else {
+            data.wallUpgradeCooldown = Cooldown(actionData.cooldown.duration.multipliedBy(2L))
+        }
         data.sendPacket(
             SetCooldownPacket(
                 itemMaterial.cooldownIdentifier,
@@ -217,6 +223,7 @@ object UpgradeWallItem : Actionable {
 
     override fun onHandAnimation(event: PlayerHandAnimationEvent) {
         val data = event.player.data ?: return
+        val playerData = event.player.playerData ?: return
         if (data.handAnimationWasDrop) return
         val target = event.player.getTrueTarget(20) ?: return
         val block = event.instance.getBlock(target.buildingPosition)
@@ -270,7 +277,7 @@ object UpgradeWallItem : Actionable {
                         }
                     }
                 } else if (res.clickedItem == confirmItem) {
-                    data.targetWallLevel = targetLevel
+                    playerData.targetWallLevel = targetLevel
                     player.closeInventory()
                 }
             }
@@ -280,8 +287,8 @@ object UpgradeWallItem : Actionable {
             event.instance.getNearbyEntities(target.buildingPosition, 0.2).onEach {
                 if (it.hasTag(Tag.Boolean("wallUpgrade"))) it.remove()
             }
-        } else if (data.targetWallLevel != 0) {
-            data.wallUpgradeQueue.addFirst(target.buildingPosition to data.targetWallLevel)
+        } else if (playerData.targetWallLevel != 0) {
+            data.wallUpgradeQueue.addFirst(target.buildingPosition to playerData.targetWallLevel)
             blockDisplay {
                 this.block = Block.LIME_STAINED_GLASS
                 hasGravity = false

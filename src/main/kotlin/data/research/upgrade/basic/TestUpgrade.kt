@@ -1,5 +1,6 @@
 package io.github.flyingpig525.data.research.upgrade
 
+import io.github.flyingpig525.GameInstance
 import io.github.flyingpig525.data.player.permission.Permission
 import io.github.flyingpig525.data.research.action.ActionData
 import io.github.flyingpig525.data.research.currency.BasicResearch
@@ -24,8 +25,8 @@ class TestUpgrade : ResearchUpgrade() {
     override val cost: Long
         get() = 600
 
-    override fun item(currency: ResearchCurrency): ItemStack = item(Material.GOLDEN_HOE) {
-        if ((currency as BasicResearch).noOp) return ItemStack.AIR
+    override fun item(currency: ResearchCurrency, gameInstance: GameInstance): ItemStack = item(Material.GOLDEN_HOE) {
+        if (!gameInstance.instanceConfig.opResearch) return ItemStack.AIR
         itemName = "<gold><bold>Literally the best upgrade <gray>-<aqua> Level: $level/$maxLevel".asMini()
         lore {
             +"<dark_gray>Removes claim cooldown and cost".asMini().noItalic()

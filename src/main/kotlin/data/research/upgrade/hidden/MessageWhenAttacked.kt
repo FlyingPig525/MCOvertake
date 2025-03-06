@@ -1,5 +1,6 @@
 package io.github.flyingpig525.data.research.upgrade
 
+import io.github.flyingpig525.GameInstance
 import io.github.flyingpig525.data.research.action.ActionData
 import io.github.flyingpig525.data.research.currency.ResearchCurrency
 import kotlinx.serialization.Serializable
@@ -19,7 +20,7 @@ class MessageWhenAttacked : ResearchUpgrade(level = 1) {
     override val cost: Long = 0L
     @Transient private var cooldown: Cooldown = Cooldown(Duration.ZERO)
 
-    override fun item(currency: ResearchCurrency): ItemStack = ItemStack.AIR
+    override fun item(currency: ResearchCurrency, gameInstance: GameInstance): ItemStack = ItemStack.AIR
 
     override fun onAttacked(eventData: ActionData.Attacked): ActionData.Attacked? {
         if (!cooldown.isReady(Instant.now().toEpochMilli())) return null

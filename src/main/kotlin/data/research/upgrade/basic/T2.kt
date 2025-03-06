@@ -1,5 +1,6 @@
 package io.github.flyingpig525.data.research.upgrade
 
+import io.github.flyingpig525.GameInstance
 import io.github.flyingpig525.data.research.currency.BasicResearch
 import io.github.flyingpig525.data.research.currency.ResearchCurrency
 import kotlinx.serialization.Serializable
@@ -17,8 +18,8 @@ class T2 : ResearchUpgrade() {
     override var maxLevel: Int = 6
     override val name: String = "Get Money!"
 
-    override fun item(currency: ResearchCurrency): ItemStack = item(Material.GOLD_INGOT) {
-        if ((currency as BasicResearch).noOp) return ItemStack.AIR
+    override fun item(currency: ResearchCurrency, gameInstance: GameInstance): ItemStack = item(Material.GOLD_INGOT) {
+        if (!gameInstance.instanceConfig.opResearch) return ItemStack.AIR
         itemName = "<gold><bold>$name</bold> <gray>-<aqua> Level: $level/$maxLevel".asMini()
     }
 

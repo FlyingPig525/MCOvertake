@@ -3,6 +3,7 @@ package io.github.flyingpig525.item
 import io.github.flyingpig525.GLOBAL_RESEARCH_SYMBOL
 import io.github.flyingpig525.GameInstance
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
+import io.github.flyingpig525.GameInstance.Companion.gameInstance
 import io.github.flyingpig525.data
 import io.github.flyingpig525.data.research.currency.ResearchCurrency
 import io.github.flyingpig525.data.research.upgrade.ResearchUpgrade
@@ -73,10 +74,10 @@ object ResearchUpgradeItem : Actionable {
 
         var i = 0
         for (upgrade in currency.upgrades) {
-            val newItem = upgrade.item(currency).withTag(Tag.String("name"), upgrade.name)
+            val newItem = upgrade.item(currency, e.instance.gameInstance!!).withTag(Tag.String("name"), upgrade.name)
             if (newItem.material() == Material.AIR) continue
             val lore = newItem.get(ItemComponent.LORE)!!.map {
-                if (it.toString().contains("Cost:") && upgrade.level == upgrade.maxLevel) {
+                if (upgrade.level == upgrade.maxLevel && it.toString().contains("Cost:")) {
                     return@map "<green><bold>Max Level".asMini().noItalic()
                 }
                 it
@@ -110,9 +111,9 @@ object ResearchUpgradeItem : Actionable {
                 return@addInventoryCondition
             }
             (player.openInventory!! as Inventory).apply {
-                val newItem = upgrade.item(currency).withTag(Tag.String("name"), upgrade.name)
+                val newItem = upgrade.item(currency, player.gameInstance!!).withTag(Tag.String("name"), upgrade.name)
                 val lore = newItem.get(ItemComponent.LORE)!!.map {
-                    if (it.toString().contains("Cost:") && upgrade.level == upgrade.maxLevel) {
+                    if (upgrade.level == upgrade.maxLevel && it.toString().contains("Cost:")) {
                         return@map "<green><bold>Max Level".asMini().noItalic()
                     }
                     it
