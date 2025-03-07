@@ -263,6 +263,7 @@ class GameInstance(
                     playerData.block -> {
                         if (blockIsWall(buildingBlock)) {
                             UpgradeWallItem.setItemSlot(e.player)
+                            UpgradeWallAutomationItem.setItemSlot(e.player)
                         } else {
                             OwnedBlockItem.setItemSlot(e.player)
                         }
@@ -280,6 +281,10 @@ class GameInstance(
                             e.player.inventory.idle()
                         }
                     }
+                }
+                if (e.player.inventory[0].getTag(Tag.String("identifier")) != UpgradeWallItem.identifier
+                    && e.player.inventory[1] != ItemStack.AIR) {
+                    e.player.inventory[1] = ItemStack.AIR
                 }
                 val y40 = target.buildingPosition.add(0.0, PIXEL_SIZE, 0.0)
                 val oneZero = y40.add(1.0 - PIXEL_SIZE, 0.0, 0.0)
