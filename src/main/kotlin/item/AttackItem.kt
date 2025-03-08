@@ -251,7 +251,6 @@ object AttackItem : Actionable {
     }
 
     override fun setItemSlot(player: Player) {
-        if (itemCheck(player, this)) return
         player.inventory[0] = getItem(player.uuid, instances.fromInstance(player.instance)!!)
     }
 }
