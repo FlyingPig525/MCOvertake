@@ -53,7 +53,8 @@ class LubricantProcessor : Building(producesPollution = true) {
             itemName = "$lubricantColor$LUBRICANT_SYMBOL Lubricant Processor <gray>-</gray><green> $MATTER_SYMBOL ${cost.organicMatter}".asMini()
             lore {
                 +"<dark_gray>Processes oil provided by Oil Extractors".asMini()
-                +"<dark_gray>to create Lubricant"
+                +"<dark_gray>to create Lubricant".asMini()
+                +"<dark_gray>Can only be placed underground".asMini()
                 +"<gray>Generates 5 $lubricant".asMini().noItalic()
                 +"<gray>Must be placed directly next to an Oil Extractor".asMini().noItalic()
                 pollutant()

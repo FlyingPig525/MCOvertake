@@ -66,7 +66,7 @@ class ElevatedBiosphere : Building() {
     }
 
     @io.github.flyingpig525.ksp.BuildingCompanion(orderAfter = "first", category = SkyCategory::class)
-    companion object ElevatedBiosphereCompanion : Building.BuildingCompanion {
+    companion object ElevatedBiosphereCompanion : Building.BuildingCompanion, Validated {
         override val block: Block = Block.BEACON
         override val identifier: String = "sky:biosphere"
         override val playerRef: KProperty1<PlayerBuildings, Building> = PlayerBuildings::elevatedBiospheres
@@ -78,6 +78,9 @@ class ElevatedBiosphere : Building() {
                 lore {
                     +"<dark_gray>Allows claiming of sky blocks within a 50 block".asMini()
                     +"<dark_gray>radius on both the current and next level".asMini()
+                    +"<dark_gray>If production cannot handle the total amount of elevated".asMini()
+                    +"<dark_gray>biospheres you have, they will be disabled in the opposite".asMini()
+                    +"<dark_gray>order you placed them in".asMini()
                     +"<gray>Consumes 40 $lubricant per research tick".asMini().noItalic()
                     +"<gray>Consumes 32 $disposableResources on the first construction".asMini().noItalic()
                     +("<gray>Consumes 10 $disposableResources on any further construction " +
@@ -94,5 +97,7 @@ class ElevatedBiosphere : Building() {
 
         override fun getResourceUse(currentDisposableResources: Int, count: Int): Int =
             currentDisposableResources + if (count == 0) 32 else 10
+
+        override fun validate(instance: Instance, point: Point): Boolean = !point.isUnderground
     }
 }

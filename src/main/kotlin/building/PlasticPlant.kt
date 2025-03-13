@@ -50,7 +50,8 @@ class PlasticPlant : Building(producesPollution = true) {
             itemName = "$plasticColor$PLASTIC_SYMBOL Plastic Plant <gray>-</gray><green> $MATTER_SYMBOL ${cost.organicMatter}".asMini()
             lore {
                 +"<dark_gray>Processes oil provided by Oil Extractors".asMini()
-                +"<dark_gray>to create Plastic"
+                +"<dark_gray>to create Plastic".asMini()
+                +"<dark_gray>Can only be placed underground".asMini()
                 +"<gray>Generates 20 $plastic".asMini().noItalic()
                 +"<gray>Must be placed directly next to an Oil Extractor".asMini().noItalic()
                 pollutant()

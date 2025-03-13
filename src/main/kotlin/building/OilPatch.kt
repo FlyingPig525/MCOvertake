@@ -52,6 +52,7 @@ class OilPatch : Building() {
             lore {
                 +"<dark_gray>Brings oil from deep underground".asMini()
                 +"<dark_gray>to a more manageable depth".asMini()
+                +"<dark_gray>Can only be placed underground".asMini()
                 +"<gray>Supplies enough oil to support 4".asMini().noItalic()
                 +"<gray>Oil Extractors".asMini().noItalic()
                 resourcesConsumed(2, count)

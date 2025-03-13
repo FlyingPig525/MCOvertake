@@ -68,6 +68,7 @@ class ToxicologyLab : Building() {
                 lore {
                     +"<dark_gray>Utilizes the carbon from pollution and".asMini()
                     +"<dark_gray>turns it into a concentrated toxic gas".asMini()
+                    +"<dark_gray>Can only be placed in the sky".asMini()
                     +"<gray>Consumes 20 $lubricant per research tick".asMini().noItalic()
                     +"<gray>Produces 0.05 $power per pollution-producing building every 30 ticks".asMini().noItalic()
                     resourcesConsumed(6, count)

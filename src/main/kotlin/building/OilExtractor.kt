@@ -55,6 +55,7 @@ class OilExtractor : Building() {
                 +"<dark_gray>Extracts oil from surface rock".asMini()
                 +"<gray>Supplies enough oil to support 2".asMini().noItalic()
                 +"<gray>dependents".asMini().noItalic()
+                +"<dark_gray>Can only be placed underground".asMini()
                 +"<gray>Must be placed directly next to an Oil Patch".asMini().noItalic()
                 resourcesConsumed(3, count)
                 amountOwned(count)

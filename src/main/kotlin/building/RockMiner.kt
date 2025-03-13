@@ -65,6 +65,7 @@ class RockMiner : Building(producesPollution = true) {
             lore {
                 +"<dark_gray>Breaks down adjacent rock walls".asMini()
                 +"<dark_gray>to create organic matter".asMini()
+                +"<dark_gray>Can only be placed underground".asMini()
                 +"<gray>Generates 2 $organicMatter every 30 ticks".asMini().noItalic()
                 pollutant()
                 resourcesConsumed(4, count)
