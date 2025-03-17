@@ -32,15 +32,13 @@ import kotlin.reflect.KProperty1
 class UndergroundTeleporter : Building(), Interactable {
     override val resourceUse: Int = count * 20
     override val cost get() = CurrencyCost.genericOrganicMatter(count, 750.0)
+    override val itemGetter: (cost: CurrencyCost, count: Int) -> ItemStack
+        get() = ::getItem
 
     override fun place(playerTarget: Point, instance: Instance, playerData: BlockData) {
         instance.setBlock(playerTarget.buildingPosition, block.building(identifier))
         spawn(playerTarget.buildingPosition, instance, playerData.uuid.toUUID()!!)
         count++
-    }
-
-    override fun select(player: Player) {
-        player.inventory[4] = getItem(cost, count)
     }
 
     override fun onInteract(e: PlayerBlockInteractEvent): Boolean {

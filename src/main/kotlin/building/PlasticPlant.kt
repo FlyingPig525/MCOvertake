@@ -26,14 +26,12 @@ import kotlin.reflect.KProperty1
 class PlasticPlant : Building() {
     override val resourceUse: Int get() = 3 * count
     override val cost get() = CurrencyCost.genericOrganicMatter(count, 400.0)
+    override val itemGetter: (cost: CurrencyCost, count: Int) -> ItemStack
+        get() = ::getItem
 
     override fun place(playerTarget: Point, instance: Instance, data: BlockData) {
         instance.setBlock(playerTarget.buildingPosition, block.building(identifier))
         count++
-    }
-
-    override fun select(player: Player) {
-        player.inventory[BUILDING_INVENTORY_SLOT] = getItem(cost, count)
     }
 
     override fun tick(data: BlockData) {

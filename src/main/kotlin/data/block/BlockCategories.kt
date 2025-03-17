@@ -85,7 +85,6 @@ enum class UndergroundCategory(override val material: Material) : CategoryBlock 
     Lapis_Block(LAPIS_BLOCK),
     Deepslate_Lapis_Ore(DEEPSLATE_LAPIS_ORE),
     Diamond_Ore(DIAMOND_ORE),
-    Diamond_Block(DIAMOND_BLOCK),
     Deepslate_Diamond_Block(DEEPSLATE_DIAMOND_ORE),
     Block_of_Amethyst(AMETHYST_BLOCK),
     Sculk(SCULK)

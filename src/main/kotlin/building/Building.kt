@@ -1,14 +1,18 @@
 package io.github.flyingpig525.building
 
+import io.github.flyingpig525.BUILDING_INVENTORY_SLOT
 import io.github.flyingpig525.building.Building.BuildingCompanion.Companion.registry
 import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.data.player.CurrencyCost
 import io.github.flyingpig525.ksp.PlayerBuildings
 import kotlinx.serialization.Serializable
+import net.bladehunt.kotstom.extension.adventure.asMini
+import net.bladehunt.kotstom.extension.set
 import net.minestom.server.coordinate.Point
 import net.minestom.server.entity.Player
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
+import net.minestom.server.item.ItemComponent
 import net.minestom.server.item.ItemStack
 import net.minestom.server.tag.Tag
 import kotlin.reflect.KProperty1
@@ -18,6 +22,7 @@ abstract class Building {
     var count: Int = 0
     abstract val resourceUse: Int
     abstract val cost: CurrencyCost
+    protected abstract val itemGetter: (cost: CurrencyCost, count: Int) -> ItemStack
 
     abstract fun place(playerTarget: Point, instance: Instance, data: BlockData)
 
@@ -25,7 +30,11 @@ abstract class Building {
      * @return Whether this building should be destroyed or not
      */
     open fun onDestruction(point: Point, instance: Instance, data: BlockData): Boolean = true
-    abstract fun select(player: Player)
+    open fun select(player: Player) {
+        val item = itemGetter(cost, count)
+        val lore = item.get(ItemComponent.LORE).apply { this?.add("<gold>Crouch + right-click to select another building".asMini()) }
+        player.inventory[BUILDING_INVENTORY_SLOT] = if (lore != null) item.withLore(lore) else item
+    }
     open fun tick(data: BlockData) {}
 
     override fun toString(): String {
