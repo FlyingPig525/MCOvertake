@@ -1,6 +1,7 @@
 package io.github.flyingpig525.data.player
 
 import io.github.flyingpig525.GameInstance.Companion.gameInstance
+import io.github.flyingpig525.serialization.PointSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import net.minestom.server.coordinate.Point
@@ -18,7 +19,8 @@ class PlayerData {
     var bulkWallQueueFirstPosJustReset = false
 
     var playtime: Long = 0
-
+    var spawnPos: @Serializable(with = PointSerializer::class) Point? = null
+    var wasFlying: Boolean = false
     companion object {
         val Player.playerData: PlayerData? get() = gameInstance?.playerData?.get(uuid.toString())
     }

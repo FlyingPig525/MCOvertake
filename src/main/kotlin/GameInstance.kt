@@ -27,8 +27,11 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.bladehunt.kotstom.InstanceManager
 import net.bladehunt.kotstom.SchedulerManager
+import net.bladehunt.kotstom.dsl.item.item
+import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.dsl.listen
 import net.bladehunt.kotstom.extension.adventure.asMini
+import net.bladehunt.kotstom.extension.asPos
 import net.bladehunt.kotstom.extension.get
 import net.bladehunt.kotstom.extension.set
 import net.kyori.adventure.text.format.NamedTextColor
@@ -39,12 +42,16 @@ import net.minestom.server.entity.Entity
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
 import net.minestom.server.event.instance.InstanceTickEvent
+import net.minestom.server.event.instance.RemoveEntityFromInstanceEvent
 import net.minestom.server.event.player.*
+import net.minestom.server.event.trait.PlayerInstanceEvent
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.InstanceContainer
 import net.minestom.server.instance.anvil.AnvilLoader
 import net.minestom.server.instance.block.Block
+import net.minestom.server.instance.block.BlockHandler.PlayerDestroy
 import net.minestom.server.item.ItemStack
+import net.minestom.server.item.Material
 import net.minestom.server.network.packet.server.SendablePacket
 import net.minestom.server.network.packet.server.play.ParticlePacket
 import net.minestom.server.particle.Particle
@@ -418,6 +425,18 @@ class GameInstance(
                 }
             }
         }
+
+        instance.eventNode().listen<RemoveEntityFromInstanceEvent> {
+            if (it.entity !is Player) return@listen
+            (it.entity as Player).apply {
+                playerData?.spawnPos = it.entity.position
+                if (isFlying) {
+                    playerData?.wasFlying = true
+                } else {
+                    playerData?.wasFlying = false
+                }
+            }
+        }
     }
 
     fun registerTasks() {
@@ -516,7 +535,11 @@ class GameInstance(
             e.player.gameMode = GameMode.ADVENTURE
             e.player.flyingSpeed = 0.5f
             e.player.isAllowFlying = true
-            e.player.teleport(Pos(5.0, 41.0, 5.0))
+            val tpPos = e.player.playerData?.spawnPos?.asPos() ?: Pos(5.0, 41.0, 5.0)
+            e.player.teleport(tpPos)
+            if (e.player.playerData?.wasFlying == true) {
+                e.player.isFlying = true
+            }
             e.player.addEffect(Potion(PotionEffect.NIGHT_VISION, 1, -1))
             val data = e.player.data
             if (data == null) {
@@ -529,6 +552,15 @@ class GameInstance(
                 }
             }
             e.player.config
+            val selectInstanceItem = item(Material.COMPASS) {
+                itemName = "<gold>Switch Instance".asMini()
+            }
+            e.player.inventory[17] = selectInstanceItem
+            e.player.inventory.addInventoryCondition { player, slot, type, res ->
+                if (res.clickedItem == selectInstanceItem) {
+                    selectInstance(player)
+                }
+            }
             scoreboard.addViewer(e.player)
             if (!playerData.contains(e.player.uuid.toString())) {
                 playerData[e.player.uuid.toString()] = PlayerData()

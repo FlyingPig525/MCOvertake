@@ -310,46 +310,7 @@ fun main() = runBlocking { try {
     }
     lobbyInstance.eventNode().listen<PlayerUseItemEvent> { e ->
         if (e.itemStack.material() == Material.COMPASS) {
-            val type = with(instances) {
-                if (size <= 9) CHEST_1_ROW
-                else if (size <= 18) CHEST_2_ROW
-                else if (size <= 27) CHEST_3_ROW
-                else if (size <= 36) CHEST_4_ROW
-                else if (size <= 45) CHEST_5_ROW
-                else CHEST_6_ROW
-            }
-            val inventory = Inventory(type, "Game Instances")
-            instances.onEachIndexed { index, (name, instance) ->
-                inventory[index] = item(Material.WHITE_WOOL) {
-                    itemName = name.asMini()
-                    if (instance.instanceConfig.whitelist.isNotEmpty()) {
-                        lore {
-                            val color = if (e.player.username in instance.instanceConfig.whitelist) "<green>" else "<red>"
-                            +"${color}Whitelisted".asMini().noItalic()
-                        }
-                    }
-                    set(Tag.String("selector"), name)
-                }
-            }
-            inventory.addInventoryCondition { player: Player, slot: Int, clickType: ClickType, res: InventoryConditionResult ->
-                res.isCancel = true
-                if (res.clickedItem.hasTag(Tag.String("selector"))) {
-                    val instance = instances[res.clickedItem.getTag(Tag.String("selector"))!!]
-                    if (instance != null) {
-                        if (instance.instanceConfig.whitelist.isNotEmpty() && player.username !in instance.instanceConfig.whitelist) {
-                            player.sendMessage("<red>You are not whitelisted in this instance".asMini())
-                            return@addInventoryCondition
-                        }
-                        if (player.instance == instance.instance) return@addInventoryCondition
-                        player.inventory.clear()
-                        player.closeInventory()
-                        player.removeBossBars()
-                        player.sendMessage("<gray>Sending you to <red>${res.clickedItem.getTag(Tag.String("selector"))}<gray>...".asMini())
-                        player.instance = instance.instance
-                    }
-                }
-            }
-            e.player.openInventory(inventory)
+            selectInstance(e.player)
         }
     }
     var scoreboardTitleProgress = -1.0
@@ -727,4 +688,47 @@ fun initConsoleCommands() {
     ConfigCommand
     SaveCommand
     OpCommand
+}
+
+fun selectInstance(player: Player) {
+    val type = with(instances) {
+        if (size <= 9) CHEST_1_ROW
+        else if (size <= 18) CHEST_2_ROW
+        else if (size <= 27) CHEST_3_ROW
+        else if (size <= 36) CHEST_4_ROW
+        else if (size <= 45) CHEST_5_ROW
+        else CHEST_6_ROW
+    }
+    val inventory = Inventory(type, "Game Instances")
+    instances.onEachIndexed { index, (name, instance) ->
+        inventory[index] = item(Material.WHITE_WOOL) {
+            itemName = name.asMini()
+            if (instance.instanceConfig.whitelist.isNotEmpty()) {
+                lore {
+                    val color = if (player.username in instance.instanceConfig.whitelist) "<green>" else "<red>"
+                    +"${color}Whitelisted".asMini().noItalic()
+                }
+            }
+            set(Tag.String("selector"), name)
+        }
+    }
+    inventory.addInventoryCondition { player: Player, slot: Int, clickType: ClickType, res: InventoryConditionResult ->
+        res.isCancel = true
+        if (res.clickedItem.hasTag(Tag.String("selector"))) {
+            val instance = instances[res.clickedItem.getTag(Tag.String("selector"))!!]
+            if (instance != null) {
+                if (player.instance == instance.instance) return@addInventoryCondition
+                if (instance.instanceConfig.whitelist.isNotEmpty() && player.username !in instance.instanceConfig.whitelist) {
+                    player.sendMessage("<red>You are not whitelisted in this instance".asMini())
+                    return@addInventoryCondition
+                }
+                player.inventory.clear()
+                player.closeInventory()
+                player.removeBossBars()
+                player.sendMessage("<gray>Sending you to <red>${res.clickedItem.getTag(Tag.String("selector"))}<gray>...".asMini())
+                player.instance = instance.instance
+            }
+        }
+    }
+    player.openInventory(inventory)
 }
