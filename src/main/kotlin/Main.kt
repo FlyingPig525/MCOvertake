@@ -96,7 +96,7 @@ const val GLOBAL_RESEARCH_SYMBOL = "\uD83E\uDDEA"
 const val OIL_SYMBOL = "☀"
 const val PLASTIC_SYMBOL = "⏺"
 const val LUBRICANT_SYMBOL = "₴"
-const val SKY_SYMBOL = "INSERT SYMBOL"
+const val SKY_SYMBOL = "⭐"
 
 const val BUILDING_INVENTORY_SLOT = 4
 
