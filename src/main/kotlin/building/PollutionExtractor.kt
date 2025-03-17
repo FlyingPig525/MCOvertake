@@ -31,6 +31,8 @@ class PollutionExtractor : Building() {
             .genericMechanicalParts(count, 1500)
             .genericPlastic(count, 250)
             .genericOrganicMatter(count, 900.0)
+    override val itemGetter: (cost: CurrencyCost, count: Int) -> ItemStack
+        get() = ::getItem
 
     override fun place(playerTarget: Point, instance: Instance, data: BlockData) {
         instance.setBlock(playerTarget.buildingPosition, block.building(identifier))
@@ -43,7 +45,7 @@ class PollutionExtractor : Building() {
 
     override fun tick(data: BlockData) {
         if (count == 0) return
-        val pollution = data.buildings.sumOf { if (it.producesPollution) it.count else 0 }
+        val pollution = data.buildings.sumOf { if (it.producesPollution) it.count else 0 }.coerceAtMost(250)
         data.lubricant -= 20 * count
         data.organicMatter += 0.05 * pollution
     }
