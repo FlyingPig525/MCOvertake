@@ -29,6 +29,8 @@ import kotlin.reflect.KProperty1
 class RockMiner : Building(producesPollution = true) {
     override val resourceUse: Int get() = 4 * count
     override val cost get() = CurrencyCost.genericMechanicalParts(count, 40)
+    override val itemGetter: (cost: CurrencyCost, count: Int) -> ItemStack
+        get() = ::getItem
 
     override fun place(playerTarget: Point, instance: Instance, data: BlockData) {
         playerTarget.buildingPosition.repeatDirection { point, dir ->
@@ -44,10 +46,6 @@ class RockMiner : Building(producesPollution = true) {
         }
         spawn(playerTarget.buildingPosition, instance, data.uuid.toUUID()!!)
         count++
-    }
-
-    override fun select(player: Player) {
-        player.inventory[BUILDING_INVENTORY_SLOT] = getItem(cost, count)
     }
 
     override fun tick(data: BlockData) {

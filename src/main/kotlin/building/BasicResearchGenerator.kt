@@ -29,13 +29,12 @@ import kotlin.reflect.KProperty1
 class BasicResearchGenerator : Building() {
     override val resourceUse: Int get() = 3 * count
     override val cost get() = CurrencyCost.genericMechanicalParts(count, 100)
+    override val itemGetter: (cost: CurrencyCost, count: Int) -> ItemStack
+        get() = ::getItem
+
     override fun place(playerTarget: Point, instance: Instance, playerData: BlockData) {
         instance.setBlock(playerTarget.buildingPosition, block.building(identifier))
         count++
-    }
-
-    override fun select(player: Player) {
-        player.inventory[BUILDING_INVENTORY_SLOT] = getItem(cost, count)
     }
 
     override fun tick(data: BlockData) {

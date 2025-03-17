@@ -28,14 +28,12 @@ import kotlin.reflect.KProperty1
 class MatterExtractor : Building(producesPollution = true) {
     override val resourceUse: Int get() = count * 3
     override val cost get() = CurrencyCost.genericOrganicMatter(count, 25.0)
+    override val itemGetter: (cost: CurrencyCost, count: Int) -> ItemStack
+        get() = ::getItem
 
     override fun place(playerTarget: Point, instance: Instance, playerData: BlockData) {
         instance.setBlock(playerTarget.buildingPosition, block.building(identifier))
         count++
-    }
-
-    override fun select(player: Player) {
-        player.inventory[BUILDING_INVENTORY_SLOT] = getItem(cost, count)
     }
 
     override fun tick(data: BlockData) {

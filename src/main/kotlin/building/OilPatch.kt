@@ -26,15 +26,14 @@ import kotlin.reflect.KProperty1
 class OilPatch : Building() {
     override val resourceUse: Int get() = 2 * count
     override val cost get() = CurrencyCost.genericOrganicMatter(count, 750.0)
+    override val itemGetter: (cost: CurrencyCost, count: Int) -> ItemStack
+        get() = ::getItem
 
     override fun place(playerTarget: Point, instance: Instance, data: BlockData) {
         instance.setBlock(playerTarget.buildingPosition, block.building(identifier))
         count++
     }
 
-    override fun select(player: Player) {
-        player.inventory[BUILDING_INVENTORY_SLOT] = getItem(cost, count)
-    }
     override fun onDestruction(point: Point, instance: Instance, data: BlockData): Boolean {
         return !point.buildingPosition.repeatDirection { point, dir ->
             Building.getBuildingByBlock(instance.getBlock(point)) == OilExtractor

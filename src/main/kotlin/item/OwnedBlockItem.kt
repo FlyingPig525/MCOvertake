@@ -28,6 +28,7 @@ object OwnedBlockItem : Actionable {
     }
 
     override fun setItemSlot(player: Player) {
+        if (itemCheck(player, this)) return
         val gameInstance = instances.fromInstance(player.instance) ?: return
         player.inventory[0] = getItem(player.uuid, gameInstance)
     }

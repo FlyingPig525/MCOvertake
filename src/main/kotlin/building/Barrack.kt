@@ -29,13 +29,12 @@ import kotlin.reflect.KProperty1
 class Barrack : Building() {
     override val resourceUse: Int get() = count * 2
     override val cost get() = CurrencyCost.genericOrganicMatter(count, 25.0)
+    override val itemGetter: (cost: CurrencyCost, count: Int) -> ItemStack
+        get() = ::getItem
+
     override fun place(playerTarget: Point, instance: Instance, playerData: BlockData) {
         instance.setBlock(playerTarget.buildingPosition, block.building(identifier))
         count++
-    }
-
-    override fun select(player: Player) {
-        player.inventory[BUILDING_INVENTORY_SLOT] = getItem(cost, count)
     }
 
     @io.github.flyingpig525.ksp.BuildingCompanion("TrainingCamp", BasicCategory::class)

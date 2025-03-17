@@ -26,6 +26,7 @@ import kotlin.reflect.KProperty1
 class ArmsManufacturer : Building(producesPollution = true) {
     override val resourceUse: Int get() = 5 * count
     override val cost: CurrencyCost get() = CurrencyCost.genericMechanicalParts(count, 75).genericPlastic(count, 50)
+    override val itemGetter: (cost: CurrencyCost, count: Int) -> ItemStack get() = ::getItem
 
     override fun place(playerTarget: Point, instance: Instance, data: BlockData) {
         instance.setBlock(playerTarget.buildingPosition, block.building(identifier))
@@ -34,10 +35,6 @@ class ArmsManufacturer : Building(producesPollution = true) {
 
     override fun tick(data: BlockData) {
         data.power += 1.5 * count
-    }
-
-    override fun select(player: Player) {
-        player.inventory[BUILDING_INVENTORY_SLOT] = getItem(player.data ?: return)
     }
 
     @io.github.flyingpig525.ksp.BuildingCompanion(orderAfter = "LubricantProcessor", category = UndergroundCategory::class)
