@@ -14,6 +14,7 @@ import io.github.flyingpig525.serialization.BlockSerializer
 import io.github.flyingpig525.wall.wallLevel
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
+import net.bladehunt.kotstom.dsl.instance.buildInstance
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.kyori.adventure.bossbar.BossBar
@@ -157,6 +158,7 @@ class BlockData(val uuid: String, @Serializable(BlockSerializer::class) val bloc
         try {
             buildings.matterExtractors.tick(this)
             buildings.rockMiners.tick(this)
+            buildings.pollutionExtractors.tick(this)
             val player = instance.getPlayerByUuid(UUID.fromString(uuid))
             if (player != null) {
                 updateBossBars()
@@ -172,6 +174,7 @@ class BlockData(val uuid: String, @Serializable(BlockSerializer::class) val bloc
         try {
             buildings.trainingCamps.tick(this)
             buildings.armsManufacturers.tick(this)
+            buildings.toxicologyLabs.tick(this)
         } catch (e: Exception) {
             log("Something went wrong in ${block.name()}'s power tick!", LogType.EXCEPTION)
             log("Dumping buildings: $buildings", LogType.EXCEPTION)

@@ -67,7 +67,7 @@ class ToxicologyLab : Building() {
                     +"<dark_gray>turns it into a concentrated toxic gas".asMini()
                     +"<dark_gray>Can only be placed in the sky".asMini()
                     +"<gray>Consumes 20 $lubricant per research tick".asMini().noItalic()
-                    +"<gray>Produces 0.05 $power per pollution-producing building every 30 ticks".asMini().noItalic()
+                    +"<gray>Produces 0.05 $power per pollution-producing building every 70 ticks".asMini().noItalic()
                     resourcesConsumed(6, count)
                     amountOwned(count)
                 }
