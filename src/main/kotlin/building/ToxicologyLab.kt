@@ -43,10 +43,6 @@ class ToxicologyLab : Building() {
         count++
     }
 
-    override fun select(player: Player) {
-        player.inventory[BUILDING_INVENTORY_SLOT] = getItem(cost, count)
-    }
-
     override fun tick(data: BlockData) {
         if (count == 0) return
         val pollution = data.buildings.sumOf { if (it.producesPollution) it.count else 0 }.coerceAtMost(250)

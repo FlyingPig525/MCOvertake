@@ -64,10 +64,6 @@ class ElevatedBiosphere : Building() {
         data.lubricant -= enabledPositions.size * 40
     }
 
-    override fun select(player: Player) {
-        player.inventory[BUILDING_INVENTORY_SLOT] = getItem(player.data ?: return)
-    }
-
     @io.github.flyingpig525.ksp.BuildingCompanion(orderAfter = "first", category = SkyCategory::class)
     companion object ElevatedBiosphereCompanion : Building.BuildingCompanion, Validated {
         override val block: Block = Block.BEACON

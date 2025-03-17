@@ -18,7 +18,6 @@ class ToxicologyLabGasEntity(private val startingScale: Double = 1.1) : Entity(E
     private var z = startingScale
     private var y = startingScale
     private val vec get() = Vec(x, y, z)
-    private val randomSin = (0..50).random() / 100.0
     init {
         editMeta<ItemDisplayMeta> {
             itemStack = item(Material.GREEN_STAINED_GLASS)
@@ -26,8 +25,8 @@ class ToxicologyLabGasEntity(private val startingScale: Double = 1.1) : Entity(E
             translation = Vec(0.5, 0.5, 0.5)
             scale = vec
             leftRotation = rotation.toArray()
-            posRotInterpolationDuration = 1
-            transformationInterpolationDuration = 1
+            posRotInterpolationDuration = 2
+            transformationInterpolationDuration = 2
         }
 //            block = Block.LIME_STAINED_GLASS
 //            scale = Vec(0.4, 0.4, 0.4)
@@ -46,7 +45,7 @@ class ToxicologyLabGasEntity(private val startingScale: Double = 1.1) : Entity(E
             euler.x += degToRad((1..2).random())
             euler.y += degToRad((1..2).random())
             euler.z += degToRad((1..2).random())
-            val scale = startingScale + (0.08 * sin((time.toDouble() + tan(startingScale * 45)) / 4 + randomSin))
+            val scale = startingScale + (0.08 * sin((time.toDouble() + tan(startingScale * 45)) / 4))
             x = scale
             y = scale
             z = scale
