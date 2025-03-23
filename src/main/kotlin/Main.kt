@@ -99,7 +99,7 @@ const val SKY_SYMBOL = "⭐"
 
 const val BUILDING_INVENTORY_SLOT = 4
 
-const val SERVER_VERSION = "v0.4.4"
+const val SERVER_VERSION = "v0.5.1"
 
 const val PIXEL_SIZE = 1.0 / 16.0
 
