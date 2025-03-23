@@ -206,10 +206,10 @@ class BlockData(val uuid: String, @Serializable(BlockSerializer::class) val bloc
     // TODO: uses 7mb of ram, should refactor to not create new components each tick
     fun updateBossBars(player: Player? = null) {
         powerBossBar.name("<red>$POWER_SYMBOL Power <gray>-<red> $power/$maxPower".asMini())
-        powerBossBar.progress((power / maxPower).toFloat().coerceIn(0f..1f))
+        powerBossBar.progress((power.toDouble() / maxPower).toFloat().coerceIn(0f..1f))
 
         matterBossBar.name("<green>$MATTER_SYMBOL Organic Matter <gray>-<green> $organicMatter/$maxMatter".asMini())
-        matterBossBar.progress((organicMatter / maxMatter).toFloat().coerceIn(0f..1f))
+        matterBossBar.progress((organicMatter.toDouble() / maxMatter).toFloat().coerceIn(0f..1f))
 
         val overflow = disposableResourcesUsed > maxDisposableResources
         resourcesBossBar.name("<${if (overflow) "light_purple" else "aqua"}>$RESOURCE_SYMBOL Disposable Resources <gray>- <${if (overflow) "light_purple" else "aqua"}>$disposableResourcesUsed/$maxDisposableResources".asMini())
