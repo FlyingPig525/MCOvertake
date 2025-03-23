@@ -7,6 +7,8 @@ import io.github.flyingpig525.buildingPosition
 import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.data.player.CurrencyCost
 import io.github.flyingpig525.data.research.currency.BasicResearch
+import io.github.flyingpig525.extension.compareTo
+import io.github.flyingpig525.extension.minus
 import io.github.flyingpig525.ksp.BuildingCompanion
 import io.github.flyingpig525.ksp.PlayerBuildings
 import kotlinx.serialization.Serializable

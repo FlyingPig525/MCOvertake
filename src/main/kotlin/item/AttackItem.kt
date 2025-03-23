@@ -10,6 +10,7 @@ import io.github.flyingpig525.ksp.Item
 import io.github.flyingpig525.wall.getWallAttackCost
 import io.github.flyingpig525.wall.lastWall
 import io.github.flyingpig525.wall.wall
+import io.github.flyingpig525.extension.*
 import io.github.flyingpig525.wall.wallLevel
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.extension.adventure.asMini

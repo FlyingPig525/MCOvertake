@@ -8,12 +8,15 @@ import io.github.flyingpig525.building.lubricantColor
 import io.github.flyingpig525.building.plasticColor
 import io.github.flyingpig525.data.player.config.BlockConfig
 import io.github.flyingpig525.data.research.ResearchContainer
+import io.github.flyingpig525.extension.*
 import io.github.flyingpig525.item.*
 import io.github.flyingpig525.ksp.PlayerBuildings
+import io.github.flyingpig525.serialization.BigDecimalSerializer
 import io.github.flyingpig525.serialization.BlockSerializer
 import io.github.flyingpig525.wall.wallLevel
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
+import kotlinx.serialization.json.Json
 import net.bladehunt.kotstom.dsl.instance.buildInstance
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.extension.adventure.asMini
@@ -31,6 +34,7 @@ import net.minestom.server.network.packet.server.play.ActionBarPacket
 import net.minestom.server.network.packet.server.play.SetCooldownPacket
 import net.minestom.server.tag.Tag
 import net.minestom.server.utils.time.Cooldown
+import java.math.BigDecimal
 import java.time.Duration
 import java.time.Instant
 import java.util.*
@@ -53,9 +57,9 @@ class BlockData(val uuid: String, @Serializable(BlockSerializer::class) val bloc
     @Transient var wallCooldown = Cooldown(Duration.ofSeconds(2))
     @Transient var wallUpgradeCooldown = Cooldown(Duration.ofSeconds(2))
     @Transient var raftCooldown = Cooldown(Duration.ofSeconds(20))
-    var power: Double = 100.0
+    var power: @Serializable(BigDecimalSerializer::class) BigDecimal = (100.0).toBigDecimal(2)
         set(value) {
-            field = value.coerceIn(0.0..maxPower.toDouble())
+            field = value.coerceIn(BigDecimal.ZERO, maxPower.toBigDecimal())
             val player = gameInstance?.instance?.getPlayerByUuid(UUID.fromString(uuid))
             updateBossBars(player)
         }
@@ -65,9 +69,9 @@ class BlockData(val uuid: String, @Serializable(BlockSerializer::class) val bloc
                 BossBar.Color.RED,
                 BossBar.Overlay.PROGRESS
             )
-    var organicMatter: Double = 100.0
+    var organicMatter: @Serializable(BigDecimalSerializer::class) BigDecimal = (100.0).toBigDecimal(2)
         set(value) {
-            field = value.coerceIn(0.0..maxMatter.toDouble())
+            field = value.coerceIn(BigDecimal.ZERO, maxMatter.toBigDecimal())
             val player = gameInstance?.instance?.getPlayerByUuid(UUID.fromString(uuid))
             updateBossBars(player)
         }
@@ -320,4 +324,9 @@ class BlockData(val uuid: String, @Serializable(BlockSerializer::class) val bloc
             return values.map { it.block }
         }
     }
+}
+
+fun main() {
+    val f: Double = Json.decodeFromString("12")
+    println(f)
 }

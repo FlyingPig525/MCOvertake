@@ -8,6 +8,7 @@ import io.github.flyingpig525.item.AttackItem.getAttackCooldown
 import io.github.flyingpig525.item.AttackItem.getAttackCost
 import io.github.flyingpig525.item.AttackItem.getAttacking
 import io.github.flyingpig525.ksp.Item
+import io.github.flyingpig525.extension.*
 import io.github.flyingpig525.wall.wallLevel
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.extension.adventure.asMini

@@ -1,5 +1,7 @@
 package io.github.flyingpig525.data.player
 
+import io.github.flyingpig525.extension.compareTo
+import io.github.flyingpig525.extension.minus
 import net.bladehunt.kotstom.extension.adventure.asMini
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.TextComponent

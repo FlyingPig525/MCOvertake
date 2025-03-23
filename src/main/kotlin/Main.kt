@@ -3,7 +3,6 @@ package io.github.flyingpig525
 import cz.lukynka.prettylog.*
 import io.github.flyingpig525.GameInstance.Companion.fromInstance
 import io.github.flyingpig525.GameInstance.Companion.gameInstance
-import io.github.flyingpig525.building.ToxicologyLab
 import io.github.flyingpig525.command.*
 import io.github.flyingpig525.console.Command
 import io.github.flyingpig525.console.ConfigCommand
@@ -18,6 +17,7 @@ import io.github.flyingpig525.data.player.config.PlayerConfig
 import io.github.flyingpig525.data.player.permission.Permission
 import io.github.flyingpig525.data.player.permission.PermissionManager
 import io.github.flyingpig525.entity.ToxicologyLabGasEntity
+import io.github.flyingpig525.extension.div
 import io.github.flyingpig525.item.SelectBlockItem
 import io.github.flyingpig525.ksp.initBuildingCompanions
 import io.github.flyingpig525.ksp.initItems
@@ -26,13 +26,11 @@ import kotlinx.coroutines.*
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import net.bladehunt.kotstom.*
-import net.bladehunt.kotstom.dsl.item.amount
 import net.bladehunt.kotstom.dsl.item.item
 import net.bladehunt.kotstom.dsl.item.itemName
 import net.bladehunt.kotstom.dsl.item.lore
 import net.bladehunt.kotstom.dsl.kbar
 import net.bladehunt.kotstom.dsl.kommand.buildSyntax
-import net.bladehunt.kotstom.dsl.kommand.defaultExecutor
 import net.bladehunt.kotstom.dsl.kommand.kommand
 import net.bladehunt.kotstom.dsl.listen
 import net.bladehunt.kotstom.extension.adventure.asMini
@@ -77,6 +75,7 @@ import team.unnamed.creative.serialize.minecraft.MinecraftResourcePackReader
 import team.unnamed.creative.serialize.minecraft.MinecraftResourcePackWriter
 import team.unnamed.creative.server.ResourcePackServer
 import java.io.File
+import java.math.BigDecimal
 import java.net.URI
 import java.nio.file.Path
 import java.util.*
@@ -152,6 +151,8 @@ fun main() = runBlocking { try {
             it.printStackTrace()
         }
     }
+
+    BigDecimal(3) / 2
 
     val configFile = File("config.json5")
     if (!configFile.exists()) {

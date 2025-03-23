@@ -30,7 +30,7 @@ import kotlin.reflect.KProperty1
 class ElevatedBiosphere : Building() {
     override val resourceUse: Int get() = if (count > 0) 32 + ((count-1) * 10) else 0
     override val cost: CurrencyCost
-        get() = CurrencyCost.genericMechanicalParts(count, 2000).genericPlastic(count, 300)
+        get() = CurrencyCost.genericMechanicalParts(count, 2000).genericPlastic(count, 850)
     override val itemGetter: (cost: CurrencyCost, count: Int) -> ItemStack
         get() = ::getItem
 

@@ -6,6 +6,7 @@ import io.github.flyingpig525.data.player.BlockData
 import io.github.flyingpig525.data.player.CurrencyCost
 import io.github.flyingpig525.dsl.blockDisplay
 import io.github.flyingpig525.entity.ToxicologyLabGasEntity
+import io.github.flyingpig525.extension.plus
 import io.github.flyingpig525.ksp.PlayerBuildings
 import kotlinx.serialization.Serializable
 import net.bladehunt.kotstom.dsl.item.item
